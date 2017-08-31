@@ -17,8 +17,8 @@ limitations under the License.
 package cloudify
 
 import (
-	"cloudify/rest"
 	"fmt"
+	rest "github.com/0lvin-cfy/cloudify-rest-go-client/cloudifyrest"
 	"log"
 	"net/url"
 	"os"

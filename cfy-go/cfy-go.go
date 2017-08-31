@@ -17,10 +17,10 @@ limitations under the License.
 package main
 
 import (
-	"cloudify"
-	"cloudify/utils"
 	"flag"
 	"fmt"
+	cloudify "github.com/0lvin-cfy/cloudify-rest-go-client/cloudify"
+	utils "github.com/0lvin-cfy/cloudify-rest-go-client/cloudifyutils"
 	"os"
 )
 

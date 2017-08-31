@@ -7,7 +7,7 @@ sudo apt-get install golang-go
 export GOBIN=`pwd`/bin
 export PATH=$PATH:`pwd`/bin
 export GOPATH=`pwd`
-make all
+go get github.com/0lvin-cfy/cloudify-rest-go-client/cfy-go
 ```
 
 # reformat code
@@ -89,7 +89,7 @@ Create a blueprint archive
 Upload a blueprint [manager only]
 
 ```shell
-cfy-go blueprints upload new-blueprint -path examples/blueprint/Minimal.yaml
+cfy-go blueprints upload new-blueprint -path src/github.com/0lvin-cfy/cloudify-rest-go-client/examples/blueprint/Minimal.yaml
 ```
 
 ### validate
