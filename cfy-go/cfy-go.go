@@ -543,7 +543,7 @@ func eventsOptions(args, options []string) int {
 	return 0
 }
 
-var versionString = "Please compile with make all."
+var versionString = "0.1"
 
 func main() {
 
