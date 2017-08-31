@@ -10,6 +10,7 @@ export GOPATH=`pwd`
 go get github.com/0lvin-cfy/cloudify-rest-go-client/cfy-go
 rm bin/cfy-go
 ln -s src/github.com/0lvin-cfy/cloudify-rest-go-client/Makefile Makefile
+make all
 ```
 
 # reformat code
