@@ -23,17 +23,17 @@ CLOUDIFYREST := \
 	src/${PACKAGEPATH}/cloudifyrest/rest.go \
 	src/${PACKAGEPATH}/cloudifyrest/types.go
 
-pkg/linux_amd64/src/${PACKAGEPATH}/cloudifyrest.a: ${CLOUDIFYREST}
+pkg/linux_amd64/${PACKAGEPATH}/cloudifyrest.a: ${CLOUDIFYREST}
 	$(call colorecho,"Build: ", $@)
-	go build -v -i -o pkg/linux_amd64/src/${PACKAGEPATH}/cloudifyrest.a ${CLOUDIFYREST}
+	go build -v -i -o pkg/linux_amd64/${PACKAGEPATH}/cloudifyrest.a ${CLOUDIFYREST}
 
 # cloudify utils
 CLOUDIFYUTILS := \
 	src/${PACKAGEPATH}/cloudifyutils/utils.go
 
-pkg/linux_amd64/src/${PACKAGEPATH}/cloudifyutils.a: ${CLOUDIFYUTILS}
+pkg/linux_amd64/${PACKAGEPATH}/cloudifyutils.a: ${CLOUDIFYUTILS}
 	$(call colorecho,"Build: ", $@)
-	go build -v -i -o pkg/linux_amd64/src/${PACKAGEPATH}/cloudifyutils.a ${CLOUDIFYUTILS}
+	go build -v -i -o pkg/linux_amd64/${PACKAGEPATH}/cloudifyutils.a ${CLOUDIFYUTILS}
 
 # cloudify
 CLOUDIFYCOMMON := \
@@ -44,11 +44,11 @@ CLOUDIFYCOMMON := \
 	src/${PACKAGEPATH}/cloudify/executions.go \
 	src/${PACKAGEPATH}/cloudify/deployments.go
 
-pkg/linux_amd64/cloudify.a: ${CLOUDIFYCOMMON} pkg/linux_amd64/src/${PACKAGEPATH}/cloudifyrest.a
+pkg/linux_amd64/cloudify.a: ${CLOUDIFYCOMMON} pkg/linux_amd64/${PACKAGEPATH}/cloudifyrest.a
 	$(call colorecho,"Build: ",$@)
 	go build -v -i -o pkg/linux_amd64/cloudify.a ${CLOUDIFYCOMMON}
 
-bin/cfy-go: src/${PACKAGEPATH}/cfy-go/cfy-go.go pkg/linux_amd64/src/${PACKAGEPATH}/cloudifyutils.a pkg/linux_amd64/cloudify.a
+bin/cfy-go: src/${PACKAGEPATH}/cfy-go/cfy-go.go pkg/linux_amd64/${PACKAGEPATH}/cloudifyutils.a pkg/linux_amd64/cloudify.a
 	$(call colorecho,"Install: ", $@)
 	go install -v -ldflags "-X main.versionString=`cd src/${PACKAGEPATH} && git rev-parse --short HEAD`" src/${PACKAGEPATH}/cfy-go/cfy-go.go
 
