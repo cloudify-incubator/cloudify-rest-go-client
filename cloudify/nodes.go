@@ -23,6 +23,15 @@ import (
 	"net/url"
 )
 
+type CloudifyNodePlugin struct {
+	CloudifyPluginBase
+	Name     string `json:"name,omitempty"`
+	Executor string `json:"executor,omitempty"`
+	// TODO describe "install_arguments"
+	// TODO describe "source"
+	Install bool `json:"install"`
+}
+
 type CloudifyNode struct {
 	rest.CloudifyIdWithTenant
 	Operations               map[string]interface{} `json:"operations,omitempty"`
@@ -34,7 +43,7 @@ type CloudifyNode struct {
 	DeploymentId             string                 `json:"deployment_id,omitempty"`
 	Properties               map[string]interface{} `json:"properties,omitempty"`
 	PlannedNumberOfInstances int                    `json:"planned_number_of_instances"`
-	Plugins                  []interface{}          `json:"plugins,omitempty"`
+	Plugins                  []CloudifyNodePlugin   `json:"plugins,omitempty"`
 	MaxNumberOfInstances     int                    `json:"max_number_of_instances"`
 	HostId                   string                 `json:"host_id,omitempty"`
 	MinNumberOfInstances     int                    `json:"min_number_of_instances"`

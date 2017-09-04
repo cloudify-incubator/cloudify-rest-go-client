@@ -300,7 +300,36 @@ cfy-go nodes list
 
 ## plugins
 Handle plugins on the manager
+
+### delete
+Delete a plugin [manager only]
+
 * Not Implemented
+
+### download
+Download a plugin [manager only]
+
+* Not Implemented
+
+### get
+Retrieve plugin information [manager only]
+* Not Implemented
+
+### list
+List plugins [manager only]
+```shell
+cfy-go plugins list
+```
+
+### upload
+Upload a plugin [manager only]
+
+* Not Implemented
+
+### validate
+Validate a plugin
+
+* Not Implemented (requered )
 
 ------
 

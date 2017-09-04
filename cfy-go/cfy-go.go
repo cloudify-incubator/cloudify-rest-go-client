@@ -669,12 +669,69 @@ func eventsOptions(args, options []string) int {
 	return 0
 }
 
+func pluginsOptions(args, options []string) int {
+	defaultError := "list subcommand is required"
+
+	if len(args) < 3 {
+		fmt.Println(defaultError)
+		return 1
+	}
+
+	switch args[2] {
+	case "list":
+		{
+			operFlagSet := basicOptions("plugins list")
+			params := parsePagination(operFlagSet, options)
+
+			cl := cloudify.NewClient(host, user, password, tenant)
+			plugins := cl.GetPlugins(params)
+			var lines [][]string = make([][]string, len(plugins.Items))
+			for pos, plugin := range plugins.Items {
+				lines[pos] = make([]string, 9)
+				lines[pos][0] = plugin.Id
+				lines[pos][1] = plugin.PackageName
+				lines[pos][2] = plugin.PackageVersion
+				lines[pos][3] = plugin.Distribution
+				lines[pos][4] = plugin.SupportedPlatform
+				lines[pos][5] = plugin.DistributionRelease
+				lines[pos][6] = plugin.UploadedAt
+				lines[pos][7] = plugin.Tenant
+				lines[pos][8] = plugin.CreatedBy
+			}
+			utils.PrintTable([]string{
+				"Id", "Package name", "Package version", "Distribution",
+				"Supported platform", "Distribution release", "Uploaded at",
+				"Tenant", "Created by",
+			}, lines)
+			fmt.Printf("Showed %d+%d/%d results. Use offset/size for get more.\n",
+				plugins.Metadata.Pagination.Offset, len(plugins.Items),
+				plugins.Metadata.Pagination.Total)
+		}
+	default:
+		{
+			fmt.Println(defaultError)
+			return 1
+		}
+	}
+	return 0
+}
+
 var versionString = "0.1"
 
 func main() {
 
 	args, options := utils.CliArgumentsList(os.Args)
-	defaultError := "Supported only: status, version, blueprints, deployments, executions, events, nodes, node-instances."
+	var defaultError string = ("Supported commands:\n" +
+		"\tblueprints        Handle blueprints on the manager\n" +
+		"\tdeployments       Handle deployments on the Manager\n" +
+		"\tevents            Show events from workflow executions\n" +
+		"\texecutions        Handle workflow executions\n" +
+		"\tnode-instances    Handle a deployment's node-instances\n" +
+		"\tnodes             Handle a deployment's nodes\n" +
+		"\tplugins           Handle plugins on the manager\n" +
+		"\tstatus            Show manager status\n" +
+		"\tversion           Show client version.\n")
+
 	if len(args) < 2 {
 		fmt.Println(defaultError)
 		return
@@ -701,6 +758,10 @@ func main() {
 	case "executions":
 		{
 			os.Exit(executionsOptions(args, options))
+		}
+	case "plugins":
+		{
+			os.Exit(pluginsOptions(args, options))
 		}
 	case "events":
 		{
