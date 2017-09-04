@@ -62,12 +62,16 @@ type CloudifyMetadata struct {
 	Pagination CloudifyPagination `json:"pagination"`
 }
 
-type CloudifyResource struct {
+type CloudifyIdWithTenant struct {
 	Id              string `json:"id"`
-	Description     string `json:"description"`
 	Tenant          string `json:"tenant_name"`
-	CreatedAt       string `json:"created_at"`
-	UpdatedAt       string `json:"updated_at"`
 	CreatedBy       string `json:"created_by"`
 	PrivateResource bool   `json:"private_resource"`
+}
+
+type CloudifyResource struct {
+	CloudifyIdWithTenant
+	Description     string `json:"description"`
+	CreatedAt       string `json:"created_at"`
+	UpdatedAt       string `json:"updated_at"`
 }

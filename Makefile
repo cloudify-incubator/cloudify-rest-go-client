@@ -38,17 +38,18 @@ pkg/linux_amd64/${PACKAGEPATH}/cloudifyutils.a: ${CLOUDIFYUTILS}
 # cloudify
 CLOUDIFYCOMMON := \
 	src/${PACKAGEPATH}/cloudify/client.go \
+	src/${PACKAGEPATH}/cloudify/nodes.go \
 	src/${PACKAGEPATH}/cloudify/events.go \
 	src/${PACKAGEPATH}/cloudify/blueprints.go \
 	src/${PACKAGEPATH}/cloudify/status.go \
 	src/${PACKAGEPATH}/cloudify/executions.go \
 	src/${PACKAGEPATH}/cloudify/deployments.go
 
-pkg/linux_amd64/cloudify.a: ${CLOUDIFYCOMMON} pkg/linux_amd64/${PACKAGEPATH}/cloudifyrest.a
+pkg/linux_amd64/${PACKAGEPATH}/cloudify.a: ${CLOUDIFYCOMMON} pkg/linux_amd64/${PACKAGEPATH}/cloudifyrest.a
 	$(call colorecho,"Build: ",$@)
-	go build -v -i -o pkg/linux_amd64/cloudify.a ${CLOUDIFYCOMMON}
+	go build -v -i -o pkg/linux_amd64/${PACKAGEPATH}/cloudify.a ${CLOUDIFYCOMMON}
 
-bin/cfy-go: src/${PACKAGEPATH}/cfy-go/cfy-go.go pkg/linux_amd64/${PACKAGEPATH}/cloudifyutils.a pkg/linux_amd64/cloudify.a
+bin/cfy-go: src/${PACKAGEPATH}/cfy-go/cfy-go.go pkg/linux_amd64/${PACKAGEPATH}/cloudifyutils.a pkg/linux_amd64/${PACKAGEPATH}/cloudify.a
 	$(call colorecho,"Install: ", $@)
 	go install -v -ldflags "-X main.versionString=`cd src/${PACKAGEPATH} && git rev-parse --short HEAD`" src/${PACKAGEPATH}/cfy-go/cfy-go.go
 

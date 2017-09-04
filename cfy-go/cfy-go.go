@@ -478,6 +478,67 @@ func executionsOptions(args, options []string) int {
 	return 0
 }
 
+func nodesOptions(args, options []string) int {
+	defaultError := "list subcommand is required"
+
+	if len(args) < 3 {
+		fmt.Println(defaultError)
+		return 1
+	}
+
+	switch args[2] {
+	case "list":
+		{
+			operFlagSet := basicOptions("nodes list")
+			var node string
+			var deployment string
+			operFlagSet.StringVar(&node, "node", "",
+				"The unique identifier for the node")
+			operFlagSet.StringVar(&deployment, "deployment", "",
+				"The unique identifier for the deployment")
+
+			params := parsePagination(operFlagSet, options)
+
+			if node != "" {
+				params["id"] = node
+			}
+			if deployment != "" {
+				params["deployment_id"] = deployment
+			}
+
+			cl := cloudify.NewClient(host, user, password, tenant)
+			nodes := cl.GetNodes(params)
+			var lines [][]string = make([][]string, len(nodes.Items))
+			for pos, node := range nodes.Items {
+				lines[pos] = make([]string, 9)
+				lines[pos][0] = node.Id
+				lines[pos][1] = node.DeploymentId
+				lines[pos][2] = node.BlueprintId
+				lines[pos][3] = node.HostId
+				lines[pos][4] = node.Type
+				lines[pos][5] = fmt.Sprintf("%d", node.NumberOfInstances)
+				lines[pos][6] = fmt.Sprintf("%d", node.PlannedNumberOfInstances)
+				lines[pos][7] = node.Tenant
+				lines[pos][8] = node.CreatedBy
+			}
+			utils.PrintTable([]string{
+				"Id", "Deployment id", "Blueprint id", "Host id", "Type",
+				"Number of instances", "Planned number of instances",
+				"Tenant", "created_by",
+			}, lines)
+			fmt.Printf("Showed %d+%d/%d results. Use offset/size for get more.\n",
+				nodes.Metadata.Pagination.Offset, len(nodes.Items),
+				nodes.Metadata.Pagination.Total)
+		}
+	default:
+		{
+			fmt.Println(defaultError)
+			return 1
+		}
+	}
+	return 0
+}
+
 func eventsOptions(args, options []string) int {
 	defaultError := "list subcommand is required"
 
@@ -510,9 +571,6 @@ func eventsOptions(args, options []string) int {
 			}
 			if execution != "" {
 				params["execution_id"] = execution
-			}
-			if blueprint != "" {
-				params["blueprint_id"] = blueprint
 			}
 
 			cl := cloudify.NewClient(host, user, password, tenant)
@@ -548,7 +606,7 @@ var versionString = "0.1"
 func main() {
 
 	args, options := utils.CliArgumentsList(os.Args)
-	defaultError := "Supported only: status, version, blueprints, deployments, executions, events."
+	defaultError := "Supported only: status, version, blueprints, deployments, executions, events, nodes."
 	if len(args) < 2 {
 		fmt.Println(defaultError)
 		return
@@ -579,6 +637,10 @@ func main() {
 	case "events":
 		{
 			os.Exit(eventsOptions(args, options))
+		}
+	case "nodes":
+		{
+			os.Exit(nodesOptions(args, options))
 		}
 	default:
 		{

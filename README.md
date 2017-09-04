@@ -268,7 +268,20 @@ Handle a deployment's node-instances
 
 ## nodes
 Handle a deployment's nodes
-* Not Implemented
+
+### get
+Retrieve node information [manager only]
+
+```shell
+ cfy-go nodes list -node server -deployment deployment
+```
+
+### list
+List nodes for a deployment [manager only]
+
+```shell
+ cfy-go nodes list
+```
 
 ------
 

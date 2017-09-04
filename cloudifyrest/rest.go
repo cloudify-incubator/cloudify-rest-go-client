@@ -60,7 +60,7 @@ func (r *CloudifyRestClient) Get(url, acceptedContentType string) []byte {
 
 	contentType := resp.Header.Get("Content-Type")
 
-	if contentType[:len(acceptedContentType)] != acceptedContentType {
+	if len(contentType) < len(acceptedContentType) || contentType[:len(acceptedContentType)] != acceptedContentType {
 		log.Fatal(fmt.Sprintf("Wrong content type: %+v", contentType))
 	}
 
