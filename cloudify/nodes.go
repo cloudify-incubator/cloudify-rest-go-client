@@ -17,6 +17,7 @@ limitations under the License.
 package cloudify
 
 import (
+	"encoding/json"
 	rest "github.com/0lvin-cfy/cloudify-rest-go-client/cloudifyrest"
 	"log"
 	"net/url"
@@ -39,6 +40,14 @@ type CloudifyNode struct {
 	MinNumberOfInstances     int                    `json:"min_number_of_instances"`
 	Type                     string                 `json:"type,omitempty"`
 	PluginsToInstall         []interface{}          `json:"plugins_to_install,omitempty"`
+}
+
+func (node *CloudifyNode) GetJsonProperties() string {
+	json_data, err := json.Marshal(node.Properties)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return string(json_data)
 }
 
 type CloudifyNodes struct {

@@ -529,6 +529,11 @@ func nodesOptions(args, options []string) int {
 			fmt.Printf("Showed %d+%d/%d results. Use offset/size for get more.\n",
 				nodes.Metadata.Pagination.Offset, len(nodes.Items),
 				nodes.Metadata.Pagination.Total)
+			if len(nodes.Items) == 1 {
+				fmt.Printf("Properties: %s\n", nodes.Items[0].GetJsonProperties())
+			} else {
+				fmt.Printf("Limit to one row if you want to check Properties\n")
+			}
 		}
 	default:
 		{
@@ -587,6 +592,11 @@ func nodeInstancesOptions(args, options []string) int {
 			fmt.Printf("Showed %d+%d/%d results. Use offset/size for get more.\n",
 				nodeInstances.Metadata.Pagination.Offset, len(nodeInstances.Items),
 				nodeInstances.Metadata.Pagination.Total)
+			if len(nodeInstances.Items) == 1 {
+				fmt.Printf("Runtime properties: %s\n", nodeInstances.Items[0].GetJsonRuntimeProperties())
+			} else {
+				fmt.Printf("Limit to one row if you want to check RuntimeProperties\n")
+			}
 		}
 	default:
 		{
