@@ -539,6 +539,64 @@ func nodesOptions(args, options []string) int {
 	return 0
 }
 
+func nodeInstancesOptions(args, options []string) int {
+	defaultError := "list subcommand is required"
+
+	if len(args) < 3 {
+		fmt.Println(defaultError)
+		return 1
+	}
+
+	switch args[2] {
+	case "list":
+		{
+			operFlagSet := basicOptions("node-instances list")
+			var node string
+			var deployment string
+			operFlagSet.StringVar(&node, "node", "",
+				"The unique identifier for the node")
+			operFlagSet.StringVar(&deployment, "deployment", "",
+				"The unique identifier for the deployment")
+
+			params := parsePagination(operFlagSet, options)
+
+			if node != "" {
+				params["node_id"] = node
+			}
+			if deployment != "" {
+				params["deployment_id"] = deployment
+			}
+
+			cl := cloudify.NewClient(host, user, password, tenant)
+			nodeInstances := cl.GetNodeInstances(params)
+			var lines [][]string = make([][]string, len(nodeInstances.Items))
+			for pos, nodeInstance := range nodeInstances.Items {
+				lines[pos] = make([]string, 7)
+				lines[pos][0] = nodeInstance.Id
+				lines[pos][1] = nodeInstance.DeploymentId
+				lines[pos][2] = nodeInstance.HostId
+				lines[pos][3] = nodeInstance.NodeId
+				lines[pos][4] = nodeInstance.State
+				lines[pos][5] = nodeInstance.Tenant
+				lines[pos][6] = nodeInstance.CreatedBy
+			}
+			utils.PrintTable([]string{
+				"Id", "Deployment id", "Host id", "Node id", "State", "Tenant",
+				"created_by",
+			}, lines)
+			fmt.Printf("Showed %d+%d/%d results. Use offset/size for get more.\n",
+				nodeInstances.Metadata.Pagination.Offset, len(nodeInstances.Items),
+				nodeInstances.Metadata.Pagination.Total)
+		}
+	default:
+		{
+			fmt.Println(defaultError)
+			return 1
+		}
+	}
+	return 0
+}
+
 func eventsOptions(args, options []string) int {
 	defaultError := "list subcommand is required"
 
@@ -606,7 +664,7 @@ var versionString = "0.1"
 func main() {
 
 	args, options := utils.CliArgumentsList(os.Args)
-	defaultError := "Supported only: status, version, blueprints, deployments, executions, events, nodes."
+	defaultError := "Supported only: status, version, blueprints, deployments, executions, events, nodes, node-instances."
 	if len(args) < 2 {
 		fmt.Println(defaultError)
 		return
@@ -641,6 +699,10 @@ func main() {
 	case "nodes":
 		{
 			os.Exit(nodesOptions(args, options))
+		}
+	case "node-instances":
+		{
+			os.Exit(nodeInstancesOptions(args, options))
 		}
 	default:
 		{

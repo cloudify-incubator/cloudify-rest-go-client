@@ -24,27 +24,27 @@ import (
 
 type CloudifyNode struct {
 	rest.CloudifyIdWithTenant
-	Operations map[string]interface{} `json:"operations,omitempty"`
-	Relationships []interface{} `json:"relationships,omitempty"`
-	DeployNumberOfInstances int `json:"deploy_number_of_instances"`
-	TypeHierarchy []string `json:"type_hierarchy,omitempty"`
-	BlueprintId string  `json:"blueprint_id,omitempty"`
-    NumberOfInstances int `json:"number_of_instances"`
-    DeploymentId string `json:"deployment_id,omitempty"`
-    Properties map[string]interface{} `json:"properties,omitempty"`
-    PlannedNumberOfInstances int `json:"planned_number_of_instances"`
-    Plugins []interface{} `json:"plugins,omitempty"`
-	MaxNumberOfInstances int `json:"max_number_of_instances"`
-    HostId string `json:"host_id,omitempty"`
-    MinNumberOfInstances int `json:"min_number_of_instances"`
-    Type string `json:"type,omitempty"`
-	PluginsToInstall []interface{} `json:"plugins_to_install,omitempty"`
+	Operations               map[string]interface{} `json:"operations,omitempty"`
+	Relationships            []interface{}          `json:"relationships,omitempty"`
+	DeployNumberOfInstances  int                    `json:"deploy_number_of_instances"`
+	TypeHierarchy            []string               `json:"type_hierarchy,omitempty"`
+	BlueprintId              string                 `json:"blueprint_id,omitempty"`
+	NumberOfInstances        int                    `json:"number_of_instances"`
+	DeploymentId             string                 `json:"deployment_id,omitempty"`
+	Properties               map[string]interface{} `json:"properties,omitempty"`
+	PlannedNumberOfInstances int                    `json:"planned_number_of_instances"`
+	Plugins                  []interface{}          `json:"plugins,omitempty"`
+	MaxNumberOfInstances     int                    `json:"max_number_of_instances"`
+	HostId                   string                 `json:"host_id,omitempty"`
+	MinNumberOfInstances     int                    `json:"min_number_of_instances"`
+	Type                     string                 `json:"type,omitempty"`
+	PluginsToInstall         []interface{}          `json:"plugins_to_install,omitempty"`
 }
 
 type CloudifyNodes struct {
 	rest.CloudifyBaseMessage
 	Metadata rest.CloudifyMetadata `json:"metadata"`
-	Items    []CloudifyNode       `json:"items"`
+	Items    []CloudifyNode        `json:"items"`
 }
 
 func (cl *CloudifyClient) GetNodes(params map[string]string) CloudifyNodes {

@@ -262,7 +262,18 @@ Handle the manager's maintenance-mode
 
 ## node-instances
 Handle a deployment's node-instances
+
+### get
+Retrieve node-instance information [manager only]
+
 * Not Implemented
+
+### list
+List node-instances for a deployment [manager only]
+
+```shell
+cfy-go node-instances list -deployment deployment
+```
 
 ------
 

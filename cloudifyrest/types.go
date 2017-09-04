@@ -71,7 +71,7 @@ type CloudifyIdWithTenant struct {
 
 type CloudifyResource struct {
 	CloudifyIdWithTenant
-	Description     string `json:"description"`
-	CreatedAt       string `json:"created_at"`
-	UpdatedAt       string `json:"updated_at"`
+	Description string `json:"description"`
+	CreatedAt   string `json:"created_at"`
+	UpdatedAt   string `json:"updated_at"`
 }
