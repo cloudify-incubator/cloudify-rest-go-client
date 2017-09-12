@@ -16,12 +16,14 @@ limitations under the License.
 
 package cloudifyrest
 
+const ApiVersion = "v3.1"
+
 // Credentials
 type CloudifyRestClient struct {
-	RestURL  string
-	User     string
-	Password string
-	Tenant   string
+	restURL  string
+	user     string
+	password string
+	tenant   string
 	Debug    bool
 }
 

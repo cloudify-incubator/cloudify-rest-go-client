@@ -112,7 +112,7 @@ func infoOptions(args, options []string) int {
 			ver := cl.GetVersion()
 			fmt.Printf("Retrieving manager services version... [ip=%v]\n", host)
 			utils.PrintTable([]string{"Version", "Edition", "Api Version"},
-				[][]string{{ver.Version, ver.Edition, cloudify.ApiVersion}})
+				[][]string{{ver.Version, ver.Edition, cl.GetApiVersion()}})
 		}
 	default:
 		{
@@ -752,7 +752,7 @@ func main() {
 	switch args[1] {
 	case "version":
 		{
-			fmt.Printf("CFY Go client: %s/%s\n", cloudify.ApiVersion, versionString)
+			fmt.Printf("CFY Go client: %s\n", versionString)
 			os.Exit(0)
 		}
 	case "status":

@@ -7,32 +7,26 @@ import (
 	"io/ioutil"
 )
 
-const ApiVersion = "v3.1"
-
 type CloudifyClient struct {
-	RestCl rest.CloudifyRestClient
+	restCl *rest.CloudifyRestClient
 }
 
 func NewClient(host, user, password, tenant string) *CloudifyClient {
 	var cliCl CloudifyClient
-	if host[:len("https://")] == "https://" || host[:len("http://")] == "http://" {
-		cliCl.RestCl.RestURL = host + "/api/" + ApiVersion + "/"
-	} else {
-		cliCl.RestCl.RestURL = "http://" + host + "/api/" + ApiVersion + "/"
-	}
-	cliCl.RestCl.User = user
-	cliCl.RestCl.Password = password
-	cliCl.RestCl.Tenant = tenant
-	cliCl.RestCl.Debug = false
+	cliCl.restCl = rest.NewClient(host, user, password, tenant)
 	return &cliCl
 }
 
 func (cl *CloudifyClient) EnableDebug() {
-	cl.RestCl.Debug = true
+	cl.restCl.Debug = true
+}
+
+func (cl *CloudifyClient) GetApiVersion() string {
+	return rest.ApiVersion
 }
 
 func (cl *CloudifyClient) Get(url string, output rest.CloudifyMessageInterface) error {
-	body := cl.RestCl.Get(url, rest.JsonContentType)
+	body := cl.restCl.Get(url, rest.JsonContentType)
 
 	err := json.Unmarshal(body, output)
 	if err != nil {
@@ -46,7 +40,7 @@ func (cl *CloudifyClient) Get(url string, output rest.CloudifyMessageInterface) 
 }
 
 func (cl *CloudifyClient) GetBinary(url, output_path string) error {
-	body := cl.RestCl.Get(url, rest.DataContentType)
+	body := cl.restCl.Get(url, rest.DataContentType)
 
 	err := ioutil.WriteFile(output_path, body, 0644)
 	if err != nil {
@@ -57,7 +51,7 @@ func (cl *CloudifyClient) GetBinary(url, output_path string) error {
 }
 
 func binaryPut(cl *CloudifyClient, url string, input []byte, input_type string, output rest.CloudifyMessageInterface) error {
-	body := cl.RestCl.Put(url, input_type, input)
+	body := cl.restCl.Put(url, input_type, input)
 
 	err_post := json.Unmarshal(body, output)
 	if err_post != nil {
@@ -98,7 +92,7 @@ func (cl *CloudifyClient) Post(url string, input interface{}, output rest.Cloudi
 		return err
 	}
 
-	body := cl.RestCl.Post(url, json_data)
+	body := cl.restCl.Post(url, json_data)
 
 	err_post := json.Unmarshal(body, output)
 	if err_post != nil {
@@ -112,7 +106,7 @@ func (cl *CloudifyClient) Post(url string, input interface{}, output rest.Cloudi
 }
 
 func (cl *CloudifyClient) Delete(url string, output rest.CloudifyMessageInterface) error {
-	body := cl.RestCl.Delete(url)
+	body := cl.restCl.Delete(url)
 
 	err_post := json.Unmarshal(body, output)
 	if err_post != nil {

@@ -31,19 +31,19 @@ const DataContentType = "application/octet-stream"
 
 func (r *CloudifyRestClient) GetRequest(url, method string, body io.Reader) *http.Request {
 	if r.Debug {
-		log.Printf("Use: %v:%v@%v#%s\n", r.User, r.Password, r.RestURL+url, r.Tenant)
+		log.Printf("Use: %v:%v@%v#%s\n", r.user, r.password, r.restURL+url, r.tenant)
 	}
 
 	var auth_string string
-	auth_string = r.User + ":" + r.Password
-	req, err := http.NewRequest(method, r.RestURL+url, body)
+	auth_string = r.user + ":" + r.password
+	req, err := http.NewRequest(method, r.restURL+url, body)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	req.Header.Add("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte(auth_string)))
-	if len(r.Tenant) > 0 {
-		req.Header.Add("Tenant", r.Tenant)
+	if len(r.tenant) > 0 {
+		req.Header.Add("Tenant", r.tenant)
 	}
 
 	return req
@@ -169,4 +169,19 @@ func (r *CloudifyRestClient) Put(url, providedContentType string, data []byte) [
 	}
 
 	return body
+}
+
+func NewClient(host, user, password, tenant string) *CloudifyRestClient {
+	var restCl CloudifyRestClient
+	if (host[:len("https://")] == "https://" ||
+		host[:len("http://")] == "http://") && (len(host) >= len("http://")) {
+		restCl.restURL = host + "/api/" + ApiVersion + "/"
+	} else {
+		restCl.restURL = "http://" + host + "/api/" + ApiVersion + "/"
+	}
+	restCl.user = user
+	restCl.password = password
+	restCl.tenant = tenant
+	restCl.Debug = false
+	return &restCl
 }
