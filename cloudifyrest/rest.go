@@ -30,7 +30,9 @@ const JsonContentType = "application/json"
 const DataContentType = "application/octet-stream"
 
 func (r *CloudifyRestClient) GetRequest(url, method string, body io.Reader) *http.Request {
-	log.Printf("Use: %v:%v@%v#%s\n", r.User, r.Password, r.RestURL+url, r.Tenant)
+	if r.Debug {
+		log.Printf("Use: %v:%v@%v#%s\n", r.User, r.Password, r.RestURL+url, r.Tenant)
+	}
 
 	var auth_string string
 	auth_string = r.User + ":" + r.Password
@@ -69,11 +71,14 @@ func (r *CloudifyRestClient) Get(url, acceptedContentType string) []byte {
 		log.Fatal(err)
 	}
 
-	if acceptedContentType == JsonContentType {
-		log.Printf("Response %s\n", string(body))
-	} else {
-		log.Printf("Binary response length: %d\n", len(body))
+	if r.Debug {
+		if acceptedContentType == JsonContentType {
+			log.Printf("Response %s\n", string(body))
+		} else {
+			log.Printf("Binary response length: %d\n", len(body))
+		}
 	}
+
 	return body
 }
 
@@ -99,7 +104,10 @@ func (r *CloudifyRestClient) Delete(url string) []byte {
 		log.Fatal(err)
 	}
 
-	log.Printf("Response %s\n", string(body))
+	if r.Debug {
+		log.Printf("Response %s\n", string(body))
+	}
+
 	return body
 }
 
@@ -126,7 +134,10 @@ func (r *CloudifyRestClient) Post(url string, data []byte) []byte {
 		log.Fatal(err)
 	}
 
-	log.Printf("Response %s\n", string(body))
+	if r.Debug {
+		log.Printf("Response %s\n", string(body))
+	}
+
 	return body
 }
 
@@ -153,6 +164,9 @@ func (r *CloudifyRestClient) Put(url, providedContentType string, data []byte) [
 		log.Fatal(err)
 	}
 
-	log.Printf("Response %s\n", string(body))
+	if r.Debug {
+		log.Printf("Response %s\n", string(body))
+	}
+
 	return body
 }

@@ -23,7 +23,12 @@ func NewClient(host, user, password, tenant string) *CloudifyClient {
 	cliCl.RestCl.User = user
 	cliCl.RestCl.Password = password
 	cliCl.RestCl.Tenant = tenant
+	cliCl.RestCl.Debug = false
 	return &cliCl
+}
+
+func (cl *CloudifyClient) EnableDebug() {
+	cl.RestCl.Debug = true
 }
 
 func (cl *CloudifyClient) Get(url string, output rest.CloudifyMessageInterface) error {

@@ -28,6 +28,7 @@ var host string
 var user string
 var password string
 var tenant string
+var cfyDebug bool
 
 func basicOptions(name string) *flag.FlagSet {
 	var commonFlagSet *flag.FlagSet
@@ -61,7 +62,18 @@ func basicOptions(name string) *flag.FlagSet {
 	commonFlagSet.StringVar(&tenant, "tenant", defaultTenant,
 		"Manager tenant or CFY_TENANT in env")
 
+	commonFlagSet.BoolVar(&cfyDebug, "debug", false,
+		"Manager debug or CFY_DEBUG in env")
+
 	return commonFlagSet
+}
+
+func getClient() *cloudify.CloudifyClient {
+	cl := cloudify.NewClient(host, user, password, tenant)
+	if cfyDebug {
+		cl.EnableDebug()
+	}
+	return cl
 }
 
 func infoOptions(args, options []string) int {
@@ -78,7 +90,7 @@ func infoOptions(args, options []string) int {
 			operFlagSet := basicOptions("status state")
 			operFlagSet.Parse(options)
 
-			cl := cloudify.NewClient(host, user, password, tenant)
+			cl := getClient()
 			stat := cl.GetStatus()
 			fmt.Printf("Retrieving manager services status... [ip=%v]\n", host)
 			fmt.Printf("Manager status: %v\n", stat.Status)
@@ -96,7 +108,7 @@ func infoOptions(args, options []string) int {
 			operFlagSet := basicOptions("status version")
 			operFlagSet.Parse(options)
 
-			cl := cloudify.NewClient(host, user, password, tenant)
+			cl := getClient()
 			ver := cl.GetVersion()
 			fmt.Printf("Retrieving manager services version... [ip=%v]\n", host)
 			utils.PrintTable([]string{"Version", "Edition", "Api Version"},
@@ -132,7 +144,7 @@ func blueprintsOptions(args, options []string) int {
 				params["id"] = blueprint
 			}
 
-			cl := cloudify.NewClient(host, user, password, tenant)
+			cl := getClient()
 			blueprints := cl.GetBlueprints(params)
 			var lines [][]string = make([][]string, len(blueprints.Items))
 			for pos, blueprint := range blueprints.Items {
@@ -169,7 +181,7 @@ func blueprintsOptions(args, options []string) int {
 				fmt.Println("Blueprint path required")
 				return 1
 			}
-			cl := cloudify.NewClient(host, user, password, tenant)
+			cl := getClient()
 			blueprint := cl.UploadBlueprint(args[3], blueprint_path)
 			var lines [][]string = make([][]string, 1)
 			lines[0] = make([]string, 7)
@@ -194,7 +206,7 @@ func blueprintsOptions(args, options []string) int {
 			}
 			operFlagSet.Parse(options)
 
-			cl := cloudify.NewClient(host, user, password, tenant)
+			cl := getClient()
 			blueprintPath := cl.DownloadBlueprints(args[3])
 			fmt.Printf("Blueprint saved to %s\n", blueprintPath)
 		}
@@ -207,7 +219,7 @@ func blueprintsOptions(args, options []string) int {
 			}
 			operFlagSet.Parse(options)
 
-			cl := cloudify.NewClient(host, user, password, tenant)
+			cl := getClient()
 			blueprint := cl.DeleteBlueprints(args[3])
 			var lines [][]string = make([][]string, 1)
 			lines[0] = make([]string, 7)
@@ -257,7 +269,7 @@ func deploymentsFilter(operFlagSet *flag.FlagSet, options []string) cloudify.Clo
 		params["id"] = deployment
 	}
 
-	cl := cloudify.NewClient(host, user, password, tenant)
+	cl := getClient()
 	return cl.GetDeployments(params)
 }
 
@@ -312,7 +324,7 @@ func deploymentsOptions(args, options []string) int {
 			depl.BlueprintId = blueprint
 			depl.SetJsonInputs(jsonInputs)
 
-			cl := cloudify.NewClient(host, user, password, tenant)
+			cl := getClient()
 			deployment := cl.CreateDeployments(args[3], depl)
 
 			var lines [][]string = make([][]string, 1)
@@ -360,7 +372,7 @@ func deploymentsOptions(args, options []string) int {
 
 			operFlagSet.Parse(options)
 
-			cl := cloudify.NewClient(host, user, password, tenant)
+			cl := getClient()
 			deployment := cl.DeleteDeployments(args[3])
 			var lines [][]string = make([][]string, 1)
 			lines[0] = make([]string, 6)
@@ -408,7 +420,7 @@ func executionsOptions(args, options []string) int {
 				params["deployment_id"] = deployment
 			}
 
-			cl := cloudify.NewClient(host, user, password, tenant)
+			cl := getClient()
 			executions := cl.GetExecutions(params)
 			var lines [][]string = make([][]string, len(executions.Items))
 			for pos, execution := range executions.Items {
@@ -451,7 +463,7 @@ func executionsOptions(args, options []string) int {
 			exec.DeploymentId = deployment
 			exec.SetJsonParameters(jsonParams)
 
-			cl := cloudify.NewClient(host, user, password, tenant)
+			cl := getClient()
 			execution := cl.PostExecution(exec)
 
 			var lines [][]string = make([][]string, 1)
@@ -506,7 +518,7 @@ func nodesOptions(args, options []string) int {
 				params["deployment_id"] = deployment
 			}
 
-			cl := cloudify.NewClient(host, user, password, tenant)
+			cl := getClient()
 			nodes := cl.GetNodes(params)
 			var lines [][]string = make([][]string, len(nodes.Items))
 			for pos, node := range nodes.Items {
@@ -572,7 +584,7 @@ func nodeInstancesOptions(args, options []string) int {
 				params["deployment_id"] = deployment
 			}
 
-			cl := cloudify.NewClient(host, user, password, tenant)
+			cl := getClient()
 			nodeInstances := cl.GetNodeInstances(params)
 			var lines [][]string = make([][]string, len(nodeInstances.Items))
 			for pos, nodeInstance := range nodeInstances.Items {
@@ -641,7 +653,7 @@ func eventsOptions(args, options []string) int {
 				params["execution_id"] = execution
 			}
 
-			cl := cloudify.NewClient(host, user, password, tenant)
+			cl := getClient()
 			events := cl.GetEvents(params)
 			var lines [][]string = make([][]string, len(events.Items))
 			for pos, event := range events.Items {
@@ -683,7 +695,7 @@ func pluginsOptions(args, options []string) int {
 			operFlagSet := basicOptions("plugins list")
 			params := parsePagination(operFlagSet, options)
 
-			cl := cloudify.NewClient(host, user, password, tenant)
+			cl := getClient()
 			plugins := cl.GetPlugins(params)
 			var lines [][]string = make([][]string, len(plugins.Items))
 			for pos, plugin := range plugins.Items {

@@ -22,6 +22,7 @@ type CloudifyRestClient struct {
 	User     string
 	Password string
 	Tenant   string
+	Debug    bool
 }
 
 type CloudifyMessageInterface interface {
