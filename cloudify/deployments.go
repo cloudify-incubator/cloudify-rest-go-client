@@ -18,7 +18,7 @@ package cloudify
 
 import (
 	"encoding/json"
-	rest "github.com/0lvin-cfy/cloudify-rest-go-client/cloudifyrest"
+	rest "github.com/0lvin-cfy/cloudify-rest-go-client/cloudify/cloudifyrest"
 	"log"
 	"net/url"
 )

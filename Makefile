@@ -11,7 +11,7 @@ CLOUDPROVIDER ?= vsphere
 reformat:
 	rm -rfv pkg/*
 	rm -rfv bin/*
-	gofmt -w src/${PACKAGEPATH}/cloudifyrest/*.go
+	gofmt -w src/${PACKAGEPATH}/cloudify/cloudifyrest/*.go
 	gofmt -w src/${PACKAGEPATH}/cloudifyutils/*.go
 	gofmt -w src/${PACKAGEPATH}/cloudify/*.go
 	gofmt -w src/${PACKAGEPATH}/cfy-go/*.go
@@ -27,12 +27,12 @@ endef
 
 # cloudify rest
 CLOUDIFYREST := \
-	src/${PACKAGEPATH}/cloudifyrest/rest.go \
-	src/${PACKAGEPATH}/cloudifyrest/types.go
+	src/${PACKAGEPATH}/cloudify/cloudifyrest/rest.go \
+	src/${PACKAGEPATH}/cloudify/cloudifyrest/types.go
 
-pkg/linux_amd64/${PACKAGEPATH}/cloudifyrest.a: ${CLOUDIFYREST}
+pkg/linux_amd64/${PACKAGEPATH}/cloudify/cloudifyrest.a: ${CLOUDIFYREST}
 	$(call colorecho,"Build: ", $@)
-	go build -v -i -o pkg/linux_amd64/${PACKAGEPATH}/cloudifyrest.a ${CLOUDIFYREST}
+	go build -v -i -o pkg/linux_amd64/${PACKAGEPATH}/cloudify/cloudifyrest.a ${CLOUDIFYREST}
 
 # cloudify utils
 CLOUDIFYUTILS := \
@@ -54,7 +54,7 @@ CLOUDIFYCOMMON := \
 	src/${PACKAGEPATH}/cloudify/executions.go \
 	src/${PACKAGEPATH}/cloudify/deployments.go
 
-pkg/linux_amd64/${PACKAGEPATH}/cloudify.a: ${CLOUDIFYCOMMON} pkg/linux_amd64/${PACKAGEPATH}/cloudifyrest.a
+pkg/linux_amd64/${PACKAGEPATH}/cloudify.a: ${CLOUDIFYCOMMON} pkg/linux_amd64/${PACKAGEPATH}/cloudify/cloudifyrest.a
 	$(call colorecho,"Build: ",$@)
 	go build -v -i -o pkg/linux_amd64/${PACKAGEPATH}/cloudify.a ${CLOUDIFYCOMMON}
 
