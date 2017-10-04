@@ -1,7 +1,13 @@
-all: bin/cfy-go
+.PHONY: all
+all: bin/cfy-go bin/cfy-mount
 
 PACKAGEPATH := github.com/0lvin-cfy/cloudify-rest-go-client
 
+VERSION := `cd src/${PACKAGEPATH} && git rev-parse --short HEAD`
+
+CLOUDPROVIDER ?= vsphere
+
+.PHONY: reformat
 reformat:
 	rm -rfv pkg/*
 	rm -rfv bin/*
@@ -9,6 +15,7 @@ reformat:
 	gofmt -w src/${PACKAGEPATH}/cloudifyutils/*.go
 	gofmt -w src/${PACKAGEPATH}/cloudify/*.go
 	gofmt -w src/${PACKAGEPATH}/cfy-go/*.go
+	gofmt -w src/${PACKAGEPATH}/cfy-mount/*.go
 
 define colorecho
 	@tput setaf 2
@@ -53,7 +60,14 @@ pkg/linux_amd64/${PACKAGEPATH}/cloudify.a: ${CLOUDIFYCOMMON} pkg/linux_amd64/${P
 
 bin/cfy-go: src/${PACKAGEPATH}/cfy-go/cfy-go.go pkg/linux_amd64/${PACKAGEPATH}/cloudifyutils.a pkg/linux_amd64/${PACKAGEPATH}/cloudify.a
 	$(call colorecho,"Install: ", $@)
-	go install -v -ldflags "-X main.versionString=`cd src/${PACKAGEPATH} && git rev-parse --short HEAD`" src/${PACKAGEPATH}/cfy-go/cfy-go.go
+	# delete -s -w if you want to debug
+	go install -v -ldflags "-s -w -X main.versionString=${VERSION}" src/${PACKAGEPATH}/cfy-go/cfy-go.go
 
+bin/cfy-mount: src/${PACKAGEPATH}/cfy-mount/cfy-mount.go pkg/linux_amd64/${PACKAGEPATH}/cloudify.a
+	$(call colorecho,"Install: ", $@)
+	# delete -s -w if you want to debug
+	go install -v -ldflags "-s -w -X main.versionString=${VERSION}" src/${PACKAGEPATH}/cfy-mount/cfy-mount.go
+
+.PHONY: test
 test:
 	go test ./src/${PACKAGEPATH}/...
