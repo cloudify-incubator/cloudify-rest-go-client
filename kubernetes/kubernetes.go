@@ -19,6 +19,7 @@ package kubernetes
 import (
 	"encoding/json"
 	"fmt"
+	cloudify "github.com/0lvin-cfy/cloudify-rest-go-client/cloudify"
 	"log"
 )
 
@@ -34,7 +35,7 @@ func initFunction() error {
 	return nil
 }
 
-func Run(args []string) int {
+func Run(cl *cloudify.CloudifyClient, args []string, deployment, instance string) int {
 	var message string = "Unknown"
 
 	log.Printf("Kubernetes mount called with %+v", args)

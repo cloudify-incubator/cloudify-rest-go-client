@@ -22,6 +22,7 @@ import (
 	cloudify "github.com/0lvin-cfy/cloudify-rest-go-client/cloudify"
 	utils "github.com/0lvin-cfy/cloudify-rest-go-client/cloudifyutils"
 	kubernetes "github.com/0lvin-cfy/cloudify-rest-go-client/kubernetes"
+	"log"
 	"os"
 )
 
@@ -85,7 +86,20 @@ func kubernetesOptions(args, options []string) int {
 		return 1
 	}
 
-	if kubernetes.Run(args[2:]) != 0 {
+	operFlagSet := basicOptions("kubernetes")
+
+	var deployment string
+	operFlagSet.StringVar(&deployment, "deployment", "",
+		"The unique identifier for the deployment")
+	var instance string
+	operFlagSet.StringVar(&instance, "instance", "",
+		"The unique identifier for the instance")
+
+	operFlagSet.Parse(options)
+
+	cl := getClient()
+
+	if kubernetes.Run(cl, args[2:], deployment, instance) != 0 {
 		fmt.Println(defaultError)
 		return 1
 	}
@@ -747,6 +761,13 @@ func pluginsOptions(args, options []string) int {
 var versionString = "0.1"
 
 func main() {
+	f, err := os.OpenFile("/var/log/cfy-mount.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		log.Printf("Logs outputs to standart output: %s\n", err.Error())
+	} else {
+		defer f.Close()
+		log.SetOutput(f)
+	}
 
 	args, options := utils.CliArgumentsList(os.Args)
 	var defaultError string = ("Supported commands:\n" +
