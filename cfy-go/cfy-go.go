@@ -21,6 +21,7 @@ import (
 	"fmt"
 	cloudify "github.com/0lvin-cfy/cloudify-rest-go-client/cloudify"
 	utils "github.com/0lvin-cfy/cloudify-rest-go-client/cloudifyutils"
+	kubernetes "github.com/0lvin-cfy/cloudify-rest-go-client/kubernetes"
 	"os"
 )
 
@@ -74,6 +75,21 @@ func getClient() *cloudify.CloudifyClient {
 		cl.EnableDebug()
 	}
 	return cl
+}
+
+func kubernetesOptions(args, options []string) int {
+	defaultError := "init/mount/unmount subcommand is required"
+
+	if len(args) < 3 {
+		fmt.Println(defaultError)
+		return 1
+	}
+
+	if kubernetes.Run(args[2:]) != 0 {
+		fmt.Println(defaultError)
+		return 1
+	}
+	return 0
 }
 
 func infoOptions(args, options []string) int {
@@ -786,6 +802,10 @@ func main() {
 	case "node-instances":
 		{
 			os.Exit(nodeInstancesOptions(args, options))
+		}
+	case "kubernetes":
+		{
+			os.Exit(kubernetesOptions(args, options))
 		}
 	default:
 		{

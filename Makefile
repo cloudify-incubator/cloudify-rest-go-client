@@ -15,6 +15,7 @@ reformat:
 	gofmt -w src/${PACKAGEPATH}/cloudifyutils/*.go
 	gofmt -w src/${PACKAGEPATH}/cloudify/*.go
 	gofmt -w src/${PACKAGEPATH}/cfy-go/*.go
+	gofmt -w src/${PACKAGEPATH}/kubernetes/*.go
 	gofmt -w src/${PACKAGEPATH}/cfy-mount/*.go
 
 define colorecho
@@ -33,6 +34,15 @@ CLOUDIFYREST := \
 pkg/linux_amd64/${PACKAGEPATH}/cloudify/cloudifyrest.a: ${CLOUDIFYREST}
 	$(call colorecho,"Build: ", $@)
 	go build -v -i -o pkg/linux_amd64/${PACKAGEPATH}/cloudify/cloudifyrest.a ${CLOUDIFYREST}
+
+# cloudify kubernetes support
+CLOUDIFYKUBERNETES := \
+	src/${PACKAGEPATH}/kubernetes/kubernetes.go \
+	src/${PACKAGEPATH}/kubernetes/types.go
+
+pkg/linux_amd64/${PACKAGEPATH}/kubernetes.a: ${CLOUDIFYKUBERNETES}
+	$(call colorecho,"Build: ", $@)
+	go build -v -i -o pkg/linux_amd64/${PACKAGEPATH}/kubernetes.a ${CLOUDIFYKUBERNETES}
 
 # cloudify utils
 CLOUDIFYUTILS := \
@@ -58,7 +68,12 @@ pkg/linux_amd64/${PACKAGEPATH}/cloudify.a: ${CLOUDIFYCOMMON} pkg/linux_amd64/${P
 	$(call colorecho,"Build: ",$@)
 	go build -v -i -o pkg/linux_amd64/${PACKAGEPATH}/cloudify.a ${CLOUDIFYCOMMON}
 
-bin/cfy-go: src/${PACKAGEPATH}/cfy-go/cfy-go.go pkg/linux_amd64/${PACKAGEPATH}/cloudifyutils.a pkg/linux_amd64/${PACKAGEPATH}/cloudify.a
+CFYGOLIBS := \
+	pkg/linux_amd64/${PACKAGEPATH}/cloudifyutils.a \
+	pkg/linux_amd64/${PACKAGEPATH}/kubernetes.a \
+	pkg/linux_amd64/${PACKAGEPATH}/cloudify.a
+
+bin/cfy-go: src/${PACKAGEPATH}/cfy-go/cfy-go.go ${CFYGOLIBS}
 	$(call colorecho,"Install: ", $@)
 	# delete -s -w if you want to debug
 	go install -v -ldflags "-s -w -X main.versionString=${VERSION}" src/${PACKAGEPATH}/cfy-go/cfy-go.go
