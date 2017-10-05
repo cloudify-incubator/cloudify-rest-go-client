@@ -91,6 +91,7 @@ func kubernetesOptions(args, options []string) int {
 	var deployment string
 	operFlagSet.StringVar(&deployment, "deployment", "",
 		"The unique identifier for the deployment")
+
 	var instance string
 	operFlagSet.StringVar(&instance, "instance", "",
 		"The unique identifier for the instance")

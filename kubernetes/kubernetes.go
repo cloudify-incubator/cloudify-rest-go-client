@@ -21,6 +21,7 @@ import (
 	"fmt"
 	cloudify "github.com/0lvin-cfy/cloudify-rest-go-client/cloudify"
 	"log"
+	"time"
 )
 
 func initFunction() error {
@@ -35,6 +36,96 @@ func initFunction() error {
 	return nil
 }
 
+func runAction(cl *cloudify.CloudifyClient, action string, params map[string]interface{}, deployment, instance string) error {
+	log.Printf("Client version %s", cl.GetApiVersion())
+	log.Printf("Run %v with %v", action, params)
+
+	var exec cloudify.CloudifyExecutionPost
+	exec.WorkflowId = "execute_operation"
+	exec.DeploymentId = deployment
+	exec.Parameters = map[string]interface{}{}
+	exec.Parameters["operation"] = action
+	exec.Parameters["node_ids"] = []string{}
+	exec.Parameters["type_names"] = []string{}
+	exec.Parameters["run_by_dependency_order"] = false
+	exec.Parameters["allow_kwargs_override"] = nil
+	exec.Parameters["node_instance_ids"] = []string{instance}
+	exec.Parameters["operation_kwargs"] = params
+	var execution cloudify.CloudifyExecution
+	executionGet := cl.PostExecution(exec)
+	execution = executionGet.CloudifyExecution
+	for execution.Status == "pending" || execution.Status == "started" {
+		log.Printf("Check status for %v, last status: %v", execution.Id, execution.Status)
+
+		time.Sleep(15 * time.Second)
+
+		var params = map[string]string{}
+		params["id"] = execution.Id
+		executions := cl.GetExecutions(params)
+		if len(executions.Items) != 1 {
+			return fmt.Errorf("Returned wrong count of results.")
+		}
+		execution = executions.Items[0]
+	}
+
+	log.Printf("Final status for %v, last status: %v", execution.Id, execution.Status)
+
+	if execution.Status == "failed" {
+		return fmt.Errorf(execution.ErrorMessage)
+	}
+	return nil
+}
+
+func mountFunction(cl *cloudify.CloudifyClient, path, config_json, deployment, instance string) error {
+	var in_data_parsed map[string]interface{}
+	err := json.Unmarshal([]byte(config_json), &in_data_parsed)
+	if err != nil {
+		return err
+	}
+
+	var params = map[string]interface{}{
+		"path":   path,
+		"params": in_data_parsed}
+
+	err_action := runAction(cl, "maintenance.mount", params, deployment, instance)
+
+	if err_action != nil {
+		return err_action
+	}
+
+	var response MountResponse
+	response.Status = "Success"
+	response.Attached = true
+	json_data, err := json.Marshal(response)
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(json_data))
+	return nil
+}
+
+func unMountFunction(cl *cloudify.CloudifyClient, path, deployment, instance string) error {
+	var params = map[string]interface{}{
+		"path": path}
+
+	err_action := runAction(cl, "maintenance.unmount", params, deployment, instance)
+
+	if err_action != nil {
+		return err_action
+	}
+
+	var response MountResponse
+	response.Status = "Success"
+	response.Attached = false
+	json_data, err := json.Marshal(response)
+	if err != nil {
+		return err
+	} else {
+		fmt.Println(string(json_data))
+	}
+	return nil
+}
+
 func Run(cl *cloudify.CloudifyClient, args []string, deployment, instance string) int {
 	var message string = "Unknown"
 
@@ -44,6 +135,22 @@ func Run(cl *cloudify.CloudifyClient, args []string, deployment, instance string
 		command := args[0]
 		if len(args) == 1 && command == "init" {
 			err := initFunction()
+			if err != nil {
+				message = err.Error()
+			} else {
+				return 0
+			}
+		}
+		if len(args) == 3 && command == "mount" {
+			err := mountFunction(cl, args[1], args[2], deployment, instance)
+			if err != nil {
+				message = err.Error()
+			} else {
+				return 0
+			}
+		}
+		if len(args) == 2 && command == "unmount" {
+			err := unMountFunction(cl, args[1], deployment, instance)
 			if err != nil {
 				message = err.Error()
 			} else {

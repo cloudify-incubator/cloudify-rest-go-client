@@ -37,6 +37,31 @@ Handle a deployment's agents
 
 ------
 
+## kubernetes related commands
+
+### init
+Return json in kubernetes format for use as init script responce
+
+```shell
+cfy-go kubernetes init
+```
+
+### mount
+Return json in kubernetes format for use as mount script responce
+
+```shell
+cfy-go kubernetes mount /tmp/someunxists '{"kubernetes.io/fsType":"ext4","kubernetes.io/pod.name":"nginx","kubernetes.io/pod.namespace":"default","kubernetes.io/pod.uid":"ecd89d9d-a44a-11e7-b34f-00505685ddd0","kubernetes.io/pvOrVolumeName":"someunxists","kubernetes.io/readwrite":"rw","kubernetes.io/serviceAccount.name":"default","size":"1000m","volumeID":"vol1","volumegroup":"kube_vg"}' -deployment slave -instance kubenetes_slave_*
+```
+
+### unmount
+Return json in kubernetes format for use as unmount script responce
+
+```shell
+cfy-go kubernetes unmount /tmp/someunxists -deployment slave -instance kubenetes_slave_*
+```
+
+------
+
 ## blueprints
 Handle blueprints on the manager
 

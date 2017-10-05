@@ -1,5 +1,5 @@
 .PHONY: all
-all: bin/cfy-go bin/cfy-mount
+all: bin/cfy-go
 
 PACKAGEPATH := github.com/0lvin-cfy/cloudify-rest-go-client
 
@@ -16,7 +16,6 @@ reformat:
 	gofmt -w src/${PACKAGEPATH}/cloudify/*.go
 	gofmt -w src/${PACKAGEPATH}/cfy-go/*.go
 	gofmt -w src/${PACKAGEPATH}/kubernetes/*.go
-	gofmt -w src/${PACKAGEPATH}/cfy-mount/*.go
 
 define colorecho
 	@tput setaf 2
@@ -77,11 +76,6 @@ bin/cfy-go: src/${PACKAGEPATH}/cfy-go/cfy-go.go ${CFYGOLIBS}
 	$(call colorecho,"Install: ", $@)
 	# delete -s -w if you want to debug
 	go install -v -ldflags "-s -w -X main.versionString=${VERSION}" src/${PACKAGEPATH}/cfy-go/cfy-go.go
-
-bin/cfy-mount: src/${PACKAGEPATH}/cfy-mount/cfy-mount.go pkg/linux_amd64/${PACKAGEPATH}/cloudify.a
-	$(call colorecho,"Install: ", $@)
-	# delete -s -w if you want to debug
-	go install -v -ldflags "-s -w -X main.versionString=${VERSION}" src/${PACKAGEPATH}/cfy-mount/cfy-mount.go
 
 .PHONY: test
 test:
