@@ -11,8 +11,8 @@ CLOUDPROVIDER ?= vsphere
 reformat:
 	rm -rfv pkg/*
 	rm -rfv bin/*
-	gofmt -w src/${PACKAGEPATH}/cloudify/cloudifyrest/*.go
-	gofmt -w src/${PACKAGEPATH}/cloudifyutils/*.go
+	gofmt -w src/${PACKAGEPATH}/cloudify/rest/*.go
+	gofmt -w src/${PACKAGEPATH}/cloudify/utils/*.go
 	gofmt -w src/${PACKAGEPATH}/cloudify/*.go
 	gofmt -w src/${PACKAGEPATH}/cfy-go/*.go
 	gofmt -w src/${PACKAGEPATH}/kubernetes/*.go
@@ -27,12 +27,12 @@ endef
 
 # cloudify rest
 CLOUDIFYREST := \
-	src/${PACKAGEPATH}/cloudify/cloudifyrest/rest.go \
-	src/${PACKAGEPATH}/cloudify/cloudifyrest/types.go
+	src/${PACKAGEPATH}/cloudify/rest/rest.go \
+	src/${PACKAGEPATH}/cloudify/rest/types.go
 
-pkg/linux_amd64/${PACKAGEPATH}/cloudify/cloudifyrest.a: ${CLOUDIFYREST}
+pkg/linux_amd64/${PACKAGEPATH}/cloudify/rest.a: ${CLOUDIFYREST}
 	$(call colorecho,"Build: ", $@)
-	go build -v -i -o pkg/linux_amd64/${PACKAGEPATH}/cloudify/cloudifyrest.a ${CLOUDIFYREST}
+	go build -v -i -o pkg/linux_amd64/${PACKAGEPATH}/cloudify/rest.a ${CLOUDIFYREST}
 
 # cloudify kubernetes support
 CLOUDIFYKUBERNETES := \
@@ -45,11 +45,11 @@ pkg/linux_amd64/${PACKAGEPATH}/kubernetes.a: ${CLOUDIFYKUBERNETES}
 
 # cloudify utils
 CLOUDIFYUTILS := \
-	src/${PACKAGEPATH}/cloudifyutils/utils.go
+	src/${PACKAGEPATH}/cloudify/utils/utils.go
 
-pkg/linux_amd64/${PACKAGEPATH}/cloudifyutils.a: ${CLOUDIFYUTILS}
+pkg/linux_amd64/${PACKAGEPATH}/cloudify/utils.a: ${CLOUDIFYUTILS}
 	$(call colorecho,"Build: ", $@)
-	go build -v -i -o pkg/linux_amd64/${PACKAGEPATH}/cloudifyutils.a ${CLOUDIFYUTILS}
+	go build -v -i -o pkg/linux_amd64/${PACKAGEPATH}/cloudify/utils.a ${CLOUDIFYUTILS}
 
 # cloudify
 CLOUDIFYCOMMON := \
@@ -63,12 +63,12 @@ CLOUDIFYCOMMON := \
 	src/${PACKAGEPATH}/cloudify/executions.go \
 	src/${PACKAGEPATH}/cloudify/deployments.go
 
-pkg/linux_amd64/${PACKAGEPATH}/cloudify.a: ${CLOUDIFYCOMMON} pkg/linux_amd64/${PACKAGEPATH}/cloudify/cloudifyrest.a
+pkg/linux_amd64/${PACKAGEPATH}/cloudify.a: ${CLOUDIFYCOMMON} pkg/linux_amd64/${PACKAGEPATH}/cloudify/rest.a
 	$(call colorecho,"Build: ",$@)
 	go build -v -i -o pkg/linux_amd64/${PACKAGEPATH}/cloudify.a ${CLOUDIFYCOMMON}
 
 CFYGOLIBS := \
-	pkg/linux_amd64/${PACKAGEPATH}/cloudifyutils.a \
+	pkg/linux_amd64/${PACKAGEPATH}/cloudify/utils.a \
 	pkg/linux_amd64/${PACKAGEPATH}/kubernetes.a \
 	pkg/linux_amd64/${PACKAGEPATH}/cloudify.a
 

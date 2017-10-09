@@ -18,7 +18,7 @@ package cloudify
 
 import (
 	"fmt"
-	rest "github.com/0lvin-cfy/cloudify-rest-go-client/cloudify/cloudifyrest"
+	rest "github.com/0lvin-cfy/cloudify-rest-go-client/cloudify/rest"
 	"log"
 	"net/url"
 	"os"

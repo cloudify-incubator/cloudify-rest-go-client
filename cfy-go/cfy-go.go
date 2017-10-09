@@ -20,7 +20,7 @@ import (
 	"flag"
 	"fmt"
 	cloudify "github.com/0lvin-cfy/cloudify-rest-go-client/cloudify"
-	utils "github.com/0lvin-cfy/cloudify-rest-go-client/cloudifyutils"
+	utils "github.com/0lvin-cfy/cloudify-rest-go-client/cloudify/utils"
 	kubernetes "github.com/0lvin-cfy/cloudify-rest-go-client/kubernetes"
 	"log"
 	"os"
