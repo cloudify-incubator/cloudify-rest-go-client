@@ -7,9 +7,9 @@ sudo apt-get install golang-go
 export GOBIN=`pwd`/bin
 export PATH=$PATH:`pwd`/bin
 export GOPATH=`pwd`
-go get github.com/0lvin-cfy/cloudify-rest-go-client/cfy-go
+go get github.com/cloudify-incubator/cloudify-rest-go-client/cfy-go
 rm bin/cfy-go
-ln -s src/github.com/0lvin-cfy/cloudify-rest-go-client/Makefile Makefile
+ln -s src/github.com/cloudify-incubator/cloudify-rest-go-client/Makefile Makefile
 make all
 ```
 
@@ -117,7 +117,7 @@ Create a blueprint archive
 Upload a blueprint [manager only]
 
 ```shell
-cfy-go blueprints upload new-blueprint -path src/github.com/0lvin-cfy/cloudify-rest-go-client/examples/blueprint/Minimal.yaml
+cfy-go blueprints upload new-blueprint -path src/github.com/cloudify-incubator/cloudify-rest-go-client/examples/blueprint/Minimal.yaml
 ```
 
 ### validate

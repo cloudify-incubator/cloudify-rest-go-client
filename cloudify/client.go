@@ -2,8 +2,8 @@ package cloudify
 
 import (
 	"encoding/json"
-	rest "github.com/0lvin-cfy/cloudify-rest-go-client/cloudify/rest"
-	utils "github.com/0lvin-cfy/cloudify-rest-go-client/cloudify/utils"
+	rest "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify/rest"
+	utils "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify/utils"
 	"io/ioutil"
 )
 

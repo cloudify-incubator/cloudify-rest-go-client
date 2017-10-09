@@ -1,7 +1,7 @@
 .PHONY: all
 all: bin/cfy-go
 
-PACKAGEPATH := github.com/0lvin-cfy/cloudify-rest-go-client
+PACKAGEPATH := github.com/cloudify-incubator/cloudify-rest-go-client
 
 VERSION := `cd src/${PACKAGEPATH} && git rev-parse --short HEAD`
 
