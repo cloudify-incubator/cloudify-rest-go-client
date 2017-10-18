@@ -21,7 +21,6 @@ import (
 	"fmt"
 	cloudify "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify"
 	"log"
-	"time"
 )
 
 func initFunction() error {
@@ -51,22 +50,7 @@ func runAction(cl *cloudify.CloudifyClient, action string, params map[string]int
 	exec.Parameters["allow_kwargs_override"] = nil
 	exec.Parameters["node_instance_ids"] = []string{instance}
 	exec.Parameters["operation_kwargs"] = params
-	var execution cloudify.CloudifyExecution
-	executionGet := cl.PostExecution(exec)
-	execution = executionGet.CloudifyExecution
-	for execution.Status == "pending" || execution.Status == "started" {
-		log.Printf("Check status for %v, last status: %v", execution.Id, execution.Status)
-
-		time.Sleep(15 * time.Second)
-
-		var params = map[string]string{}
-		params["id"] = execution.Id
-		executions := cl.GetExecutions(params)
-		if len(executions.Items) != 1 {
-			return fmt.Errorf("Returned wrong count of results.")
-		}
-		execution = executions.Items[0]
-	}
+	execution := cl.RunExecution(exec)
 
 	log.Printf("Final status for %v, last status: %v", execution.Id, execution.Status)
 

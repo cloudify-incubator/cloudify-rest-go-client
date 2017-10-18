@@ -18,9 +18,11 @@ package cloudify
 
 import (
 	"encoding/json"
+	"fmt"
 	rest "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify/rest"
 	"log"
 	"net/url"
+	"time"
 )
 
 type CloudifyExecutionPost struct {
@@ -81,6 +83,7 @@ func (cl *CloudifyClient) GetExecutions(params map[string]string) CloudifyExecut
 	return executions
 }
 
+// run executions without waiting
 func (cl *CloudifyClient) PostExecution(exec CloudifyExecutionPost) CloudifyExecutionGet {
 	var execution CloudifyExecutionGet
 
@@ -91,5 +94,26 @@ func (cl *CloudifyClient) PostExecution(exec CloudifyExecutionPost) CloudifyExec
 		log.Fatal(err)
 	}
 
+	return execution
+}
+
+// Run executions and wait results
+func (cl *CloudifyClient) RunExecution(exec_post CloudifyExecutionPost) CloudifyExecution {
+	var execution CloudifyExecution
+	executionGet := cl.PostExecution(exec_post)
+	execution = executionGet.CloudifyExecution
+	for execution.Status == "pending" || execution.Status == "started" {
+		log.Printf("Check status for %v, last status: %v", execution.Id, execution.Status)
+
+		time.Sleep(15 * time.Second)
+
+		var params = map[string]string{}
+		params["id"] = execution.Id
+		executions := cl.GetExecutions(params)
+		if len(executions.Items) != 1 {
+			log.Fatal(fmt.Errorf("Returned wrong count of results."))
+		}
+		execution = executions.Items[0]
+	}
 	return execution
 }
