@@ -762,7 +762,7 @@ func pluginsOptions(args, options []string) int {
 var versionString = "0.1"
 
 func main() {
-	f, err := os.OpenFile("/var/log/cfy-mount.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+	f, err := os.OpenFile("/var/log/cloudify.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		log.Printf("Logs outputs to standart output: %s\n", err.Error())
 	} else {
