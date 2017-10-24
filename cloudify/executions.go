@@ -97,12 +97,36 @@ func (cl *CloudifyClient) PostExecution(exec CloudifyExecutionPost) CloudifyExec
 	return execution
 }
 
-// Run executions and wait results
-func (cl *CloudifyClient) RunExecution(exec_post CloudifyExecutionPost) CloudifyExecution {
+/* Check that all executions finished */
+func (cl *CloudifyClient) WaitBeforeRunExecution(deploymentID string) error {
+	for true {
+		var params = map[string]string{}
+		params["deployment_id"] = deploymentID
+		executions := cl.GetExecutions(params)
+		for _, execution := range executions.Items {
+			if execution.WorkflowId == "create_deployment_environment" && execution.Status == "failed" {
+				return fmt.Errorf(execution.ErrorMessage)
+			}
+			if execution.Status == "pending" || execution.Status == "started" || execution.Status == "cancelling" {
+				log.Printf("Check status for %v, last status: %v", execution.Id, execution.Status)
+				time.Sleep(15 * time.Second)
+				break
+			}
+			return nil
+		}
+	}
+	return nil
+}
+
+/* Run executions and wait results
+ * exec_post: executions description for run
+ * full_finish: wait to full finish
+ */
+func (cl *CloudifyClient) RunExecution(exec_post CloudifyExecutionPost, full_finish bool) CloudifyExecution {
 	var execution CloudifyExecution
 	executionGet := cl.PostExecution(exec_post)
 	execution = executionGet.CloudifyExecution
-	for execution.Status == "pending" || execution.Status == "started" {
+	for execution.Status == "pending" || (execution.Status == "started" && full_finish) {
 		log.Printf("Check status for %v, last status: %v", execution.Id, execution.Status)
 
 		time.Sleep(15 * time.Second)

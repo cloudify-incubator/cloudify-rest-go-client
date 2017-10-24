@@ -39,6 +39,10 @@ func runAction(cl *cloudify.CloudifyClient, action string, params map[string]int
 	log.Printf("Client version %s", cl.GetApiVersion())
 	log.Printf("Run %v with %v", action, params)
 
+	err := cl.WaitBeforeRunExecution(deployment)
+	if err != nil {
+		return err
+	}
 	var exec cloudify.CloudifyExecutionPost
 	exec.WorkflowId = "execute_operation"
 	exec.DeploymentId = deployment
@@ -50,7 +54,7 @@ func runAction(cl *cloudify.CloudifyClient, action string, params map[string]int
 	exec.Parameters["allow_kwargs_override"] = nil
 	exec.Parameters["node_instance_ids"] = []string{instance}
 	exec.Parameters["operation_kwargs"] = params
-	execution := cl.RunExecution(exec)
+	execution := cl.RunExecution(exec, true)
 
 	log.Printf("Final status for %v, last status: %v", execution.Id, execution.Status)
 
