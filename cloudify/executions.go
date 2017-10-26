@@ -103,15 +103,21 @@ func (cl *CloudifyClient) WaitBeforeRunExecution(deploymentID string) error {
 		var params = map[string]string{}
 		params["deployment_id"] = deploymentID
 		executions := cl.GetExecutions(params)
+		var have_unfinished bool = false
 		for _, execution := range executions.Items {
 			if execution.WorkflowId == "create_deployment_environment" && execution.Status == "failed" {
 				return fmt.Errorf(execution.ErrorMessage)
 			}
 			if execution.Status == "pending" || execution.Status == "started" || execution.Status == "cancelling" {
-				log.Printf("Check status for %v, last status: %v", execution.Id, execution.Status)
+				if cl.restCl.Debug {
+					log.Printf("Check status for %v, last status: %v", execution.Id, execution.Status)
+				}
 				time.Sleep(15 * time.Second)
+				have_unfinished = true
 				break
 			}
+		}
+		if !have_unfinished {
 			return nil
 		}
 	}
@@ -127,7 +133,9 @@ func (cl *CloudifyClient) RunExecution(exec_post CloudifyExecutionPost, full_fin
 	executionGet := cl.PostExecution(exec_post)
 	execution = executionGet.CloudifyExecution
 	for execution.Status == "pending" || (execution.Status == "started" && full_finish) {
-		log.Printf("Check status for %v, last status: %v", execution.Id, execution.Status)
+		if cl.restCl.Debug {
+			log.Printf("Check status for %v, last status: %v", execution.Id, execution.Status)
+		}
 
 		time.Sleep(15 * time.Second)
 
