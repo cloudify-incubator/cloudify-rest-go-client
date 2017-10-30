@@ -18,7 +18,6 @@ package cloudify
 
 import (
 	rest "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify/rest"
-	"log"
 	"net/url"
 )
 
@@ -48,7 +47,7 @@ type CloudifyPlugins struct {
 	Items    []CloudifyPlugin      `json:"items"`
 }
 
-func (cl *CloudifyClient) GetPlugins(params map[string]string) CloudifyPlugins {
+func (cl *CloudifyClient) GetPlugins(params map[string]string) (*CloudifyPlugins, error) {
 	var plugins CloudifyPlugins
 
 	values := url.Values{}
@@ -58,8 +57,8 @@ func (cl *CloudifyClient) GetPlugins(params map[string]string) CloudifyPlugins {
 
 	err := cl.Get("plugins?"+values.Encode(), &plugins)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
-	return plugins
+	return &plugins, nil
 }

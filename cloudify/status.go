@@ -18,7 +18,6 @@ package cloudify
 
 import (
 	rest "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify/rest"
-	"log"
 )
 
 type CloudifyVersion struct {
@@ -63,24 +62,24 @@ type CloudifyStatus struct {
 	Services []CloudifyInstanceService `json:"services"`
 }
 
-func (cl *CloudifyClient) GetVersion() CloudifyVersion {
+func (cl *CloudifyClient) GetVersion() (*CloudifyVersion, error) {
 	var ver CloudifyVersion
 
 	err := cl.Get("version", &ver)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
-	return ver
+	return &ver, nil
 }
 
-func (cl *CloudifyClient) GetStatus() CloudifyStatus {
+func (cl *CloudifyClient) GetStatus() (*CloudifyStatus, error) {
 	var stat CloudifyStatus
 
 	err := cl.Get("status", &stat)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
-	return stat
+	return &stat, nil
 }

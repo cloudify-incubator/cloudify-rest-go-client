@@ -19,7 +19,6 @@ package cloudify
 import (
 	"fmt"
 	rest "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify/rest"
-	"log"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -44,7 +43,7 @@ type CloudifyBlueprints struct {
 	Items    []CloudifyBlueprint   `json:"items"`
 }
 
-func (cl *CloudifyClient) GetBlueprints(params map[string]string) CloudifyBlueprints {
+func (cl *CloudifyClient) GetBlueprints(params map[string]string) (*CloudifyBlueprints, error) {
 	var blueprints CloudifyBlueprints
 
 	values := url.Values{}
@@ -54,44 +53,44 @@ func (cl *CloudifyClient) GetBlueprints(params map[string]string) CloudifyBluepr
 
 	err := cl.Get("blueprints?"+values.Encode(), &blueprints)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
-	return blueprints
+	return &blueprints, nil
 }
 
-func (cl *CloudifyClient) DeleteBlueprints(blueprint_id string) CloudifyBlueprintGet {
+func (cl *CloudifyClient) DeleteBlueprints(blueprint_id string) (*CloudifyBlueprintGet, error) {
 	var blueprint CloudifyBlueprintGet
 
 	err := cl.Delete("blueprints/"+blueprint_id, &blueprint)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
-	return blueprint
+	return &blueprint, nil
 }
 
-func (cl *CloudifyClient) DownloadBlueprints(blueprint_id string) string {
+func (cl *CloudifyClient) DownloadBlueprints(blueprint_id string) (string, error) {
 	file_name := blueprint_id + ".tar.gz"
 
 	_, err_file := os.Stat(file_name)
 	if !os.IsNotExist(err_file) {
-		log.Fatal(fmt.Sprintf("File `%s` is exist.", file_name))
+		return "", fmt.Errorf("File `%s` is exist.", file_name)
 	}
 
 	err := cl.GetBinary("blueprints/"+blueprint_id+"/archive", file_name)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
 
-	return file_name
+	return file_name, nil
 }
 
-func (cl *CloudifyClient) UploadBlueprint(blueprint_id, path string) CloudifyBlueprintGet {
+func (cl *CloudifyClient) UploadBlueprint(blueprint_id, path string) (*CloudifyBlueprintGet, error) {
 
 	absPath, err_abs := filepath.Abs(path)
 	if err_abs != nil {
-		log.Fatal(err_abs)
+		return nil, err_abs
 	}
 
 	dirPath, name_file := filepath.Split(absPath)
@@ -100,8 +99,8 @@ func (cl *CloudifyClient) UploadBlueprint(blueprint_id, path string) CloudifyBlu
 
 	err := cl.PutZip("blueprints/"+blueprint_id+"?application_file_name="+name_file, dirPath, &blueprint)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
-	return blueprint
+	return &blueprint, nil
 }

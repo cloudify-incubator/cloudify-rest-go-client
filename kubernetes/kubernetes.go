@@ -54,7 +54,10 @@ func runAction(cl *cloudify.CloudifyClient, action string, params map[string]int
 	exec.Parameters["allow_kwargs_override"] = nil
 	exec.Parameters["node_instance_ids"] = []string{instance}
 	exec.Parameters["operation_kwargs"] = params
-	execution := cl.RunExecution(exec, true)
+	execution, err := cl.RunExecution(exec, true)
+	if err != nil {
+		return err
+	}
 
 	log.Printf("Final status for %v, last status: %v", execution.Id, execution.Status)
 

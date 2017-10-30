@@ -19,7 +19,6 @@ package cloudify
 import (
 	"encoding/json"
 	rest "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify/rest"
-	"log"
 	"net/url"
 )
 
@@ -35,12 +34,12 @@ type CloudifyNodeInstance struct {
 	// TODO describe "scaling_groups" struct
 }
 
-func (instance *CloudifyNodeInstance) GetJsonRuntimeProperties() string {
+func (instance *CloudifyNodeInstance) GetJsonRuntimeProperties() (string, error) {
 	json_data, err := json.Marshal(instance.RuntimeProperties)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
-	return string(json_data)
+	return string(json_data), nil
 }
 
 type CloudifyNodeInstances struct {
@@ -49,7 +48,7 @@ type CloudifyNodeInstances struct {
 	Items    []CloudifyNodeInstance `json:"items"`
 }
 
-func (cl *CloudifyClient) GetNodeInstances(params map[string]string) CloudifyNodeInstances {
+func (cl *CloudifyClient) GetNodeInstances(params map[string]string) (*CloudifyNodeInstances, error) {
 	var instances CloudifyNodeInstances
 
 	values := url.Values{}
@@ -59,8 +58,8 @@ func (cl *CloudifyClient) GetNodeInstances(params map[string]string) CloudifyNod
 
 	err := cl.Get("node-instances?"+values.Encode(), &instances)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
-	return instances
+	return &instances, nil
 }

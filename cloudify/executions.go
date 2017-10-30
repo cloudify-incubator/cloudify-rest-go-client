@@ -31,16 +31,17 @@ type CloudifyExecutionPost struct {
 	Parameters   map[string]interface{} `json:"parameters"`
 }
 
-func (exec *CloudifyExecutionPost) SetJsonParameters(parameters string) {
+func (exec *CloudifyExecutionPost) SetJsonParameters(parameters string) error {
 	if len(parameters) == 0 {
 		exec.Parameters = map[string]interface{}{}
-		return
+		return nil
 	}
 
 	err := json.Unmarshal([]byte(parameters), &exec.Parameters)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
+	return nil
 }
 
 type CloudifyExecution struct {
@@ -67,7 +68,7 @@ type CloudifyExecutions struct {
 }
 
 // change params type if you want use non uniq values in params
-func (cl *CloudifyClient) GetExecutions(params map[string]string) CloudifyExecutions {
+func (cl *CloudifyClient) GetExecutions(params map[string]string) (*CloudifyExecutions, error) {
 	var executions CloudifyExecutions
 
 	values := url.Values{}
@@ -77,24 +78,24 @@ func (cl *CloudifyClient) GetExecutions(params map[string]string) CloudifyExecut
 
 	err := cl.Get("executions?"+values.Encode(), &executions)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
-	return executions
+	return &executions, nil
 }
 
 // run executions without waiting
-func (cl *CloudifyClient) PostExecution(exec CloudifyExecutionPost) CloudifyExecutionGet {
+func (cl *CloudifyClient) PostExecution(exec CloudifyExecutionPost) (*CloudifyExecutionGet, error) {
 	var execution CloudifyExecutionGet
 
 	var err error
 
 	err = cl.Post("executions", exec, &execution)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
-	return execution
+	return &execution, nil
 }
 
 /* Check that all executions finished */
@@ -102,7 +103,10 @@ func (cl *CloudifyClient) WaitBeforeRunExecution(deploymentID string) error {
 	for true {
 		var params = map[string]string{}
 		params["deployment_id"] = deploymentID
-		executions := cl.GetExecutions(params)
+		executions, err := cl.GetExecutions(params)
+		if err != nil {
+			return err
+		}
 		var have_unfinished bool = false
 		for _, execution := range executions.Items {
 			if execution.WorkflowId == "create_deployment_environment" && execution.Status == "failed" {
@@ -128,9 +132,12 @@ func (cl *CloudifyClient) WaitBeforeRunExecution(deploymentID string) error {
  * exec_post: executions description for run
  * full_finish: wait to full finish
  */
-func (cl *CloudifyClient) RunExecution(exec_post CloudifyExecutionPost, full_finish bool) CloudifyExecution {
+func (cl *CloudifyClient) RunExecution(exec_post CloudifyExecutionPost, full_finish bool) (*CloudifyExecution, error) {
 	var execution CloudifyExecution
-	executionGet := cl.PostExecution(exec_post)
+	executionGet, err := cl.PostExecution(exec_post)
+	if err != nil {
+		return nil, err
+	}
 	execution = executionGet.CloudifyExecution
 	for execution.Status == "pending" || (execution.Status == "started" && full_finish) {
 		if cl.restCl.Debug {
@@ -141,11 +148,14 @@ func (cl *CloudifyClient) RunExecution(exec_post CloudifyExecutionPost, full_fin
 
 		var params = map[string]string{}
 		params["id"] = execution.Id
-		executions := cl.GetExecutions(params)
+		executions, err := cl.GetExecutions(params)
+		if err != nil {
+			return nil, err
+		}
 		if len(executions.Items) != 1 {
-			log.Fatal(fmt.Errorf("Returned wrong count of results."))
+			return nil, fmt.Errorf("Returned wrong count of results.")
 		}
 		execution = executions.Items[0]
 	}
-	return execution
+	return &execution, nil
 }

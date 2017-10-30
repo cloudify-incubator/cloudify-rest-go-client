@@ -19,7 +19,6 @@ package cloudify
 import (
 	"encoding/json"
 	rest "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify/rest"
-	"log"
 	"net/url"
 )
 
@@ -35,24 +34,21 @@ type CloudifyDeploymentPost struct {
 	Inputs      map[string]interface{} `json:"inputs"`
 }
 
-func (depl *CloudifyDeploymentPost) SetJsonInputs(inputs string) {
+func (depl *CloudifyDeploymentPost) SetJsonInputs(inputs string) error {
 	if len(inputs) == 0 {
 		depl.Inputs = map[string]interface{}{}
-		return
+		return nil
 	}
 
-	err := json.Unmarshal([]byte(inputs), &depl.Inputs)
-	if err != nil {
-		log.Fatal(err)
-	}
+	return json.Unmarshal([]byte(inputs), &depl.Inputs)
 }
 
-func (depl *CloudifyDeploymentPost) GetJsonInputs() string {
+func (depl *CloudifyDeploymentPost) GetJsonInputs() (string, error) {
 	json_data, err := json.Marshal(depl.Inputs)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
-	return string(json_data)
+	return string(json_data), nil
 }
 
 type CloudifyDeployment struct {
@@ -69,20 +65,20 @@ type CloudifyDeployment struct {
 	// TODO describe "scaling_groups" struct
 }
 
-func (depl *CloudifyDeployment) GetJsonOutputs() string {
+func (depl *CloudifyDeployment) GetJsonOutputs() (string, error) {
 	json_data, err := json.Marshal(depl.Outputs)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
-	return string(json_data)
+	return string(json_data), nil
 }
 
-func (depl *CloudifyDeployment) GetJsonInputs() string {
+func (depl *CloudifyDeployment) GetJsonInputs() (string, error) {
 	json_data, err := json.Marshal(depl.Inputs)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
-	return string(json_data)
+	return string(json_data), nil
 }
 
 type CloudifyDeploymentGet struct {
@@ -97,7 +93,7 @@ type CloudifyDeployments struct {
 	Items    []CloudifyDeployment  `json:"items"`
 }
 
-func (cl *CloudifyClient) GetDeployments(params map[string]string) CloudifyDeployments {
+func (cl *CloudifyClient) GetDeployments(params map[string]string) (*CloudifyDeployments, error) {
 	var deployments CloudifyDeployments
 
 	values := url.Values{}
@@ -107,30 +103,30 @@ func (cl *CloudifyClient) GetDeployments(params map[string]string) CloudifyDeplo
 
 	err := cl.Get("deployments?"+values.Encode(), &deployments)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
-	return deployments
+	return &deployments, nil
 }
 
-func (cl *CloudifyClient) DeleteDeployments(deployment_id string) CloudifyDeploymentGet {
+func (cl *CloudifyClient) DeleteDeployments(deployment_id string) (*CloudifyDeploymentGet, error) {
 	var deployment CloudifyDeploymentGet
 
 	err := cl.Delete("deployments/"+deployment_id, &deployment)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
-	return deployment
+	return &deployment, nil
 }
 
-func (cl *CloudifyClient) CreateDeployments(deployment_id string, depl CloudifyDeploymentPost) CloudifyDeploymentGet {
+func (cl *CloudifyClient) CreateDeployments(deployment_id string, depl CloudifyDeploymentPost) (*CloudifyDeploymentGet, error) {
 	var deployment CloudifyDeploymentGet
 
 	err := cl.Put("deployments/"+deployment_id, depl, &deployment)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
-	return deployment
+	return &deployment, nil
 }

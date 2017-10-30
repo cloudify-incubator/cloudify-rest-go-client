@@ -19,7 +19,6 @@ package cloudify
 import (
 	"encoding/json"
 	rest "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify/rest"
-	"log"
 	"net/url"
 )
 
@@ -51,12 +50,12 @@ type CloudifyNode struct {
 	PluginsToInstall         []interface{}          `json:"plugins_to_install,omitempty"`
 }
 
-func (node *CloudifyNode) GetJsonProperties() string {
+func (node *CloudifyNode) GetJsonProperties() (string, error) {
 	json_data, err := json.Marshal(node.Properties)
 	if err != nil {
-		log.Fatal(err)
+		return "", err
 	}
-	return string(json_data)
+	return string(json_data), nil
 }
 
 type CloudifyNodes struct {
@@ -65,7 +64,7 @@ type CloudifyNodes struct {
 	Items    []CloudifyNode        `json:"items"`
 }
 
-func (cl *CloudifyClient) GetNodes(params map[string]string) CloudifyNodes {
+func (cl *CloudifyClient) GetNodes(params map[string]string) (*CloudifyNodes, error) {
 	var nodes CloudifyNodes
 
 	values := url.Values{}
@@ -75,8 +74,8 @@ func (cl *CloudifyClient) GetNodes(params map[string]string) CloudifyNodes {
 
 	err := cl.Get("nodes?"+values.Encode(), &nodes)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
-	return nodes
+	return &nodes, nil
 }

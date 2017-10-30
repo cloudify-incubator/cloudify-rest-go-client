@@ -122,7 +122,10 @@ func infoOptions(args, options []string) int {
 			operFlagSet.Parse(options)
 
 			cl := getClient()
-			stat := cl.GetStatus()
+			stat, err := cl.GetStatus()
+			if err != nil {
+				log.Fatal(err)
+			}
 			fmt.Printf("Retrieving manager services status... [ip=%v]\n", host)
 			fmt.Printf("Manager status: %v\n", stat.Status)
 			fmt.Printf("Services:\n")
@@ -140,7 +143,11 @@ func infoOptions(args, options []string) int {
 			operFlagSet.Parse(options)
 
 			cl := getClient()
-			ver := cl.GetVersion()
+			ver, err := cl.GetVersion()
+			if err != nil {
+				log.Fatal(err)
+			}
+
 			fmt.Printf("Retrieving manager services version... [ip=%v]\n", host)
 			utils.PrintTable([]string{"Version", "Edition", "Api Version"},
 				[][]string{{ver.Version, ver.Edition, cl.GetApiVersion()}})
@@ -176,7 +183,10 @@ func blueprintsOptions(args, options []string) int {
 			}
 
 			cl := getClient()
-			blueprints := cl.GetBlueprints(params)
+			blueprints, err := cl.GetBlueprints(params)
+			if err != nil {
+				log.Fatal(err)
+			}
 			var lines [][]string = make([][]string, len(blueprints.Items))
 			for pos, blueprint := range blueprints.Items {
 				lines[pos] = make([]string, 7)
@@ -213,7 +223,10 @@ func blueprintsOptions(args, options []string) int {
 				return 1
 			}
 			cl := getClient()
-			blueprint := cl.UploadBlueprint(args[3], blueprint_path)
+			blueprint, err := cl.UploadBlueprint(args[3], blueprint_path)
+			if err != nil {
+				log.Fatal(err)
+			}
 			var lines [][]string = make([][]string, 1)
 			lines[0] = make([]string, 7)
 			lines[0][0] = blueprint.Id
@@ -238,7 +251,10 @@ func blueprintsOptions(args, options []string) int {
 			operFlagSet.Parse(options)
 
 			cl := getClient()
-			blueprintPath := cl.DownloadBlueprints(args[3])
+			blueprintPath, err := cl.DownloadBlueprints(args[3])
+			if err != nil {
+				log.Fatal(err)
+			}
 			fmt.Printf("Blueprint saved to %s\n", blueprintPath)
 		}
 	case "delete":
@@ -251,7 +267,10 @@ func blueprintsOptions(args, options []string) int {
 			operFlagSet.Parse(options)
 
 			cl := getClient()
-			blueprint := cl.DeleteBlueprints(args[3])
+			blueprint, err := cl.DeleteBlueprints(args[3])
+			if err != nil {
+				log.Fatal(err)
+			}
 			var lines [][]string = make([][]string, 1)
 			lines[0] = make([]string, 7)
 			lines[0][0] = blueprint.Id
@@ -289,7 +308,7 @@ func parsePagination(operFlagSet *flag.FlagSet, options []string) map[string]str
 	return params
 }
 
-func deploymentsFilter(operFlagSet *flag.FlagSet, options []string) cloudify.CloudifyDeployments {
+func deploymentsFilter(operFlagSet *flag.FlagSet, options []string) (*cloudify.CloudifyDeployments, error) {
 	var deployment string
 	operFlagSet.StringVar(&deployment, "deployment", "",
 		"The unique identifier for the deployment")
@@ -316,7 +335,10 @@ func deploymentsOptions(args, options []string) int {
 	case "list":
 		{
 			operFlagSet := basicOptions("deployments list")
-			deployments := deploymentsFilter(operFlagSet, options)
+			deployments, err := deploymentsFilter(operFlagSet, options)
+			if err != nil {
+				log.Fatal(err)
+			}
 			var lines [][]string = make([][]string, len(deployments.Items))
 			for pos, deployment := range deployments.Items {
 				lines[pos] = make([]string, 6)
@@ -356,7 +378,10 @@ func deploymentsOptions(args, options []string) int {
 			depl.SetJsonInputs(jsonInputs)
 
 			cl := getClient()
-			deployment := cl.CreateDeployments(args[3], depl)
+			deployment, err := cl.CreateDeployments(args[3], depl)
+			if err != nil {
+				log.Fatal(err)
+			}
 
 			var lines [][]string = make([][]string, 1)
 			lines[0] = make([]string, 6)
@@ -374,24 +399,36 @@ func deploymentsOptions(args, options []string) int {
 	case "outputs":
 		{
 			operFlagSet := basicOptions("deployments outputs")
-			deployments := deploymentsFilter(operFlagSet, options)
+			deployments, err := deploymentsFilter(operFlagSet, options)
+			if err != nil {
+				log.Fatal(err)
+			}
 			if len(deployments.Items) != 1 {
 				fmt.Println("Please recheck list of deployments")
 				return 1
 			}
-
-			fmt.Printf("Deployment outputs: %+v\n", deployments.Items[0].GetJsonOutputs())
+			json_outputs, err := deployments.Items[0].GetJsonOutputs()
+			if err != nil {
+				log.Fatal(err)
+			}
+			fmt.Printf("Deployment outputs: %+v\n", json_outputs)
 		}
 	case "inputs":
 		{
 			operFlagSet := basicOptions("deployments inputs")
-			deployments := deploymentsFilter(operFlagSet, options)
+			deployments, err := deploymentsFilter(operFlagSet, options)
+			if err != nil {
+				log.Fatal(err)
+			}
 			if len(deployments.Items) != 1 {
 				fmt.Println("Please recheck list of deployments")
 				return 1
 			}
-
-			fmt.Printf("Deployment inputs: %+v\n", deployments.Items[0].GetJsonInputs())
+			json_inputs, err := deployments.Items[0].GetJsonInputs()
+			if err != nil {
+				log.Fatal(err)
+			}
+			fmt.Printf("Deployment inputs: %+v\n", json_inputs)
 		}
 	case "delete":
 		{
@@ -404,7 +441,10 @@ func deploymentsOptions(args, options []string) int {
 			operFlagSet.Parse(options)
 
 			cl := getClient()
-			deployment := cl.DeleteDeployments(args[3])
+			deployment, err := cl.DeleteDeployments(args[3])
+			if err != nil {
+				log.Fatal(err)
+			}
 			var lines [][]string = make([][]string, 1)
 			lines[0] = make([]string, 6)
 			lines[0][0] = deployment.Id
@@ -452,7 +492,10 @@ func executionsOptions(args, options []string) int {
 			}
 
 			cl := getClient()
-			executions := cl.GetExecutions(params)
+			executions, err := cl.GetExecutions(params)
+			if err != nil {
+				log.Fatal(err)
+			}
 			var lines [][]string = make([][]string, len(executions.Items))
 			for pos, execution := range executions.Items {
 				lines[pos] = make([]string, 8)
@@ -495,7 +538,10 @@ func executionsOptions(args, options []string) int {
 			exec.SetJsonParameters(jsonParams)
 
 			cl := getClient()
-			execution := cl.PostExecution(exec)
+			execution, err := cl.PostExecution(exec)
+			if err != nil {
+				log.Fatal(err)
+			}
 
 			var lines [][]string = make([][]string, 1)
 			lines[0] = make([]string, 8)
@@ -550,7 +596,10 @@ func nodesOptions(args, options []string) int {
 			}
 
 			cl := getClient()
-			nodes := cl.GetNodes(params)
+			nodes, err := cl.GetNodes(params)
+			if err != nil {
+				log.Fatal(err)
+			}
 			var lines [][]string = make([][]string, len(nodes.Items))
 			for pos, node := range nodes.Items {
 				lines[pos] = make([]string, 9)
@@ -573,7 +622,11 @@ func nodesOptions(args, options []string) int {
 				nodes.Metadata.Pagination.Offset, len(nodes.Items),
 				nodes.Metadata.Pagination.Total)
 			if len(nodes.Items) == 1 {
-				fmt.Printf("Properties: %s\n", nodes.Items[0].GetJsonProperties())
+				properties, err := nodes.Items[0].GetJsonProperties()
+				if err != nil {
+					log.Fatal(err)
+				}
+				fmt.Printf("Properties: %s\n", properties)
 			} else {
 				fmt.Printf("Limit to one row if you want to check Properties\n")
 			}
@@ -616,7 +669,10 @@ func nodeInstancesOptions(args, options []string) int {
 			}
 
 			cl := getClient()
-			nodeInstances := cl.GetNodeInstances(params)
+			nodeInstances, err := cl.GetNodeInstances(params)
+			if err != nil {
+				log.Fatal(err)
+			}
 			var lines [][]string = make([][]string, len(nodeInstances.Items))
 			for pos, nodeInstance := range nodeInstances.Items {
 				lines[pos] = make([]string, 7)
@@ -636,7 +692,11 @@ func nodeInstancesOptions(args, options []string) int {
 				nodeInstances.Metadata.Pagination.Offset, len(nodeInstances.Items),
 				nodeInstances.Metadata.Pagination.Total)
 			if len(nodeInstances.Items) == 1 {
-				fmt.Printf("Runtime properties: %s\n", nodeInstances.Items[0].GetJsonRuntimeProperties())
+				properties, err := nodeInstances.Items[0].GetJsonRuntimeProperties()
+				if err != nil {
+					log.Fatal(err)
+				}
+				fmt.Printf("Runtime properties: %s\n", properties)
 			} else {
 				fmt.Printf("Limit to one row if you want to check RuntimeProperties\n")
 			}
@@ -685,7 +745,10 @@ func eventsOptions(args, options []string) int {
 			}
 
 			cl := getClient()
-			events := cl.GetEvents(params)
+			events, err := cl.GetEvents(params)
+			if err != nil {
+				log.Fatal(err)
+			}
 			var lines [][]string = make([][]string, len(events.Items))
 			for pos, event := range events.Items {
 				lines[pos] = make([]string, 5)
@@ -727,7 +790,10 @@ func pluginsOptions(args, options []string) int {
 			params := parsePagination(operFlagSet, options)
 
 			cl := getClient()
-			plugins := cl.GetPlugins(params)
+			plugins, err := cl.GetPlugins(params)
+			if err != nil {
+				log.Fatal(err)
+			}
 			var lines [][]string = make([][]string, len(plugins.Items))
 			for pos, plugin := range plugins.Items {
 				lines[pos] = make([]string, 9)
