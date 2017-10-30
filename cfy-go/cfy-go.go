@@ -24,6 +24,7 @@ import (
 	kubernetes "github.com/cloudify-incubator/cloudify-rest-go-client/kubernetes"
 	"log"
 	"os"
+	"strings"
 )
 
 var host string
@@ -348,17 +349,24 @@ func deploymentsOptions(args, options []string) int {
 			}
 			var lines [][]string = make([][]string, len(deployments.Items))
 			for pos, deployment := range deployments.Items {
-				lines[pos] = make([]string, 6)
+				var scale_groups = []string{}
+				if deployment.ScalingGroups != nil {
+					for group_name, _ := range deployment.ScalingGroups {
+						scale_groups = append(scale_groups, group_name)
+					}
+				}
+				lines[pos] = make([]string, 7)
 				lines[pos][0] = deployment.Id
 				lines[pos][1] = deployment.BlueprintId
 				lines[pos][2] = deployment.CreatedAt
 				lines[pos][3] = deployment.UpdatedAt
 				lines[pos][4] = deployment.Tenant
 				lines[pos][5] = deployment.CreatedBy
+				lines[pos][6] = strings.Join(scale_groups, ", ")
 			}
 			utils.PrintTable([]string{
 				"id", "blueprint_id", "created_at", "updated_at",
-				"tenant_name", "created_by",
+				"tenant_name", "created_by", "scale_groups",
 			}, lines)
 			fmt.Printf("Showed %d+%d/%d results. Use offset/size for get more.\n",
 				deployments.Metadata.Pagination.Offset, len(deployments.Items),

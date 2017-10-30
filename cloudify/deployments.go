@@ -51,14 +51,27 @@ func (depl *CloudifyDeploymentPost) GetJsonInputs() (string, error) {
 	return string(json_data), nil
 }
 
+type ScalingGroupProperties struct {
+	MinInstances     int `json:"min_instances"`
+	PlannedInstances int `json:"planned_instances"`
+	DefaultInstances int `json:"default_instances"`
+	MaxInstances     int `json:"max_instances"`
+	CurrentInstances int `json:"current_instances"`
+}
+
+type ScalingGroup struct {
+	Properties ScalingGroupProperties `json:"properties"`
+	Members    []string               `json:"members"`
+}
 type CloudifyDeployment struct {
 	// have id, owner information
 	rest.CloudifyResource
 	// contain information from post
 	CloudifyDeploymentPost
-	Permalink string                 `json:"permalink"`
-	Workflows []CloudifyWorkflow     `json:"workflows"`
-	Outputs   map[string]interface{} `json:"outputs"`
+	Permalink     string                  `json:"permalink"`
+	Workflows     []CloudifyWorkflow      `json:"workflows"`
+	Outputs       map[string]interface{}  `json:"outputs"`
+	ScalingGroups map[string]ScalingGroup `json:"scaling_groups"`
 	// TODO describe "policy_types" struct
 	// TODO describe "policy_triggers" struct
 	// TODO describe "groups" struct
