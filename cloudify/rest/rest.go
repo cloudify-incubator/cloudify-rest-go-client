@@ -29,7 +29,7 @@ import (
 const JsonContentType = "application/json"
 const DataContentType = "application/octet-stream"
 
-func (r *CloudifyRestClient) GetRequest(url, method string, body io.Reader) *http.Request {
+func (r *CloudifyRestClient) GetRequest(url, method string, body io.Reader) (*http.Request, error) {
 	if r.Debug {
 		log.Printf("Use: %v:%v@%v#%s\n", r.user, r.password, r.restURL+url, r.tenant)
 	}
@@ -38,7 +38,7 @@ func (r *CloudifyRestClient) GetRequest(url, method string, body io.Reader) *htt
 	auth_string = r.user + ":" + r.password
 	req, err := http.NewRequest(method, r.restURL+url, body)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	req.Header.Add("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte(auth_string)))
@@ -46,16 +46,19 @@ func (r *CloudifyRestClient) GetRequest(url, method string, body io.Reader) *htt
 		req.Header.Add("Tenant", r.tenant)
 	}
 
-	return req
+	return req, nil
 }
 
-func (r *CloudifyRestClient) Get(url, acceptedContentType string) []byte {
-	req := r.GetRequest(url, "GET", nil)
+func (r *CloudifyRestClient) Get(url, acceptedContentType string) ([]byte, error) {
+	req, err := r.GetRequest(url, "GET", nil)
+	if err != nil {
+		return []byte{}, err
+	}
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatal(err)
+		return []byte{}, err
 	}
 
 	defer resp.Body.Close()
@@ -63,12 +66,12 @@ func (r *CloudifyRestClient) Get(url, acceptedContentType string) []byte {
 	contentType := resp.Header.Get("Content-Type")
 
 	if len(contentType) < len(acceptedContentType) || contentType[:len(acceptedContentType)] != acceptedContentType {
-		log.Fatal(fmt.Sprintf("Wrong content type: %+v", contentType))
+		return []byte{}, fmt.Errorf("Wrong content type: %+v", contentType)
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatal(err)
+		return []byte{}, err
 	}
 
 	if r.Debug {
@@ -79,16 +82,19 @@ func (r *CloudifyRestClient) Get(url, acceptedContentType string) []byte {
 		}
 	}
 
-	return body
+	return body, nil
 }
 
-func (r *CloudifyRestClient) Delete(url string) []byte {
-	req := r.GetRequest(url, "DELETE", nil)
+func (r *CloudifyRestClient) Delete(url string) ([]byte, error) {
+	req, err := r.GetRequest(url, "DELETE", nil)
+	if err != nil {
+		return []byte{}, err
+	}
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatal(err)
+		return []byte{}, err
 	}
 
 	defer resp.Body.Close()
@@ -96,29 +102,32 @@ func (r *CloudifyRestClient) Delete(url string) []byte {
 	contentType := resp.Header.Get("Content-Type")
 
 	if contentType[:len(JsonContentType)] != JsonContentType {
-		log.Fatal(fmt.Sprintf("Wrong content type: %+v", contentType))
+		return []byte{}, fmt.Errorf("Wrong content type: %+v", contentType)
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatal(err)
+		return []byte{}, err
 	}
 
 	if r.Debug {
 		log.Printf("Response %s\n", string(body))
 	}
 
-	return body
+	return body, nil
 }
 
-func (r *CloudifyRestClient) Post(url string, data []byte) []byte {
-	req := r.GetRequest(url, "POST", bytes.NewBuffer(data))
+func (r *CloudifyRestClient) Post(url string, data []byte) ([]byte, error) {
+	req, err := r.GetRequest(url, "POST", bytes.NewBuffer(data))
+	if err != nil {
+		return []byte{}, err
+	}
 	req.Header.Set("Content-Type", JsonContentType)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatal(err)
+		return []byte{}, err
 	}
 
 	defer resp.Body.Close()
@@ -126,29 +135,32 @@ func (r *CloudifyRestClient) Post(url string, data []byte) []byte {
 	contentType := resp.Header.Get("Content-Type")
 
 	if contentType[:len(JsonContentType)] != JsonContentType {
-		log.Fatal(fmt.Sprintf("Wrong content type: %+v", contentType))
+		return []byte{}, fmt.Errorf("Wrong content type: %+v", contentType)
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	if r.Debug {
 		log.Printf("Response %s\n", string(body))
 	}
 
-	return body
+	return body, nil
 }
 
-func (r *CloudifyRestClient) Put(url, providedContentType string, data []byte) []byte {
-	req := r.GetRequest(url, "PUT", bytes.NewBuffer(data))
+func (r *CloudifyRestClient) Put(url, providedContentType string, data []byte) ([]byte, error) {
+	req, err := r.GetRequest(url, "PUT", bytes.NewBuffer(data))
+	if err != nil {
+		return []byte{}, err
+	}
 	req.Header.Set("Content-Type", providedContentType)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatal(err)
+		return []byte{}, err
 	}
 
 	defer resp.Body.Close()
@@ -156,19 +168,19 @@ func (r *CloudifyRestClient) Put(url, providedContentType string, data []byte) [
 	contentType := resp.Header.Get("Content-Type")
 
 	if contentType[:len(JsonContentType)] != JsonContentType {
-		log.Fatal(fmt.Sprintf("Wrong content type: %+v", contentType))
+		return []byte{}, fmt.Errorf("Wrong content type: %+v", contentType)
 	}
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatal(err)
+		return []byte{}, err
 	}
 
 	if r.Debug {
 		log.Printf("Response %s\n", string(body))
 	}
 
-	return body
+	return body, nil
 }
 
 func NewClient(host, user, password, tenant string) *CloudifyRestClient {

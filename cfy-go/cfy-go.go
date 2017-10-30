@@ -124,7 +124,8 @@ func infoOptions(args, options []string) int {
 			cl := getClient()
 			stat, err := cl.GetStatus()
 			if err != nil {
-				log.Fatal(err)
+				log.Printf("Cloudify error: %s\n", err.Error())
+				return 1
 			}
 			fmt.Printf("Retrieving manager services status... [ip=%v]\n", host)
 			fmt.Printf("Manager status: %v\n", stat.Status)
@@ -145,7 +146,8 @@ func infoOptions(args, options []string) int {
 			cl := getClient()
 			ver, err := cl.GetVersion()
 			if err != nil {
-				log.Fatal(err)
+				log.Printf("Cloudify error: %s\n", err.Error())
+				return 1
 			}
 
 			fmt.Printf("Retrieving manager services version... [ip=%v]\n", host)
@@ -185,7 +187,8 @@ func blueprintsOptions(args, options []string) int {
 			cl := getClient()
 			blueprints, err := cl.GetBlueprints(params)
 			if err != nil {
-				log.Fatal(err)
+				log.Printf("Cloudify error: %s\n", err.Error())
+				return 1
 			}
 			var lines [][]string = make([][]string, len(blueprints.Items))
 			for pos, blueprint := range blueprints.Items {
@@ -225,7 +228,8 @@ func blueprintsOptions(args, options []string) int {
 			cl := getClient()
 			blueprint, err := cl.UploadBlueprint(args[3], blueprint_path)
 			if err != nil {
-				log.Fatal(err)
+				log.Printf("Cloudify error: %s\n", err.Error())
+				return 1
 			}
 			var lines [][]string = make([][]string, 1)
 			lines[0] = make([]string, 7)
@@ -253,7 +257,8 @@ func blueprintsOptions(args, options []string) int {
 			cl := getClient()
 			blueprintPath, err := cl.DownloadBlueprints(args[3])
 			if err != nil {
-				log.Fatal(err)
+				log.Printf("Cloudify error: %s\n", err.Error())
+				return 1
 			}
 			fmt.Printf("Blueprint saved to %s\n", blueprintPath)
 		}
@@ -269,7 +274,8 @@ func blueprintsOptions(args, options []string) int {
 			cl := getClient()
 			blueprint, err := cl.DeleteBlueprints(args[3])
 			if err != nil {
-				log.Fatal(err)
+				log.Printf("Cloudify error: %s\n", err.Error())
+				return 1
 			}
 			var lines [][]string = make([][]string, 1)
 			lines[0] = make([]string, 7)
@@ -337,7 +343,8 @@ func deploymentsOptions(args, options []string) int {
 			operFlagSet := basicOptions("deployments list")
 			deployments, err := deploymentsFilter(operFlagSet, options)
 			if err != nil {
-				log.Fatal(err)
+				log.Printf("Cloudify error: %s\n", err.Error())
+				return 1
 			}
 			var lines [][]string = make([][]string, len(deployments.Items))
 			for pos, deployment := range deployments.Items {
@@ -380,7 +387,8 @@ func deploymentsOptions(args, options []string) int {
 			cl := getClient()
 			deployment, err := cl.CreateDeployments(args[3], depl)
 			if err != nil {
-				log.Fatal(err)
+				log.Printf("Cloudify error: %s\n", err.Error())
+				return 1
 			}
 
 			var lines [][]string = make([][]string, 1)
@@ -401,7 +409,8 @@ func deploymentsOptions(args, options []string) int {
 			operFlagSet := basicOptions("deployments outputs")
 			deployments, err := deploymentsFilter(operFlagSet, options)
 			if err != nil {
-				log.Fatal(err)
+				log.Printf("Cloudify error: %s\n", err.Error())
+				return 1
 			}
 			if len(deployments.Items) != 1 {
 				fmt.Println("Please recheck list of deployments")
@@ -409,7 +418,8 @@ func deploymentsOptions(args, options []string) int {
 			}
 			json_outputs, err := deployments.Items[0].GetJsonOutputs()
 			if err != nil {
-				log.Fatal(err)
+				log.Printf("Cloudify error: %s\n", err.Error())
+				return 1
 			}
 			fmt.Printf("Deployment outputs: %+v\n", json_outputs)
 		}
@@ -418,7 +428,8 @@ func deploymentsOptions(args, options []string) int {
 			operFlagSet := basicOptions("deployments inputs")
 			deployments, err := deploymentsFilter(operFlagSet, options)
 			if err != nil {
-				log.Fatal(err)
+				log.Printf("Cloudify error: %s\n", err.Error())
+				return 1
 			}
 			if len(deployments.Items) != 1 {
 				fmt.Println("Please recheck list of deployments")
@@ -426,7 +437,8 @@ func deploymentsOptions(args, options []string) int {
 			}
 			json_inputs, err := deployments.Items[0].GetJsonInputs()
 			if err != nil {
-				log.Fatal(err)
+				log.Printf("Cloudify error: %s\n", err.Error())
+				return 1
 			}
 			fmt.Printf("Deployment inputs: %+v\n", json_inputs)
 		}
@@ -443,7 +455,8 @@ func deploymentsOptions(args, options []string) int {
 			cl := getClient()
 			deployment, err := cl.DeleteDeployments(args[3])
 			if err != nil {
-				log.Fatal(err)
+				log.Printf("Cloudify error: %s\n", err.Error())
+				return 1
 			}
 			var lines [][]string = make([][]string, 1)
 			lines[0] = make([]string, 6)
@@ -494,7 +507,8 @@ func executionsOptions(args, options []string) int {
 			cl := getClient()
 			executions, err := cl.GetExecutions(params)
 			if err != nil {
-				log.Fatal(err)
+				log.Printf("Cloudify error: %s\n", err.Error())
+				return 1
 			}
 			var lines [][]string = make([][]string, len(executions.Items))
 			for pos, execution := range executions.Items {
@@ -540,7 +554,8 @@ func executionsOptions(args, options []string) int {
 			cl := getClient()
 			execution, err := cl.PostExecution(exec)
 			if err != nil {
-				log.Fatal(err)
+				log.Printf("Cloudify error: %s\n", err.Error())
+				return 1
 			}
 
 			var lines [][]string = make([][]string, 1)
@@ -598,7 +613,8 @@ func nodesOptions(args, options []string) int {
 			cl := getClient()
 			nodes, err := cl.GetNodes(params)
 			if err != nil {
-				log.Fatal(err)
+				log.Printf("Cloudify error: %s\n", err.Error())
+				return 1
 			}
 			var lines [][]string = make([][]string, len(nodes.Items))
 			for pos, node := range nodes.Items {
@@ -624,7 +640,8 @@ func nodesOptions(args, options []string) int {
 			if len(nodes.Items) == 1 {
 				properties, err := nodes.Items[0].GetJsonProperties()
 				if err != nil {
-					log.Fatal(err)
+					log.Printf("Cloudify error: %s\n", err.Error())
+					return 1
 				}
 				fmt.Printf("Properties: %s\n", properties)
 			} else {
@@ -671,7 +688,8 @@ func nodeInstancesOptions(args, options []string) int {
 			cl := getClient()
 			nodeInstances, err := cl.GetNodeInstances(params)
 			if err != nil {
-				log.Fatal(err)
+				log.Printf("Cloudify error: %s\n", err.Error())
+				return 1
 			}
 			var lines [][]string = make([][]string, len(nodeInstances.Items))
 			for pos, nodeInstance := range nodeInstances.Items {
@@ -694,7 +712,8 @@ func nodeInstancesOptions(args, options []string) int {
 			if len(nodeInstances.Items) == 1 {
 				properties, err := nodeInstances.Items[0].GetJsonRuntimeProperties()
 				if err != nil {
-					log.Fatal(err)
+					log.Printf("Cloudify error: %s\n", err.Error())
+					return 1
 				}
 				fmt.Printf("Runtime properties: %s\n", properties)
 			} else {
@@ -747,7 +766,8 @@ func eventsOptions(args, options []string) int {
 			cl := getClient()
 			events, err := cl.GetEvents(params)
 			if err != nil {
-				log.Fatal(err)
+				log.Printf("Cloudify error: %s\n", err.Error())
+				return 1
 			}
 			var lines [][]string = make([][]string, len(events.Items))
 			for pos, event := range events.Items {
@@ -792,7 +812,8 @@ func pluginsOptions(args, options []string) int {
 			cl := getClient()
 			plugins, err := cl.GetPlugins(params)
 			if err != nil {
-				log.Fatal(err)
+				log.Printf("Cloudify error: %s", err.Error())
+				return 1
 			}
 			var lines [][]string = make([][]string, len(plugins.Items))
 			for pos, plugin := range plugins.Items {

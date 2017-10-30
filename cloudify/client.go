@@ -26,9 +26,12 @@ func (cl *CloudifyClient) GetApiVersion() string {
 }
 
 func (cl *CloudifyClient) Get(url string, output rest.CloudifyMessageInterface) error {
-	body := cl.restCl.Get(url, rest.JsonContentType)
+	body, err := cl.restCl.Get(url, rest.JsonContentType)
+	if err != nil {
+		return err
+	}
 
-	err := json.Unmarshal(body, output)
+	err = json.Unmarshal(body, output)
 	if err != nil {
 		return err
 	}
@@ -40,9 +43,12 @@ func (cl *CloudifyClient) Get(url string, output rest.CloudifyMessageInterface) 
 }
 
 func (cl *CloudifyClient) GetBinary(url, output_path string) error {
-	body := cl.restCl.Get(url, rest.DataContentType)
+	body, err := cl.restCl.Get(url, rest.DataContentType)
+	if err != nil {
+		return err
+	}
 
-	err := ioutil.WriteFile(output_path, body, 0644)
+	err = ioutil.WriteFile(output_path, body, 0644)
 	if err != nil {
 		return err
 	}
@@ -51,11 +57,14 @@ func (cl *CloudifyClient) GetBinary(url, output_path string) error {
 }
 
 func binaryPut(cl *CloudifyClient, url string, input []byte, input_type string, output rest.CloudifyMessageInterface) error {
-	body := cl.restCl.Put(url, input_type, input)
+	body, err := cl.restCl.Put(url, input_type, input)
+	if err != nil {
+		return err
+	}
 
-	err_post := json.Unmarshal(body, output)
-	if err_post != nil {
-		return err_post
+	err = json.Unmarshal(body, output)
+	if err != nil {
+		return err
 	}
 
 	if len(output.ErrorCode()) > 0 {
@@ -92,11 +101,14 @@ func (cl *CloudifyClient) Post(url string, input interface{}, output rest.Cloudi
 		return err
 	}
 
-	body := cl.restCl.Post(url, json_data)
+	body, err := cl.restCl.Post(url, json_data)
+	if err != nil {
+		return err
+	}
 
-	err_post := json.Unmarshal(body, output)
-	if err_post != nil {
-		return err_post
+	err = json.Unmarshal(body, output)
+	if err != nil {
+		return err
 	}
 
 	if len(output.ErrorCode()) > 0 {
@@ -106,11 +118,14 @@ func (cl *CloudifyClient) Post(url string, input interface{}, output rest.Cloudi
 }
 
 func (cl *CloudifyClient) Delete(url string, output rest.CloudifyMessageInterface) error {
-	body := cl.restCl.Delete(url)
+	body, err := cl.restCl.Delete(url)
+	if err != nil {
+		return err
+	}
 
-	err_post := json.Unmarshal(body, output)
-	if err_post != nil {
-		return err_post
+	err = json.Unmarshal(body, output)
+	if err != nil {
+		return err
 	}
 
 	if len(output.ErrorCode()) > 0 {
