@@ -36,7 +36,7 @@ pkg/linux_amd64/${PACKAGEPATH}/cloudify/rest.a: ${CLOUDIFYREST}
 
 # cloudify kubernetes support
 CLOUDIFYKUBERNETES := \
-	src/${PACKAGEPATH}/kubernetes/kubernetes.go \
+	src/${PACKAGEPATH}/kubernetes/mount.go \
 	src/${PACKAGEPATH}/kubernetes/types.go
 
 pkg/linux_amd64/${PACKAGEPATH}/kubernetes.a: ${CLOUDIFYKUBERNETES}

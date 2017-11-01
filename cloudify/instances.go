@@ -19,6 +19,7 @@ package cloudify
 import (
 	"encoding/json"
 	rest "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify/rest"
+	"log"
 	"net/url"
 )
 
@@ -62,4 +63,58 @@ func (cl *CloudifyClient) GetNodeInstances(params map[string]string) (*CloudifyN
 	}
 
 	return &instances, nil
+}
+
+func (cl *CloudifyClient) GetStartedNodeInstances(params map[string]string, node_type string) (*CloudifyNodeInstances, error) {
+	nodeInstances, err := cl.GetNodeInstances(params)
+	if err != nil {
+		return nil, err
+	}
+
+	instances := []CloudifyNodeInstance{}
+	for _, nodeInstance := range nodeInstances.Items {
+		var node_params = map[string]string{}
+		node_params["id"] = nodeInstance.NodeId
+		nodes, err := cl.GetNodes(node_params)
+		if err != nil {
+			if cl.restCl.Debug {
+				log.Printf("Not found instances: %+v", err)
+			}
+			continue
+		}
+		if len(nodes.Items) != 1 {
+			if cl.restCl.Debug {
+				log.Printf("Found more than one node by nodeId: %+v", nodeInstance.NodeId)
+			}
+			continue
+		}
+
+		var not_kubernetes_host bool = true
+		for _, type_name := range nodes.Items[0].TypeHierarchy {
+			if type_name == node_type {
+				not_kubernetes_host = false
+				break
+			}
+		}
+
+		if not_kubernetes_host {
+			continue
+		}
+
+		if nodeInstance.State != "started" {
+			continue
+		}
+
+		// check runtime properties
+		if nodeInstance.RuntimeProperties != nil {
+			instances = append(instances, nodeInstance)
+		}
+	}
+	var result CloudifyNodeInstances
+	result.Items = instances
+	result.Metadata.Pagination.Total = uint(len(instances))
+	result.Metadata.Pagination.Size = uint(len(instances))
+	result.Metadata.Pagination.Offset = 0
+
+	return &result, nil
 }
