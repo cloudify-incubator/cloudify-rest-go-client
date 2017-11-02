@@ -331,7 +331,7 @@ func deploymentsFilter(operFlagSet *flag.FlagSet, options []string) (*cloudify.C
 }
 
 func deploymentsOptions(args, options []string) int {
-	defaultError := "list/create/delete/inputs/outputs subcommand is required"
+	defaultError := "list/create/delete/inputs/outputs/scale-groups subcommand is required"
 
 	if len(args) < 3 {
 		fmt.Println(defaultError)
@@ -339,6 +339,40 @@ func deploymentsOptions(args, options []string) int {
 	}
 
 	switch args[2] {
+	case "scale-groups":
+		{
+			operFlagSet := basicOptions("deployments scale-groups")
+			deployments, err := deploymentsFilter(operFlagSet, options)
+			if err != nil {
+				log.Printf("Cloudify error: %s\n", err.Error())
+				return 1
+			}
+			for _, deployment := range deployments.Items {
+				fmt.Printf("Scale group: %v\n", deployment.Id)
+				var lines [][]string = make([][]string, len(deployment.ScalingGroups))
+				var pos int = 0
+				if deployment.ScalingGroups != nil {
+					for group_name, scale_group := range deployment.ScalingGroups {
+						lines[pos] = make([]string, 7)
+						lines[pos][0] = group_name
+						lines[pos][1] = strings.Join(scale_group.Members, ", ")
+						lines[pos][2] = fmt.Sprintf("%d", scale_group.Properties.MinInstances)
+						lines[pos][3] = fmt.Sprintf("%d", scale_group.Properties.PlannedInstances)
+						lines[pos][4] = fmt.Sprintf("%d", scale_group.Properties.DefaultInstances)
+						lines[pos][5] = fmt.Sprintf("%d", scale_group.Properties.MaxInstances)
+						lines[pos][6] = fmt.Sprintf("%d", scale_group.Properties.CurrentInstances)
+						pos += 1
+					}
+				}
+				utils.PrintTable([]string{
+					"Group name", "Members", "Min Instances", "Planned Instances",
+					"Default Instances", "Max Instances", "Current Instances",
+				}, lines)
+			}
+			fmt.Printf("Showed %d+%d/%d results. Use offset/size for get more.\n",
+				deployments.Metadata.Pagination.Offset, len(deployments.Items),
+				deployments.Metadata.Pagination.Total)
+		}
 	case "list":
 		{
 			operFlagSet := basicOptions("deployments list")
