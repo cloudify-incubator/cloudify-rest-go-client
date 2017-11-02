@@ -49,6 +49,7 @@ type CloudifyNodeInstances struct {
 	Items    []CloudifyNodeInstance `json:"items"`
 }
 
+/* Get all node instances */
 func (cl *CloudifyClient) GetNodeInstances(params map[string]string) (*CloudifyNodeInstances, error) {
 	var instances CloudifyNodeInstances
 
@@ -65,7 +66,9 @@ func (cl *CloudifyClient) GetNodeInstances(params map[string]string) (*CloudifyN
 	return &instances, nil
 }
 
-func (cl *CloudifyClient) GetStartedNodeInstances(params map[string]string, node_type string) (*CloudifyNodeInstances, error) {
+/* Returned list of started node instances with some node type,
+ * used mainly for kubernetes */
+func (cl *CloudifyClient) GetStartedNodeInstancesWithType(params map[string]string, node_type string) (*CloudifyNodeInstances, error) {
 	nodeInstances, err := cl.GetNodeInstances(params)
 	if err != nil {
 		return nil, err
@@ -105,10 +108,8 @@ func (cl *CloudifyClient) GetStartedNodeInstances(params map[string]string, node
 			continue
 		}
 
-		// check runtime properties
-		if nodeInstance.RuntimeProperties != nil {
-			instances = append(instances, nodeInstance)
-		}
+		// add instance to list
+		instances = append(instances, nodeInstance)
 	}
 	var result CloudifyNodeInstances
 	result.Items = instances

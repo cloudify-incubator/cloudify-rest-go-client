@@ -79,3 +79,40 @@ func (cl *CloudifyClient) GetNodes(params map[string]string) (*CloudifyNodes, er
 
 	return &nodes, nil
 }
+
+func (cl *CloudifyClient) GetStartedNodesWithType(params map[string]string, node_type string) (*CloudifyNodes, error) {
+	cloudNodes, err := cl.GetNodes(params)
+	if err != nil {
+		return nil, err
+	}
+
+	nodes := []CloudifyNode{}
+	for _, node := range cloudNodes.Items {
+
+		var not_kubernetes_host bool = true
+		for _, type_name := range node.TypeHierarchy {
+			if type_name == node_type {
+				not_kubernetes_host = false
+				break
+			}
+		}
+
+		if not_kubernetes_host {
+			continue
+		}
+
+		if node.NumberOfInstances <= 0 {
+			continue
+		}
+
+		// add node to list
+		nodes = append(nodes, node)
+	}
+	var result CloudifyNodes
+	result.Items = nodes
+	result.Metadata.Pagination.Total = uint(len(nodes))
+	result.Metadata.Pagination.Size = uint(len(nodes))
+	result.Metadata.Pagination.Offset = 0
+
+	return &result, nil
+}

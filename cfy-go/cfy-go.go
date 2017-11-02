@@ -590,8 +590,42 @@ func executionsOptions(args, options []string) int {
 	return 0
 }
 
+func nodesPrint(nodes *cloudify.CloudifyNodes) int {
+	var lines [][]string = make([][]string, len(nodes.Items))
+	for pos, node := range nodes.Items {
+		lines[pos] = make([]string, 9)
+		lines[pos][0] = node.Id
+		lines[pos][1] = node.DeploymentId
+		lines[pos][2] = node.BlueprintId
+		lines[pos][3] = node.HostId
+		lines[pos][4] = node.Type
+		lines[pos][5] = fmt.Sprintf("%d", node.NumberOfInstances)
+		lines[pos][6] = fmt.Sprintf("%d", node.PlannedNumberOfInstances)
+		lines[pos][7] = node.Tenant
+		lines[pos][8] = node.CreatedBy
+	}
+	utils.PrintTable([]string{
+		"Id", "Deployment id", "Blueprint id", "Host id", "Type",
+		"Number of instances", "Planned number of instances",
+		"Tenant", "created_by",
+	}, lines)
+	fmt.Printf("Showed %d+%d/%d results. Use offset/size for get more.\n",
+		nodes.Metadata.Pagination.Offset, len(nodes.Items),
+		nodes.Metadata.Pagination.Total)
+	if len(nodes.Items) == 1 {
+		properties, err := nodes.Items[0].GetJsonProperties()
+		if err != nil {
+			log.Printf("Cloudify error: %s\n", err.Error())
+			return 1
+		}
+		fmt.Printf("Properties: %s\n", properties)
+	} else {
+		fmt.Printf("Limit to one row if you want to check Properties\n")
+	}
+	return 0
+}
 func nodesOptions(args, options []string) int {
-	defaultError := "list subcommand is required"
+	defaultError := "list/started subcommand is required"
 
 	if len(args) < 3 {
 		fmt.Println(defaultError)
@@ -599,6 +633,39 @@ func nodesOptions(args, options []string) int {
 	}
 
 	switch args[2] {
+	case "started":
+		{
+			operFlagSet := basicOptions("nodes started")
+			var node string
+			var deployment string
+			var node_type string
+			operFlagSet.StringVar(&node, "node", "",
+				"The unique identifier for the node")
+			operFlagSet.StringVar(&deployment, "deployment", "",
+				"The unique identifier for the deployment")
+			operFlagSet.StringVar(&node_type, "node_type",
+				"cloudify.nodes.ApplicationServer.kubernetes.Node",
+				"The unique identifier for the deployment")
+
+			operFlagSet.Parse(options)
+
+			var params = map[string]string{}
+
+			if node != "" {
+				params["id"] = node
+			}
+			if deployment != "" {
+				params["deployment_id"] = deployment
+			}
+
+			cl := getClient()
+			nodes, err := cl.GetStartedNodesWithType(params, node_type)
+			if err != nil {
+				log.Printf("Cloudify error: %s\n", err.Error())
+				return 1
+			}
+			return nodesPrint(nodes)
+		}
 	case "list":
 		{
 			operFlagSet := basicOptions("nodes list")
@@ -624,37 +691,7 @@ func nodesOptions(args, options []string) int {
 				log.Printf("Cloudify error: %s\n", err.Error())
 				return 1
 			}
-			var lines [][]string = make([][]string, len(nodes.Items))
-			for pos, node := range nodes.Items {
-				lines[pos] = make([]string, 9)
-				lines[pos][0] = node.Id
-				lines[pos][1] = node.DeploymentId
-				lines[pos][2] = node.BlueprintId
-				lines[pos][3] = node.HostId
-				lines[pos][4] = node.Type
-				lines[pos][5] = fmt.Sprintf("%d", node.NumberOfInstances)
-				lines[pos][6] = fmt.Sprintf("%d", node.PlannedNumberOfInstances)
-				lines[pos][7] = node.Tenant
-				lines[pos][8] = node.CreatedBy
-			}
-			utils.PrintTable([]string{
-				"Id", "Deployment id", "Blueprint id", "Host id", "Type",
-				"Number of instances", "Planned number of instances",
-				"Tenant", "created_by",
-			}, lines)
-			fmt.Printf("Showed %d+%d/%d results. Use offset/size for get more.\n",
-				nodes.Metadata.Pagination.Offset, len(nodes.Items),
-				nodes.Metadata.Pagination.Total)
-			if len(nodes.Items) == 1 {
-				properties, err := nodes.Items[0].GetJsonProperties()
-				if err != nil {
-					log.Printf("Cloudify error: %s\n", err.Error())
-					return 1
-				}
-				fmt.Printf("Properties: %s\n", properties)
-			} else {
-				fmt.Printf("Limit to one row if you want to check Properties\n")
-			}
+			return nodesPrint(nodes)
 		}
 	default:
 		{
@@ -737,7 +774,7 @@ func nodeInstancesOptions(args, options []string) int {
 			}
 
 			cl := getClient()
-			nodeInstances, err := cl.GetStartedNodeInstances(params, node_type)
+			nodeInstances, err := cl.GetStartedNodeInstancesWithType(params, node_type)
 			if err != nil {
 				log.Printf("Cloudify error: %s\n", err.Error())
 				return 1
