@@ -315,6 +315,79 @@ func parsePagination(operFlagSet *flag.FlagSet, options []string) map[string]str
 	return params
 }
 
+func scaleGroupPrint(deployment_scaling_groups map[string]cloudify.ScalingGroup) int {
+	var lines [][]string = make([][]string, len(deployment_scaling_groups))
+	var pos int = 0
+	if deployment_scaling_groups != nil {
+		for group_name, scale_group := range deployment_scaling_groups {
+			lines[pos] = make([]string, 7)
+			lines[pos][0] = group_name
+			lines[pos][1] = strings.Join(scale_group.Members, ", ")
+			lines[pos][2] = fmt.Sprintf("%d", scale_group.Properties.MinInstances)
+			lines[pos][3] = fmt.Sprintf("%d", scale_group.Properties.PlannedInstances)
+			lines[pos][4] = fmt.Sprintf("%d", scale_group.Properties.DefaultInstances)
+			lines[pos][5] = fmt.Sprintf("%d", scale_group.Properties.MaxInstances)
+			lines[pos][6] = fmt.Sprintf("%d", scale_group.Properties.CurrentInstances)
+			pos += 1
+		}
+	}
+	utils.PrintTable([]string{
+		"Group name", "Members", "Min Instances", "Planned Instances",
+		"Default Instances", "Max Instances", "Current Instances",
+	}, lines)
+	return 0
+}
+
+func scaleGroupsOptions(args, options []string) int {
+	defaultError := "info subcommand with deployment and scalegroup params is required"
+
+	if len(args) < 3 {
+		fmt.Println(defaultError)
+		return 1
+	}
+
+	switch args[2] {
+	case "info":
+		{
+			operFlagSet := basicOptions("scalegroups info")
+			var deployment string
+			var scalegroup string
+			operFlagSet.StringVar(&deployment, "deployment", "",
+				"The unique identifier for the deployment")
+			operFlagSet.StringVar(&scalegroup, "scalegroup", "",
+				"The unique identifier for the scalegroup")
+
+			operFlagSet.Parse(options)
+
+			if deployment == "" {
+				fmt.Println("Please provide deployment")
+				return 1
+			}
+			if scalegroup == "" {
+				fmt.Println("Please provide scalegroup")
+				return 1
+			}
+
+			cl := getClient()
+
+			scale_group_obj, err := cl.GetDeploymentScaleGroup(deployment, scalegroup)
+			if err != nil {
+				log.Printf("Cloudify error: %s\n", err.Error())
+				return 1
+			}
+			var scale_groups = map[string]cloudify.ScalingGroup{}
+			scale_groups[scalegroup] = *scale_group_obj
+			return scaleGroupPrint(scale_groups)
+		}
+	default:
+		{
+			fmt.Println(defaultError)
+			return 1
+		}
+	}
+	return 0
+}
+
 func deploymentsFilter(operFlagSet *flag.FlagSet, options []string) (*cloudify.CloudifyDeployments, error) {
 	var deployment string
 	operFlagSet.StringVar(&deployment, "deployment", "",
@@ -349,25 +422,7 @@ func deploymentsOptions(args, options []string) int {
 			}
 			for _, deployment := range deployments.Items {
 				fmt.Printf("Scale group: %v\n", deployment.Id)
-				var lines [][]string = make([][]string, len(deployment.ScalingGroups))
-				var pos int = 0
-				if deployment.ScalingGroups != nil {
-					for group_name, scale_group := range deployment.ScalingGroups {
-						lines[pos] = make([]string, 7)
-						lines[pos][0] = group_name
-						lines[pos][1] = strings.Join(scale_group.Members, ", ")
-						lines[pos][2] = fmt.Sprintf("%d", scale_group.Properties.MinInstances)
-						lines[pos][3] = fmt.Sprintf("%d", scale_group.Properties.PlannedInstances)
-						lines[pos][4] = fmt.Sprintf("%d", scale_group.Properties.DefaultInstances)
-						lines[pos][5] = fmt.Sprintf("%d", scale_group.Properties.MaxInstances)
-						lines[pos][6] = fmt.Sprintf("%d", scale_group.Properties.CurrentInstances)
-						pos += 1
-					}
-				}
-				utils.PrintTable([]string{
-					"Group name", "Members", "Min Instances", "Planned Instances",
-					"Default Instances", "Max Instances", "Current Instances",
-				}, lines)
+				scaleGroupPrint(deployment.ScalingGroups)
 			}
 			fmt.Printf("Showed %d+%d/%d results. Use offset/size for get more.\n",
 				deployments.Metadata.Pagination.Offset, len(deployments.Items),
@@ -989,6 +1044,7 @@ func main() {
 	var defaultError string = ("Supported commands:\n" +
 		"\tblueprints        Handle blueprints on the manager\n" +
 		"\tdeployments       Handle deployments on the Manager\n" +
+		"\tscalegroups       Handle scale groups on the Manager\n" +
 		"\tevents            Show events from workflow executions\n" +
 		"\texecutions        Handle workflow executions\n" +
 		"\tnode-instances    Handle a deployment's node-instances\n" +
@@ -1021,6 +1077,10 @@ func main() {
 	case "deployments":
 		{
 			os.Exit(deploymentsOptions(args, options))
+		}
+	case "scalegroups":
+		{
+			os.Exit(scaleGroupsOptions(args, options))
 		}
 	case "executions":
 		{

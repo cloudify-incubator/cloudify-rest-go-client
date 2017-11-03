@@ -53,6 +53,7 @@ pkg/linux_amd64/${PACKAGEPATH}/cloudify/utils.a: ${CLOUDIFYUTILS}
 
 # cloudify
 CLOUDIFYCOMMON := \
+	src/${PACKAGEPATH}/cloudify/scalegroup.go \
 	src/${PACKAGEPATH}/cloudify/client.go \
 	src/${PACKAGEPATH}/cloudify/nodes.go \
 	src/${PACKAGEPATH}/cloudify/plugins.go \
