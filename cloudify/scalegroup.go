@@ -47,3 +47,35 @@ func (cl *CloudifyClient) GetDeploymentScaleGroup(deploymentID, groupName string
 	}
 	return nil, fmt.Errorf("No such scale group:%+v", groupName)
 }
+
+func (cl *CloudifyClient) GetDeploymentScaleGroupNodes(deploymentID, groupName, node_type string) (*CloudifyNodes, error) {
+	// get all nodes
+	params := map[string]string{}
+	params["deployment_id"] = deploymentID
+	cloud_nodes, err := cl.GetStartedNodesWithType(params, node_type)
+	if err != nil {
+		return nil, err
+	}
+
+	// get scale group
+	scale_group, err := cl.GetDeploymentScaleGroup(deploymentID, groupName)
+	if err != nil {
+		return nil, err
+	}
+
+	// filter by scaling group
+	nodes := []CloudifyNode{}
+	for _, node := range cloud_nodes.Items {
+		for _, nodeId := range scale_group.Members {
+			if nodeId == node.Id {
+				nodes = append(nodes, node)
+			}
+		}
+	}
+	var result CloudifyNodes
+	result.Items = nodes
+	result.Metadata.Pagination.Total = uint(len(nodes))
+	result.Metadata.Pagination.Size = uint(len(nodes))
+	result.Metadata.Pagination.Offset = 0
+	return &result, nil
+}

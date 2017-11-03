@@ -339,7 +339,7 @@ func scaleGroupPrint(deployment_scaling_groups map[string]cloudify.ScalingGroup)
 }
 
 func scaleGroupsOptions(args, options []string) int {
-	defaultError := "info subcommand with deployment and scalegroup params is required"
+	defaultError := "info, nodes subcommand with deployment and scalegroup params is required"
 
 	if len(args) < 3 {
 		fmt.Println(defaultError)
@@ -347,6 +347,39 @@ func scaleGroupsOptions(args, options []string) int {
 	}
 
 	switch args[2] {
+	case "nodes":
+		{
+			operFlagSet := basicOptions("scalegroups nodes")
+			var deployment string
+			var scalegroup string
+			var node_type string
+			operFlagSet.StringVar(&deployment, "deployment", "",
+				"The unique identifier for the deployment")
+			operFlagSet.StringVar(&scalegroup, "scalegroup", "",
+				"The unique identifier for the scalegroup")
+			operFlagSet.StringVar(&node_type, "node_type",
+				"cloudify.nodes.ApplicationServer.kubernetes.Node",
+				"The unique identifier for the deployment")
+
+			operFlagSet.Parse(options)
+
+			if deployment == "" {
+				fmt.Println("Please provide deployment")
+				return 1
+			}
+			if scalegroup == "" {
+				fmt.Println("Please provide scalegroup")
+				return 1
+			}
+
+			cl := getClient()
+			nodes, err := cl.GetDeploymentScaleGroupNodes(deployment, scalegroup, node_type)
+			if err != nil {
+				log.Printf("Cloudify error: %s\n", err.Error())
+				return 1
+			}
+			return nodesPrint(nodes)
+		}
 	case "info":
 		{
 			operFlagSet := basicOptions("scalegroups info")
@@ -369,7 +402,6 @@ func scaleGroupsOptions(args, options []string) int {
 			}
 
 			cl := getClient()
-
 			scale_group_obj, err := cl.GetDeploymentScaleGroup(deployment, scalegroup)
 			if err != nil {
 				log.Printf("Cloudify error: %s\n", err.Error())
