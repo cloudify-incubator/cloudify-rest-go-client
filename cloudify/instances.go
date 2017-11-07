@@ -35,11 +35,11 @@ type CloudifyNodeInstance struct {
 }
 
 func (instance *CloudifyNodeInstance) GetJsonRuntimeProperties() (string, error) {
-	json_data, err := json.Marshal(instance.RuntimeProperties)
+	jsonData, err := json.Marshal(instance.RuntimeProperties)
 	if err != nil {
 		return "", err
 	}
-	return string(json_data), nil
+	return string(jsonData), nil
 }
 
 type CloudifyNodeInstances struct {
@@ -67,36 +67,36 @@ func (cl *CloudifyClient) GetNodeInstances(params map[string]string) (*CloudifyN
 
 /* Returned list of started node instances with some node type,
  * used mainly for kubernetes */
-func (cl *CloudifyClient) GetStartedNodeInstancesWithType(params map[string]string, node_type string) (*CloudifyNodeInstances, error) {
+func (cl *CloudifyClient) GetStartedNodeInstancesWithType(params map[string]string, nodeType string) (*CloudifyNodeInstances, error) {
 	nodeInstances, err := cl.GetNodeInstances(params)
 	if err != nil {
 		return nil, err
 	}
 
-	var node_params = map[string]string{}
+	var nodeParams = map[string]string{}
 	if val, ok := params["deployment_id"]; ok {
-		node_params["deployment_id"] = val
+		nodeParams["deployment_id"] = val
 	}
-	nodes, err := cl.GetNodes(node_params)
+	nodes, err := cl.GetNodes(nodeParams)
 	if err != nil {
 		return nil, err
 	}
 
 	instances := []CloudifyNodeInstance{}
 	for _, nodeInstance := range nodeInstances.Items {
-		var not_kubernetes_host bool = true
+		var notKubernetesHost bool = true
 		for _, node := range nodes.Items {
 			if node.Id == nodeInstance.NodeId {
-				for _, type_name := range node.TypeHierarchy {
-					if type_name == node_type {
-						not_kubernetes_host = false
+				for _, typeName := range node.TypeHierarchy {
+					if typeName == nodeType {
+						notKubernetesHost = false
 						break
 					}
 				}
 			}
 		}
 
-		if not_kubernetes_host {
+		if notKubernetesHost {
 			continue
 		}
 

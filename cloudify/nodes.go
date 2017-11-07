@@ -51,11 +51,11 @@ type CloudifyNode struct {
 }
 
 func (node *CloudifyNode) GetJsonProperties() (string, error) {
-	json_data, err := json.Marshal(node.Properties)
+	jsonData, err := json.Marshal(node.Properties)
 	if err != nil {
 		return "", err
 	}
-	return string(json_data), nil
+	return string(jsonData), nil
 }
 
 type CloudifyNodes struct {
@@ -80,7 +80,7 @@ func (cl *CloudifyClient) GetNodes(params map[string]string) (*CloudifyNodes, er
 	return &nodes, nil
 }
 
-func (cl *CloudifyClient) GetStartedNodesWithType(params map[string]string, node_type string) (*CloudifyNodes, error) {
+func (cl *CloudifyClient) GetStartedNodesWithType(params map[string]string, nodeType string) (*CloudifyNodes, error) {
 	cloudNodes, err := cl.GetNodes(params)
 	if err != nil {
 		return nil, err
@@ -89,15 +89,15 @@ func (cl *CloudifyClient) GetStartedNodesWithType(params map[string]string, node
 	nodes := []CloudifyNode{}
 	for _, node := range cloudNodes.Items {
 
-		var not_kubernetes_host bool = true
-		for _, type_name := range node.TypeHierarchy {
-			if type_name == node_type {
-				not_kubernetes_host = false
+		var notKubernetesHost bool = true
+		for _, typeName := range node.TypeHierarchy {
+			if typeName == nodeType {
+				notKubernetesHost = false
 				break
 			}
 		}
 
-		if not_kubernetes_host {
+		if notKubernetesHost {
 			continue
 		}
 

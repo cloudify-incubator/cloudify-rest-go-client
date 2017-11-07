@@ -34,14 +34,14 @@ func (r *CloudifyRestClient) GetRequest(url, method string, body io.Reader) (*ht
 		log.Printf("Use: %v:%v@%v#%s\n", r.user, r.password, r.restURL+url, r.tenant)
 	}
 
-	var auth_string string
-	auth_string = r.user + ":" + r.password
+	var authString string
+	authString = r.user + ":" + r.password
 	req, err := http.NewRequest(method, r.restURL+url, body)
 	if err != nil {
 		return nil, err
 	}
 
-	req.Header.Add("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte(auth_string)))
+	req.Header.Add("Authorization", "Basic "+base64.StdEncoding.EncodeToString([]byte(authString)))
 	if len(r.tenant) > 0 {
 		req.Header.Add("Tenant", r.tenant)
 	}

@@ -95,35 +95,35 @@ func DirZipArchive(parentDir string) ([]byte, error) {
 	w := zip.NewWriter(buf)
 
 	log.Printf("Looking into %s", parentDir)
-	err_walk := filepath.Walk(parentDir, func(path string, f os.FileInfo, err error) error {
+	errWalk := filepath.Walk(parentDir, func(path string, f os.FileInfo, err error) error {
 		if !f.IsDir() {
-			f, err_create := w.Create("parent/" + path[len(parentDir):])
-			if err_create != nil {
-				return err_create
+			f, errCreate := w.Create("parent/" + path[len(parentDir):])
+			if errCreate != nil {
+				return errCreate
 			}
 
-			content, err_read := ioutil.ReadFile(path)
-			if err_read != nil {
-				return err_read
+			content, errRead := ioutil.ReadFile(path)
+			if errRead != nil {
+				return errRead
 			}
 
-			_, err_write := f.Write(content)
-			if err_write != nil {
-				return err_write
+			_, errWrite := f.Write(content)
+			if errWrite != nil {
+				return errWrite
 			}
 			log.Printf("Attached: %s", path[len(parentDir):])
 		}
 		return nil
 	})
 
-	if err_walk != nil {
-		return nil, err_walk
+	if errWalk != nil {
+		return nil, errWalk
 	}
 
 	// Make sure to check the error on Close.
-	err_zip := w.Close()
-	if err_zip != nil {
-		return nil, err_zip
+	errZip := w.Close()
+	if errZip != nil {
+		return nil, errZip
 	}
 	return buf.Bytes(), nil
 }

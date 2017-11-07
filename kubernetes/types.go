@@ -16,20 +16,33 @@ limitations under the License.
 
 package kubernetes
 
+/*
+BaseResponse - base type for all responses from mount operation
+*/
 type BaseResponse struct {
 	Status  string `json:"status,omitempty"`
 	Message string `json:"message,omitempty"`
 }
 
+/*
+CapabilitiesResponse - list of supported capabilities,
+return `attach` cappability for now
+*/
 type CapabilitiesResponse struct {
 	Attach bool `json:"attach"`
 }
 
+/*
+InitResponse - describe result of init operation with list of supported capabilities
+*/
 type InitResponse struct {
 	BaseResponse
 	Capabilities CapabilitiesResponse `json:"capabilities,omitempty"`
 }
 
+/*
+MountResponse - describe result of mount action with final state for device
+*/
 type MountResponse struct {
 	BaseResponse
 	Attached bool `json:"attached"`

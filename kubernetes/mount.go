@@ -27,11 +27,11 @@ func initFunction() error {
 	var response InitResponse
 	response.Status = "Success"
 	response.Capabilities.Attach = false
-	json_data, err := json.Marshal(response)
+	jsonData, err := json.Marshal(response)
 	if err != nil {
 		return err
 	}
-	fmt.Println(string(json_data))
+	fmt.Println(string(jsonData))
 	return nil
 }
 
@@ -67,31 +67,31 @@ func runAction(cl *cloudify.CloudifyClient, action string, params map[string]int
 	return nil
 }
 
-func mountFunction(cl *cloudify.CloudifyClient, path, config_json, deployment, instance string) error {
-	var in_data_parsed map[string]interface{}
-	err := json.Unmarshal([]byte(config_json), &in_data_parsed)
+func mountFunction(cl *cloudify.CloudifyClient, path, configJson, deployment, instance string) error {
+	var inDataParsed map[string]interface{}
+	err := json.Unmarshal([]byte(configJson), &inDataParsed)
 	if err != nil {
 		return err
 	}
 
 	var params = map[string]interface{}{
 		"path":   path,
-		"params": in_data_parsed}
+		"params": inDataParsed}
 
-	err_action := runAction(cl, "maintenance.mount", params, deployment, instance)
+	errAction := runAction(cl, "maintenance.mount", params, deployment, instance)
 
-	if err_action != nil {
-		return err_action
+	if errAction != nil {
+		return errAction
 	}
 
 	var response MountResponse
 	response.Status = "Success"
 	response.Attached = true
-	json_data, err := json.Marshal(response)
+	jsonData, err := json.Marshal(response)
 	if err != nil {
 		return err
 	}
-	fmt.Println(string(json_data))
+	fmt.Println(string(jsonData))
 	return nil
 }
 
@@ -99,20 +99,20 @@ func unMountFunction(cl *cloudify.CloudifyClient, path, deployment, instance str
 	var params = map[string]interface{}{
 		"path": path}
 
-	err_action := runAction(cl, "maintenance.unmount", params, deployment, instance)
+	errAction := runAction(cl, "maintenance.unmount", params, deployment, instance)
 
-	if err_action != nil {
-		return err_action
+	if errAction != nil {
+		return errAction
 	}
 
 	var response MountResponse
 	response.Status = "Success"
 	response.Attached = false
-	json_data, err := json.Marshal(response)
+	jsonData, err := json.Marshal(response)
 	if err != nil {
 		return err
 	} else {
-		fmt.Println(string(json_data))
+		fmt.Println(string(jsonData))
 	}
 	return nil
 }
@@ -154,11 +154,11 @@ func Run(cl *cloudify.CloudifyClient, args []string, deployment, instance string
 	var response BaseResponse
 	response.Status = "Not supported"
 	response.Message = message
-	json_data, err := json.Marshal(response)
+	jsonData, err := json.Marshal(response)
 	if err != nil {
 		fmt.Println(err)
 		return 1
 	}
-	fmt.Println(string(json_data))
+	fmt.Println(string(jsonData))
 	return 0
 }

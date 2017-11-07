@@ -107,7 +107,7 @@ func (cl *CloudifyClient) WaitBeforeRunExecution(deploymentID string) error {
 		if err != nil {
 			return err
 		}
-		var have_unfinished bool = false
+		var haveUnfinished bool = false
 		for _, execution := range executions.Items {
 			if execution.WorkflowId == "create_deployment_environment" && execution.Status == "failed" {
 				return fmt.Errorf(execution.ErrorMessage)
@@ -117,11 +117,11 @@ func (cl *CloudifyClient) WaitBeforeRunExecution(deploymentID string) error {
 					log.Printf("Check status for %v, last status: %v", execution.Id, execution.Status)
 				}
 				time.Sleep(15 * time.Second)
-				have_unfinished = true
+				haveUnfinished = true
 				break
 			}
 		}
-		if !have_unfinished {
+		if !haveUnfinished {
 			return nil
 		}
 	}
@@ -129,17 +129,17 @@ func (cl *CloudifyClient) WaitBeforeRunExecution(deploymentID string) error {
 }
 
 /* Run executions and wait results
- * exec_post: executions description for run
- * full_finish: wait to full finish
+ * execPost: executions description for run
+ * fullFinish : wait to full finish
  */
-func (cl *CloudifyClient) RunExecution(exec_post CloudifyExecutionPost, full_finish bool) (*CloudifyExecution, error) {
+func (cl *CloudifyClient) RunExecution(execPost CloudifyExecutionPost, fullFinish bool) (*CloudifyExecution, error) {
 	var execution CloudifyExecution
-	executionGet, err := cl.PostExecution(exec_post)
+	executionGet, err := cl.PostExecution(execPost)
 	if err != nil {
 		return nil, err
 	}
 	execution = executionGet.CloudifyExecution
-	for execution.Status == "pending" || (execution.Status == "started" && full_finish) {
+	for execution.Status == "pending" || (execution.Status == "started" && fullFinish) {
 		if cl.restCl.Debug {
 			log.Printf("Check status for %v, last status: %v", execution.Id, execution.Status)
 		}

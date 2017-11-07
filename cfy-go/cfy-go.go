@@ -217,17 +217,17 @@ func blueprintsOptions(args, options []string) int {
 				fmt.Println("Blueprint Id required")
 				return 1
 			}
-			var blueprint_path string
-			operFlagSet.StringVar(&blueprint_path, "path", "",
+			var blueprintPath string
+			operFlagSet.StringVar(&blueprintPath, "path", "",
 				"The blueprint path")
 			operFlagSet.Parse(options)
 
-			if len(blueprint_path) < 4 {
+			if len(blueprintPath) < 4 {
 				fmt.Println("Blueprint path required")
 				return 1
 			}
 			cl := getClient()
-			blueprint, err := cl.UploadBlueprint(args[3], blueprint_path)
+			blueprint, err := cl.UploadBlueprint(args[3], blueprintPath)
 			if err != nil {
 				log.Printf("Cloudify error: %s\n", err.Error())
 				return 1
@@ -315,19 +315,19 @@ func parsePagination(operFlagSet *flag.FlagSet, options []string) map[string]str
 	return params
 }
 
-func scaleGroupPrint(deployment_scaling_groups map[string]cloudify.ScalingGroup) int {
-	var lines [][]string = make([][]string, len(deployment_scaling_groups))
+func scaleGroupPrint(deploymentScalingGroups map[string]cloudify.ScalingGroup) int {
+	var lines [][]string = make([][]string, len(deploymentScalingGroups))
 	var pos int = 0
-	if deployment_scaling_groups != nil {
-		for group_name, scale_group := range deployment_scaling_groups {
+	if deploymentScalingGroups != nil {
+		for groupName, scaleGroup := range deploymentScalingGroups {
 			lines[pos] = make([]string, 7)
-			lines[pos][0] = group_name
-			lines[pos][1] = strings.Join(scale_group.Members, ", ")
-			lines[pos][2] = fmt.Sprintf("%d", scale_group.Properties.MinInstances)
-			lines[pos][3] = fmt.Sprintf("%d", scale_group.Properties.PlannedInstances)
-			lines[pos][4] = fmt.Sprintf("%d", scale_group.Properties.DefaultInstances)
-			lines[pos][5] = fmt.Sprintf("%d", scale_group.Properties.MaxInstances)
-			lines[pos][6] = fmt.Sprintf("%d", scale_group.Properties.CurrentInstances)
+			lines[pos][0] = groupName
+			lines[pos][1] = strings.Join(scaleGroup.Members, ", ")
+			lines[pos][2] = fmt.Sprintf("%d", scaleGroup.Properties.MinInstances)
+			lines[pos][3] = fmt.Sprintf("%d", scaleGroup.Properties.PlannedInstances)
+			lines[pos][4] = fmt.Sprintf("%d", scaleGroup.Properties.DefaultInstances)
+			lines[pos][5] = fmt.Sprintf("%d", scaleGroup.Properties.MaxInstances)
+			lines[pos][6] = fmt.Sprintf("%d", scaleGroup.Properties.CurrentInstances)
 			pos += 1
 		}
 	}
@@ -352,12 +352,12 @@ func scaleGroupsOptions(args, options []string) int {
 			operFlagSet := basicOptions("scalegroups instances")
 			var deployment string
 			var scalegroup string
-			var node_type string
+			var nodeType string
 			operFlagSet.StringVar(&deployment, "deployment", "",
 				"The unique identifier for the deployment")
 			operFlagSet.StringVar(&scalegroup, "scalegroup", "",
 				"The unique identifier for the scalegroup")
-			operFlagSet.StringVar(&node_type, "node_type",
+			operFlagSet.StringVar(&nodeType, "node_type",
 				"cloudify.nodes.ApplicationServer.kubernetes.Node",
 				"The unique identifier for the deployment")
 
@@ -373,7 +373,7 @@ func scaleGroupsOptions(args, options []string) int {
 			}
 
 			cl := getClient()
-			instances, err := cl.GetDeploymentScaleGroupInstances(deployment, scalegroup, node_type)
+			instances, err := cl.GetDeploymentScaleGroupInstances(deployment, scalegroup, nodeType)
 			if err != nil {
 				log.Printf("Cloudify error: %s\n", err.Error())
 				return 1
@@ -385,12 +385,12 @@ func scaleGroupsOptions(args, options []string) int {
 			operFlagSet := basicOptions("scalegroups nodes")
 			var deployment string
 			var scalegroup string
-			var node_type string
+			var nodeType string
 			operFlagSet.StringVar(&deployment, "deployment", "",
 				"The unique identifier for the deployment")
 			operFlagSet.StringVar(&scalegroup, "scalegroup", "",
 				"The unique identifier for the scalegroup")
-			operFlagSet.StringVar(&node_type, "node_type",
+			operFlagSet.StringVar(&nodeType, "node_type",
 				"cloudify.nodes.ApplicationServer.kubernetes.Node",
 				"The unique identifier for the deployment")
 
@@ -406,7 +406,7 @@ func scaleGroupsOptions(args, options []string) int {
 			}
 
 			cl := getClient()
-			nodes, err := cl.GetDeploymentScaleGroupNodes(deployment, scalegroup, node_type)
+			nodes, err := cl.GetDeploymentScaleGroupNodes(deployment, scalegroup, nodeType)
 			if err != nil {
 				log.Printf("Cloudify error: %s\n", err.Error())
 				return 1
@@ -435,14 +435,14 @@ func scaleGroupsOptions(args, options []string) int {
 			}
 
 			cl := getClient()
-			scale_group_obj, err := cl.GetDeploymentScaleGroup(deployment, scalegroup)
+			scaleGroupObj, err := cl.GetDeploymentScaleGroup(deployment, scalegroup)
 			if err != nil {
 				log.Printf("Cloudify error: %s\n", err.Error())
 				return 1
 			}
-			var scale_groups = map[string]cloudify.ScalingGroup{}
-			scale_groups[scalegroup] = *scale_group_obj
-			return scaleGroupPrint(scale_groups)
+			var scaleGroups = map[string]cloudify.ScalingGroup{}
+			scaleGroups[scalegroup] = *scaleGroupObj
+			return scaleGroupPrint(scaleGroups)
 		}
 	default:
 		{
@@ -503,10 +503,10 @@ func deploymentsOptions(args, options []string) int {
 			}
 			var lines [][]string = make([][]string, len(deployments.Items))
 			for pos, deployment := range deployments.Items {
-				var scale_groups = []string{}
+				var scaleGroups = []string{}
 				if deployment.ScalingGroups != nil {
-					for group_name, _ := range deployment.ScalingGroups {
-						scale_groups = append(scale_groups, group_name)
+					for groupName, _ := range deployment.ScalingGroups {
+						scaleGroups = append(scaleGroups, groupName)
 					}
 				}
 				lines[pos] = make([]string, 7)
@@ -516,7 +516,7 @@ func deploymentsOptions(args, options []string) int {
 				lines[pos][3] = deployment.UpdatedAt
 				lines[pos][4] = deployment.Tenant
 				lines[pos][5] = deployment.CreatedBy
-				lines[pos][6] = strings.Join(scale_groups, ", ")
+				lines[pos][6] = strings.Join(scaleGroups, ", ")
 			}
 			utils.PrintTable([]string{
 				"id", "blueprint_id", "created_at", "updated_at",
@@ -578,12 +578,12 @@ func deploymentsOptions(args, options []string) int {
 				fmt.Println("Please recheck list of deployments")
 				return 1
 			}
-			json_outputs, err := deployments.Items[0].GetJsonOutputs()
+			jsonOutputs, err := deployments.Items[0].GetJsonOutputs()
 			if err != nil {
 				log.Printf("Cloudify error: %s\n", err.Error())
 				return 1
 			}
-			fmt.Printf("Deployment outputs: %+v\n", json_outputs)
+			fmt.Printf("Deployment outputs: %+v\n", jsonOutputs)
 		}
 	case "inputs":
 		{
@@ -597,12 +597,12 @@ func deploymentsOptions(args, options []string) int {
 				fmt.Println("Please recheck list of deployments")
 				return 1
 			}
-			json_inputs, err := deployments.Items[0].GetJsonInputs()
+			jsonInputs, err := deployments.Items[0].GetJsonInputs()
 			if err != nil {
 				log.Printf("Cloudify error: %s\n", err.Error())
 				return 1
 			}
-			fmt.Printf("Deployment inputs: %+v\n", json_inputs)
+			fmt.Printf("Deployment inputs: %+v\n", jsonInputs)
 		}
 	case "delete":
 		{
@@ -792,12 +792,12 @@ func nodesOptions(args, options []string) int {
 			operFlagSet := basicOptions("nodes started")
 			var node string
 			var deployment string
-			var node_type string
+			var nodeType string
 			operFlagSet.StringVar(&node, "node", "",
 				"The unique identifier for the node")
 			operFlagSet.StringVar(&deployment, "deployment", "",
 				"The unique identifier for the deployment")
-			operFlagSet.StringVar(&node_type, "node_type",
+			operFlagSet.StringVar(&nodeType, "node_type",
 				"cloudify.nodes.ApplicationServer.kubernetes.Node",
 				"The unique identifier for the deployment")
 
@@ -813,7 +813,7 @@ func nodesOptions(args, options []string) int {
 			}
 
 			cl := getClient()
-			nodes, err := cl.GetStartedNodesWithType(params, node_type)
+			nodes, err := cl.GetStartedNodesWithType(params, nodeType)
 			if err != nil {
 				log.Printf("Cloudify error: %s\n", err.Error())
 				return 1
@@ -901,7 +901,7 @@ func nodeInstancesOptions(args, options []string) int {
 			operFlagSet := basicOptions("node-instances started")
 			var node string
 			var deployment string
-			var node_type string
+			var nodeType string
 			var instance string
 			operFlagSet.StringVar(&instance, "instance", "",
 				"The unique identifier for the instance")
@@ -909,7 +909,7 @@ func nodeInstancesOptions(args, options []string) int {
 				"The unique identifier for the node")
 			operFlagSet.StringVar(&deployment, "deployment", "",
 				"The unique identifier for the deployment")
-			operFlagSet.StringVar(&node_type, "node_type",
+			operFlagSet.StringVar(&nodeType, "node_type",
 				"cloudify.nodes.ApplicationServer.kubernetes.Node",
 				"The unique identifier for the deployment")
 
@@ -928,7 +928,7 @@ func nodeInstancesOptions(args, options []string) int {
 			}
 
 			cl := getClient()
-			nodeInstances, err := cl.GetStartedNodeInstancesWithType(params, node_type)
+			nodeInstances, err := cl.GetStartedNodeInstancesWithType(params, nodeType)
 			if err != nil {
 				log.Printf("Cloudify error: %s\n", err.Error())
 				return 1

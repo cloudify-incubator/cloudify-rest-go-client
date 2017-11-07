@@ -59,10 +59,10 @@ func (cl *CloudifyClient) GetBlueprints(params map[string]string) (*CloudifyBlue
 	return &blueprints, nil
 }
 
-func (cl *CloudifyClient) DeleteBlueprints(blueprint_id string) (*CloudifyBlueprintGet, error) {
+func (cl *CloudifyClient) DeleteBlueprints(blueprintId string) (*CloudifyBlueprintGet, error) {
 	var blueprint CloudifyBlueprintGet
 
-	err := cl.Delete("blueprints/"+blueprint_id, &blueprint)
+	err := cl.Delete("blueprints/"+blueprintId, &blueprint)
 	if err != nil {
 		return nil, err
 	}
@@ -70,34 +70,34 @@ func (cl *CloudifyClient) DeleteBlueprints(blueprint_id string) (*CloudifyBluepr
 	return &blueprint, nil
 }
 
-func (cl *CloudifyClient) DownloadBlueprints(blueprint_id string) (string, error) {
-	file_name := blueprint_id + ".tar.gz"
+func (cl *CloudifyClient) DownloadBlueprints(blueprintId string) (string, error) {
+	fileName := blueprintId + ".tar.gz"
 
-	_, err_file := os.Stat(file_name)
-	if !os.IsNotExist(err_file) {
-		return "", fmt.Errorf("File `%s` is exist.", file_name)
+	_, errFile := os.Stat(fileName)
+	if !os.IsNotExist(errFile) {
+		return "", fmt.Errorf("File `%s` is exist.", fileName)
 	}
 
-	err := cl.GetBinary("blueprints/"+blueprint_id+"/archive", file_name)
+	err := cl.GetBinary("blueprints/"+blueprintId+"/archive", fileName)
 	if err != nil {
 		return "", err
 	}
 
-	return file_name, nil
+	return fileName, nil
 }
 
-func (cl *CloudifyClient) UploadBlueprint(blueprint_id, path string) (*CloudifyBlueprintGet, error) {
+func (cl *CloudifyClient) UploadBlueprint(blueprintId, path string) (*CloudifyBlueprintGet, error) {
 
-	absPath, err_abs := filepath.Abs(path)
-	if err_abs != nil {
-		return nil, err_abs
+	absPath, errAbs := filepath.Abs(path)
+	if errAbs != nil {
+		return nil, errAbs
 	}
 
-	dirPath, name_file := filepath.Split(absPath)
+	dirPath, nameFile := filepath.Split(absPath)
 
 	var blueprint CloudifyBlueprintGet
 
-	err := cl.PutZip("blueprints/"+blueprint_id+"?application_file_name="+name_file, dirPath, &blueprint)
+	err := cl.PutZip("blueprints/"+blueprintId+"?application_file_name="+nameFile, dirPath, &blueprint)
 	if err != nil {
 		return nil, err
 	}

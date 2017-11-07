@@ -44,11 +44,11 @@ func (depl *CloudifyDeploymentPost) SetJsonInputs(inputs string) error {
 }
 
 func (depl *CloudifyDeploymentPost) GetJsonInputs() (string, error) {
-	json_data, err := json.Marshal(depl.Inputs)
+	jsonData, err := json.Marshal(depl.Inputs)
 	if err != nil {
 		return "", err
 	}
-	return string(json_data), nil
+	return string(jsonData), nil
 }
 
 type ScalingGroupProperties struct {
@@ -79,19 +79,19 @@ type CloudifyDeployment struct {
 }
 
 func (depl *CloudifyDeployment) GetJsonOutputs() (string, error) {
-	json_data, err := json.Marshal(depl.Outputs)
+	jsonData, err := json.Marshal(depl.Outputs)
 	if err != nil {
 		return "", err
 	}
-	return string(json_data), nil
+	return string(jsonData), nil
 }
 
 func (depl *CloudifyDeployment) GetJsonInputs() (string, error) {
-	json_data, err := json.Marshal(depl.Inputs)
+	jsonData, err := json.Marshal(depl.Inputs)
 	if err != nil {
 		return "", err
 	}
-	return string(json_data), nil
+	return string(jsonData), nil
 }
 
 type CloudifyDeploymentGet struct {
@@ -122,10 +122,10 @@ func (cl *CloudifyClient) GetDeployments(params map[string]string) (*CloudifyDep
 	return &deployments, nil
 }
 
-func (cl *CloudifyClient) DeleteDeployments(deployment_id string) (*CloudifyDeploymentGet, error) {
+func (cl *CloudifyClient) DeleteDeployments(deploymentId string) (*CloudifyDeploymentGet, error) {
 	var deployment CloudifyDeploymentGet
 
-	err := cl.Delete("deployments/"+deployment_id, &deployment)
+	err := cl.Delete("deployments/"+deploymentId, &deployment)
 	if err != nil {
 		return nil, err
 	}
@@ -133,10 +133,10 @@ func (cl *CloudifyClient) DeleteDeployments(deployment_id string) (*CloudifyDepl
 	return &deployment, nil
 }
 
-func (cl *CloudifyClient) CreateDeployments(deployment_id string, depl CloudifyDeploymentPost) (*CloudifyDeploymentGet, error) {
+func (cl *CloudifyClient) CreateDeployments(deploymentId string, depl CloudifyDeploymentPost) (*CloudifyDeploymentGet, error) {
 	var deployment CloudifyDeploymentGet
 
-	err := cl.Put("deployments/"+deployment_id, depl, &deployment)
+	err := cl.Put("deployments/"+deploymentId, depl, &deployment)
 	if err != nil {
 		return nil, err
 	}
