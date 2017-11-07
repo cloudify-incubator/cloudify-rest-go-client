@@ -127,3 +127,12 @@ func DirZipArchive(parentDir string) ([]byte, error) {
 	}
 	return buf.Bytes(), nil
 }
+
+func InList(source []string, value string) bool {
+	for _, inList := range source {
+		if inList == value {
+			return true
+		}
+	}
+	return false
+}
