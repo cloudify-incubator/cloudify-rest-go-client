@@ -19,7 +19,6 @@ package cloudify
 import (
 	"encoding/json"
 	rest "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify/rest"
-	"log"
 	"net/url"
 )
 
@@ -28,7 +27,7 @@ type CloudifyNodeInstance struct {
 	Relationships     []interface{}          `json:"relationships,omitempty"`
 	RuntimeProperties map[string]interface{} `json:"runtime_properties,omitempty"`
 	State             string                 `json:"state,omitempty"`
-	Version           int                    `json:"host_id,version"`
+	Version           int                    `json:"version,omitempty"`
 	HostId            string                 `json:"host_id,omitempty"`
 	DeploymentId      string                 `json:"deployment_id,omitempty"`
 	NodeId            string                 `json:"node_id,omitempty"`
@@ -74,29 +73,26 @@ func (cl *CloudifyClient) GetStartedNodeInstancesWithType(params map[string]stri
 		return nil, err
 	}
 
+	var node_params = map[string]string{}
+	if val, ok := params["deployment_id"]; ok {
+		node_params["deployment_id"] = val
+	}
+	nodes, err := cl.GetNodes(node_params)
+	if err != nil {
+		return nil, err
+	}
+
 	instances := []CloudifyNodeInstance{}
 	for _, nodeInstance := range nodeInstances.Items {
-		var node_params = map[string]string{}
-		node_params["id"] = nodeInstance.NodeId
-		nodes, err := cl.GetNodes(node_params)
-		if err != nil {
-			if cl.restCl.Debug {
-				log.Printf("Not found instances: %+v", err)
-			}
-			continue
-		}
-		if len(nodes.Items) != 1 {
-			if cl.restCl.Debug {
-				log.Printf("Found more than one node by nodeId: %+v", nodeInstance.NodeId)
-			}
-			continue
-		}
-
 		var not_kubernetes_host bool = true
-		for _, type_name := range nodes.Items[0].TypeHierarchy {
-			if type_name == node_type {
-				not_kubernetes_host = false
-				break
+		for _, node := range nodes.Items {
+			if node.Id == nodeInstance.NodeId {
+				for _, type_name := range node.TypeHierarchy {
+					if type_name == node_type {
+						not_kubernetes_host = false
+						break
+					}
+				}
 			}
 		}
 

@@ -67,7 +67,7 @@ func (cl *CloudifyClient) GetDeploymentScaleGroupNodes(deploymentID, groupName, 
 	nodes := []CloudifyNode{}
 	for _, node := range cloud_nodes.Items {
 		for _, nodeId := range scale_group.Members {
-			if nodeId == node.Id {
+			if nodeId == node.Id || nodeId == node.HostId {
 				nodes = append(nodes, node)
 			}
 		}
@@ -89,8 +89,8 @@ func (cl *CloudifyClient) GetDeploymentScaleGroupInstances(deploymentID, groupNa
 		return nil, err
 	}
 
-	// get scale group
-	scale_group, err := cl.GetDeploymentScaleGroup(deploymentID, groupName)
+	// get nodes in scale group (need to get nodes because we need host for each)
+	cloud_nodes, err := cl.GetDeploymentScaleGroupNodes(deploymentID, groupName, node_type)
 	if err != nil {
 		return nil, err
 	}
@@ -98,8 +98,8 @@ func (cl *CloudifyClient) GetDeploymentScaleGroupInstances(deploymentID, groupNa
 	// filter by scaling group
 	instances := []CloudifyNodeInstance{}
 	for _, instance := range cloud_instances.Items {
-		for _, nodeId := range scale_group.Members {
-			if nodeId == instance.NodeId {
+		for _, node := range cloud_nodes.Items {
+			if node.Id == instance.NodeId {
 				instances = append(instances, instance)
 			}
 		}
