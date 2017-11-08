@@ -891,7 +891,13 @@ func nodesOptions(args, options []string) int {
 func nodeInstancesPrint(nodeInstances *cloudify.NodeInstances) int {
 	lines := make([][]string, len(nodeInstances.Items))
 	for pos, nodeInstance := range nodeInstances.Items {
-		lines[pos] = make([]string, 7)
+		var scaleGroups = []string{}
+		if nodeInstance.ScalingGroups != nil {
+			for _, scaleGroup := range nodeInstance.ScalingGroups {
+				scaleGroups = append(scaleGroups, scaleGroup.Name)
+			}
+		}
+		lines[pos] = make([]string, 8)
 		lines[pos][0] = nodeInstance.ID
 		lines[pos][1] = nodeInstance.DeploymentID
 		lines[pos][2] = nodeInstance.HostID
@@ -899,10 +905,11 @@ func nodeInstancesPrint(nodeInstances *cloudify.NodeInstances) int {
 		lines[pos][4] = nodeInstance.State
 		lines[pos][5] = nodeInstance.Tenant
 		lines[pos][6] = nodeInstance.CreatedBy
+		lines[pos][7] = strings.Join(scaleGroups, ", ")
 	}
 	utils.PrintTable([]string{
 		"Id", "Deployment id", "Host id", "Node id", "State", "Tenant",
-		"created_by",
+		"Created by", "Scaling Group",
 	}, lines)
 	fmt.Printf("Showed %d+%d/%d results. Use offset/size for get more.\n",
 		nodeInstances.Metadata.Pagination.Offset, len(nodeInstances.Items),

@@ -22,16 +22,24 @@ import (
 	"net/url"
 )
 
+/*
+NodeInstanceScalingGroup - short information(ID+Name) about scaling group related to instance
+*/
+type NodeInstanceScalingGroup struct {
+	Name string `json:"name,omitempty"`
+	ID   string `json:"id,omitempty"`
+}
+
 type NodeInstance struct {
 	rest.CloudifyIDWithTenant
-	Relationships     []interface{}          `json:"relationships,omitempty"`
-	RuntimeProperties map[string]interface{} `json:"runtime_properties,omitempty"`
-	State             string                 `json:"state,omitempty"`
-	Version           int                    `json:"version,omitempty"`
-	HostID            string                 `json:"host_id,omitempty"`
-	DeploymentID      string                 `json:"deployment_id,omitempty"`
-	NodeID            string                 `json:"node_id,omitempty"`
-	// TODO describe "scaling_groups" struct
+	Relationships     []interface{}              `json:"relationships,omitempty"`
+	RuntimeProperties map[string]interface{}     `json:"runtime_properties,omitempty"`
+	State             string                     `json:"state,omitempty"`
+	Version           int                        `json:"version,omitempty"`
+	HostID            string                     `json:"host_id,omitempty"`
+	DeploymentID      string                     `json:"deployment_id,omitempty"`
+	NodeID            string                     `json:"node_id,omitempty"`
+	ScalingGroups     []NodeInstanceScalingGroup `json:"scaling_groups,omitempty"`
 }
 
 func (instance *NodeInstance) GetJSONRuntimeProperties() (string, error) {
