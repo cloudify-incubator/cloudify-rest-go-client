@@ -21,30 +21,30 @@ import (
 	"net/url"
 )
 
-type CloudifyEvent struct {
-	NodeInstanceId    string `json:"node_instance_id"`
+type Event struct {
+	NodeInstanceID    string `json:"node_instance_id"`
 	EventType         string `json:"event_type"`
 	Operation         string `json:"operation"`
-	BlueprintId       string `json:"blueprint_id"`
+	BlueprintID       string `json:"blueprint_id"`
 	NodeName          string `json:"node_name"`
-	WorkflowId        string `json:"workflow_id"`
+	WorkflowID        string `json:"workflow_id"`
 	ErrorCauses       string `json:"error_causes"`
 	ReportedTimestamp string `json:"reported_timestamp"`
-	DeploymentId      string `json:"deployment_id"`
+	DeploymentID      string `json:"deployment_id"`
 	Type              string `json:"type"`
-	ExecutionId       string `json:"execution_id"`
+	ExecutionID       string `json:"execution_id"`
 	Timestamp         string `json:"timestamp"`
 	Message           string `json:"message"`
 }
 
-type CloudifyEvents struct {
+type Events struct {
 	rest.CloudifyBaseMessage
 	Metadata rest.CloudifyMetadata `json:"metadata"`
-	Items    []CloudifyEvent       `json:"items"`
+	Items    []Event               `json:"items"`
 }
 
-func (cl *CloudifyClient) GetEvents(params map[string]string) (*CloudifyEvents, error) {
-	var events CloudifyEvents
+func (cl *Client) GetEvents(params map[string]string) (*Events, error) {
+	var events Events
 
 	values := url.Values{}
 	for key, value := range params {

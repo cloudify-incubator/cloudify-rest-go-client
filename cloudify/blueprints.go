@@ -24,27 +24,27 @@ import (
 	"path/filepath"
 )
 
-type CloudifyBlueprint struct {
+type Blueprint struct {
 	// have id, owner information
 	rest.CloudifyResource
 	MainFileName string `json:"main_file_name"`
 	// TODO describe "plan" struct
 }
 
-type CloudifyBlueprintGet struct {
+type BlueprintGet struct {
 	// can be response from api
 	rest.CloudifyBaseMessage
-	CloudifyBlueprint
+	Blueprint
 }
 
-type CloudifyBlueprints struct {
+type Blueprints struct {
 	rest.CloudifyBaseMessage
 	Metadata rest.CloudifyMetadata `json:"metadata"`
-	Items    []CloudifyBlueprint   `json:"items"`
+	Items    []Blueprint           `json:"items"`
 }
 
-func (cl *CloudifyClient) GetBlueprints(params map[string]string) (*CloudifyBlueprints, error) {
-	var blueprints CloudifyBlueprints
+func (cl *Client) GetBlueprints(params map[string]string) (*Blueprints, error) {
+	var blueprints Blueprints
 
 	values := url.Values{}
 	for key, value := range params {
@@ -59,10 +59,10 @@ func (cl *CloudifyClient) GetBlueprints(params map[string]string) (*CloudifyBlue
 	return &blueprints, nil
 }
 
-func (cl *CloudifyClient) DeleteBlueprints(blueprintId string) (*CloudifyBlueprintGet, error) {
-	var blueprint CloudifyBlueprintGet
+func (cl *Client) DeleteBlueprints(blueprintID string) (*BlueprintGet, error) {
+	var blueprint BlueprintGet
 
-	err := cl.Delete("blueprints/"+blueprintId, &blueprint)
+	err := cl.Delete("blueprints/"+blueprintID, &blueprint)
 	if err != nil {
 		return nil, err
 	}
@@ -70,15 +70,15 @@ func (cl *CloudifyClient) DeleteBlueprints(blueprintId string) (*CloudifyBluepri
 	return &blueprint, nil
 }
 
-func (cl *CloudifyClient) DownloadBlueprints(blueprintId string) (string, error) {
-	fileName := blueprintId + ".tar.gz"
+func (cl *Client) DownloadBlueprints(blueprintID string) (string, error) {
+	fileName := blueprintID + ".tar.gz"
 
 	_, errFile := os.Stat(fileName)
 	if !os.IsNotExist(errFile) {
-		return "", fmt.Errorf("File `%s` is exist.", fileName)
+		return "", fmt.Errorf("file `%s` is exist", fileName)
 	}
 
-	err := cl.GetBinary("blueprints/"+blueprintId+"/archive", fileName)
+	err := cl.GetBinary("blueprints/"+blueprintID+"/archive", fileName)
 	if err != nil {
 		return "", err
 	}
@@ -86,7 +86,7 @@ func (cl *CloudifyClient) DownloadBlueprints(blueprintId string) (string, error)
 	return fileName, nil
 }
 
-func (cl *CloudifyClient) UploadBlueprint(blueprintId, path string) (*CloudifyBlueprintGet, error) {
+func (cl *Client) UploadBlueprint(blueprintID, path string) (*BlueprintGet, error) {
 
 	absPath, errAbs := filepath.Abs(path)
 	if errAbs != nil {
@@ -95,9 +95,9 @@ func (cl *CloudifyClient) UploadBlueprint(blueprintId, path string) (*CloudifyBl
 
 	dirPath, nameFile := filepath.Split(absPath)
 
-	var blueprint CloudifyBlueprintGet
+	var blueprint BlueprintGet
 
-	err := cl.PutZip("blueprints/"+blueprintId+"?application_file_name="+nameFile, dirPath, &blueprint)
+	err := cl.PutZip("blueprints/"+blueprintID+"?application_file_name="+nameFile, dirPath, &blueprint)
 	if err != nil {
 		return nil, err
 	}

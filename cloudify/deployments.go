@@ -22,19 +22,23 @@ import (
 	"net/url"
 )
 
-// Check https://blog.golang.org/json-and-go for more info about json marshaling.
-type CloudifyWorkflow struct {
+/*
+Workflow - inforamtion about workflow
+
+Check https://blog.golang.org/json-and-go for more info about json marshaling.
+*/
+type Workflow struct {
 	CreatedAt  string                 `json:"created_at"`
 	Name       string                 `json:"name"`
 	Parameters map[string]interface{} `json:"parameters"`
 }
 
-type CloudifyDeploymentPost struct {
-	BlueprintId string                 `json:"blueprint_id"`
+type DeploymentPost struct {
+	BlueprintID string                 `json:"blueprint_id"`
 	Inputs      map[string]interface{} `json:"inputs"`
 }
 
-func (depl *CloudifyDeploymentPost) SetJsonInputs(inputs string) error {
+func (depl *DeploymentPost) SetJSONInputs(inputs string) error {
 	if len(inputs) == 0 {
 		depl.Inputs = map[string]interface{}{}
 		return nil
@@ -43,7 +47,7 @@ func (depl *CloudifyDeploymentPost) SetJsonInputs(inputs string) error {
 	return json.Unmarshal([]byte(inputs), &depl.Inputs)
 }
 
-func (depl *CloudifyDeploymentPost) GetJsonInputs() (string, error) {
+func (depl *DeploymentPost) GetJSONInputs() (string, error) {
 	jsonData, err := json.Marshal(depl.Inputs)
 	if err != nil {
 		return "", err
@@ -63,13 +67,13 @@ type ScalingGroup struct {
 	Properties ScalingGroupProperties `json:"properties"`
 	Members    []string               `json:"members"`
 }
-type CloudifyDeployment struct {
+type Deployment struct {
 	// have id, owner information
 	rest.CloudifyResource
 	// contain information from post
-	CloudifyDeploymentPost
+	DeploymentPost
 	Permalink     string                  `json:"permalink"`
-	Workflows     []CloudifyWorkflow      `json:"workflows"`
+	Workflows     []Workflow              `json:"workflows"`
 	Outputs       map[string]interface{}  `json:"outputs"`
 	ScalingGroups map[string]ScalingGroup `json:"scaling_groups"`
 	// TODO describe "policy_types" struct
@@ -78,7 +82,7 @@ type CloudifyDeployment struct {
 	// TODO describe "scaling_groups" struct
 }
 
-func (depl *CloudifyDeployment) GetJsonOutputs() (string, error) {
+func (depl *Deployment) GetJSONOutputs() (string, error) {
 	jsonData, err := json.Marshal(depl.Outputs)
 	if err != nil {
 		return "", err
@@ -86,7 +90,7 @@ func (depl *CloudifyDeployment) GetJsonOutputs() (string, error) {
 	return string(jsonData), nil
 }
 
-func (depl *CloudifyDeployment) GetJsonInputs() (string, error) {
+func (depl *Deployment) GetJSONInputs() (string, error) {
 	jsonData, err := json.Marshal(depl.Inputs)
 	if err != nil {
 		return "", err
@@ -94,20 +98,20 @@ func (depl *CloudifyDeployment) GetJsonInputs() (string, error) {
 	return string(jsonData), nil
 }
 
-type CloudifyDeploymentGet struct {
+type DeploymentGet struct {
 	// can be response from api
 	rest.CloudifyBaseMessage
-	CloudifyDeployment
+	Deployment
 }
 
-type CloudifyDeployments struct {
+type Deployments struct {
 	rest.CloudifyBaseMessage
 	Metadata rest.CloudifyMetadata `json:"metadata"`
-	Items    []CloudifyDeployment  `json:"items"`
+	Items    []Deployment          `json:"items"`
 }
 
-func (cl *CloudifyClient) GetDeployments(params map[string]string) (*CloudifyDeployments, error) {
-	var deployments CloudifyDeployments
+func (cl *Client) GetDeployments(params map[string]string) (*Deployments, error) {
+	var deployments Deployments
 
 	values := url.Values{}
 	for key, value := range params {
@@ -122,10 +126,10 @@ func (cl *CloudifyClient) GetDeployments(params map[string]string) (*CloudifyDep
 	return &deployments, nil
 }
 
-func (cl *CloudifyClient) DeleteDeployments(deploymentId string) (*CloudifyDeploymentGet, error) {
-	var deployment CloudifyDeploymentGet
+func (cl *Client) DeleteDeployments(deploymentID string) (*DeploymentGet, error) {
+	var deployment DeploymentGet
 
-	err := cl.Delete("deployments/"+deploymentId, &deployment)
+	err := cl.Delete("deployments/"+deploymentID, &deployment)
 	if err != nil {
 		return nil, err
 	}
@@ -133,10 +137,10 @@ func (cl *CloudifyClient) DeleteDeployments(deploymentId string) (*CloudifyDeplo
 	return &deployment, nil
 }
 
-func (cl *CloudifyClient) CreateDeployments(deploymentId string, depl CloudifyDeploymentPost) (*CloudifyDeploymentGet, error) {
-	var deployment CloudifyDeploymentGet
+func (cl *Client) CreateDeployments(deploymentID string, depl DeploymentPost) (*DeploymentGet, error) {
+	var deployment DeploymentGet
 
-	err := cl.Put("deployments/"+deploymentId, depl, &deployment)
+	err := cl.Put("deployments/"+deploymentID, depl, &deployment)
 	if err != nil {
 		return nil, err
 	}

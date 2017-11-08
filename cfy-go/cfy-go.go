@@ -71,7 +71,7 @@ func basicOptions(name string) *flag.FlagSet {
 	return commonFlagSet
 }
 
-func getClient() *cloudify.CloudifyClient {
+func getClient() *cloudify.Client {
 	cl := cloudify.NewClient(host, user, password, tenant)
 	if cfyDebug {
 		cl.EnableDebug()
@@ -131,7 +131,7 @@ func infoOptions(args, options []string) int {
 			fmt.Printf("Retrieving manager services status... [ip=%v]\n", host)
 			fmt.Printf("Manager status: %v\n", stat.Status)
 			fmt.Printf("Services:\n")
-			var lines [][]string = make([][]string, len(stat.Services))
+			lines := make([][]string, len(stat.Services))
 			for pos, service := range stat.Services {
 				lines[pos] = make([]string, 2)
 				lines[pos][0] = service.DisplayName
@@ -153,7 +153,7 @@ func infoOptions(args, options []string) int {
 
 			fmt.Printf("Retrieving manager services version... [ip=%v]\n", host)
 			utils.PrintTable([]string{"Version", "Edition", "Api Version"},
-				[][]string{{ver.Version, ver.Edition, cl.GetApiVersion()}})
+				[][]string{{ver.Version, ver.Edition, cl.GetAPIVersion()}})
 		}
 	default:
 		{
@@ -191,10 +191,10 @@ func blueprintsOptions(args, options []string) int {
 				log.Printf("Cloudify error: %s\n", err.Error())
 				return 1
 			}
-			var lines [][]string = make([][]string, len(blueprints.Items))
+			lines := make([][]string, len(blueprints.Items))
 			for pos, blueprint := range blueprints.Items {
 				lines[pos] = make([]string, 7)
-				lines[pos][0] = blueprint.Id
+				lines[pos][0] = blueprint.ID
 				lines[pos][1] = blueprint.Description
 				lines[pos][2] = blueprint.MainFileName
 				lines[pos][3] = blueprint.CreatedAt
@@ -232,9 +232,9 @@ func blueprintsOptions(args, options []string) int {
 				log.Printf("Cloudify error: %s\n", err.Error())
 				return 1
 			}
-			var lines [][]string = make([][]string, 1)
+			lines := make([][]string, 1)
 			lines[0] = make([]string, 7)
-			lines[0][0] = blueprint.Id
+			lines[0][0] = blueprint.ID
 			lines[0][1] = blueprint.Description
 			lines[0][2] = blueprint.MainFileName
 			lines[0][3] = blueprint.CreatedAt
@@ -278,9 +278,9 @@ func blueprintsOptions(args, options []string) int {
 				log.Printf("Cloudify error: %s\n", err.Error())
 				return 1
 			}
-			var lines [][]string = make([][]string, 1)
+			lines := make([][]string, 1)
 			lines[0] = make([]string, 7)
-			lines[0][0] = blueprint.Id
+			lines[0][0] = blueprint.ID
 			lines[0][1] = blueprint.Description
 			lines[0][2] = blueprint.MainFileName
 			lines[0][3] = blueprint.CreatedAt
@@ -316,8 +316,8 @@ func parsePagination(operFlagSet *flag.FlagSet, options []string) map[string]str
 }
 
 func scaleGroupPrint(deploymentScalingGroups map[string]cloudify.ScalingGroup) int {
-	var lines [][]string = make([][]string, len(deploymentScalingGroups))
-	var pos int = 0
+	lines := make([][]string, len(deploymentScalingGroups))
+	var pos int
 	if deploymentScalingGroups != nil {
 		for groupName, scaleGroup := range deploymentScalingGroups {
 			lines[pos] = make([]string, 7)
@@ -328,7 +328,7 @@ func scaleGroupPrint(deploymentScalingGroups map[string]cloudify.ScalingGroup) i
 			lines[pos][4] = fmt.Sprintf("%d", scaleGroup.Properties.DefaultInstances)
 			lines[pos][5] = fmt.Sprintf("%d", scaleGroup.Properties.MaxInstances)
 			lines[pos][6] = fmt.Sprintf("%d", scaleGroup.Properties.CurrentInstances)
-			pos += 1
+			pos++
 		}
 	}
 	utils.PrintTable([]string{
@@ -453,7 +453,7 @@ func scaleGroupsOptions(args, options []string) int {
 	return 0
 }
 
-func deploymentsFilter(operFlagSet *flag.FlagSet, options []string) (*cloudify.CloudifyDeployments, error) {
+func deploymentsFilter(operFlagSet *flag.FlagSet, options []string) (*cloudify.Deployments, error) {
 	var deployment string
 	operFlagSet.StringVar(&deployment, "deployment", "",
 		"The unique identifier for the deployment")
@@ -486,7 +486,7 @@ func deploymentsOptions(args, options []string) int {
 				return 1
 			}
 			for _, deployment := range deployments.Items {
-				fmt.Printf("Scale group: %v\n", deployment.Id)
+				fmt.Printf("Scale group: %v\n", deployment.ID)
 				scaleGroupPrint(deployment.ScalingGroups)
 			}
 			fmt.Printf("Showed %d+%d/%d results. Use offset/size for get more.\n",
@@ -501,17 +501,17 @@ func deploymentsOptions(args, options []string) int {
 				log.Printf("Cloudify error: %s\n", err.Error())
 				return 1
 			}
-			var lines [][]string = make([][]string, len(deployments.Items))
+			lines := make([][]string, len(deployments.Items))
 			for pos, deployment := range deployments.Items {
 				var scaleGroups = []string{}
 				if deployment.ScalingGroups != nil {
-					for groupName, _ := range deployment.ScalingGroups {
+					for groupName := range deployment.ScalingGroups {
 						scaleGroups = append(scaleGroups, groupName)
 					}
 				}
 				lines[pos] = make([]string, 7)
-				lines[pos][0] = deployment.Id
-				lines[pos][1] = deployment.BlueprintId
+				lines[pos][0] = deployment.ID
+				lines[pos][1] = deployment.BlueprintID
 				lines[pos][2] = deployment.CreatedAt
 				lines[pos][3] = deployment.UpdatedAt
 				lines[pos][4] = deployment.Tenant
@@ -542,9 +542,9 @@ func deploymentsOptions(args, options []string) int {
 				"The json input string")
 			operFlagSet.Parse(options)
 
-			var depl cloudify.CloudifyDeploymentPost
-			depl.BlueprintId = blueprint
-			depl.SetJsonInputs(jsonInputs)
+			var depl cloudify.DeploymentPost
+			depl.BlueprintID = blueprint
+			depl.SetJSONInputs(jsonInputs)
 
 			cl := getClient()
 			deployment, err := cl.CreateDeployments(args[3], depl)
@@ -553,10 +553,10 @@ func deploymentsOptions(args, options []string) int {
 				return 1
 			}
 
-			var lines [][]string = make([][]string, 1)
+			lines := make([][]string, 1)
 			lines[0] = make([]string, 6)
-			lines[0][0] = deployment.Id
-			lines[0][1] = deployment.BlueprintId
+			lines[0][0] = deployment.ID
+			lines[0][1] = deployment.BlueprintID
 			lines[0][2] = deployment.CreatedAt
 			lines[0][3] = deployment.UpdatedAt
 			lines[0][4] = deployment.Tenant
@@ -578,7 +578,7 @@ func deploymentsOptions(args, options []string) int {
 				fmt.Println("Please recheck list of deployments")
 				return 1
 			}
-			jsonOutputs, err := deployments.Items[0].GetJsonOutputs()
+			jsonOutputs, err := deployments.Items[0].GetJSONOutputs()
 			if err != nil {
 				log.Printf("Cloudify error: %s\n", err.Error())
 				return 1
@@ -597,7 +597,7 @@ func deploymentsOptions(args, options []string) int {
 				fmt.Println("Please recheck list of deployments")
 				return 1
 			}
-			jsonInputs, err := deployments.Items[0].GetJsonInputs()
+			jsonInputs, err := deployments.Items[0].GetJSONInputs()
 			if err != nil {
 				log.Printf("Cloudify error: %s\n", err.Error())
 				return 1
@@ -620,10 +620,10 @@ func deploymentsOptions(args, options []string) int {
 				log.Printf("Cloudify error: %s\n", err.Error())
 				return 1
 			}
-			var lines [][]string = make([][]string, 1)
+			lines := make([][]string, 1)
 			lines[0] = make([]string, 6)
-			lines[0][0] = deployment.Id
-			lines[0][1] = deployment.BlueprintId
+			lines[0][0] = deployment.ID
+			lines[0][1] = deployment.BlueprintID
 			lines[0][2] = deployment.CreatedAt
 			lines[0][3] = deployment.UpdatedAt
 			lines[0][4] = deployment.Tenant
@@ -672,13 +672,13 @@ func executionsOptions(args, options []string) int {
 				log.Printf("Cloudify error: %s\n", err.Error())
 				return 1
 			}
-			var lines [][]string = make([][]string, len(executions.Items))
+			lines := make([][]string, len(executions.Items))
 			for pos, execution := range executions.Items {
 				lines[pos] = make([]string, 8)
-				lines[pos][0] = execution.Id
-				lines[pos][1] = execution.WorkflowId
+				lines[pos][0] = execution.ID
+				lines[pos][1] = execution.WorkflowID
 				lines[pos][2] = execution.Status
-				lines[pos][3] = execution.DeploymentId
+				lines[pos][3] = execution.DeploymentID
 				lines[pos][4] = execution.CreatedAt
 				lines[pos][5] = execution.ErrorMessage
 				lines[pos][6] = execution.Tenant
@@ -708,10 +708,10 @@ func executionsOptions(args, options []string) int {
 				"The json params string")
 			operFlagSet.Parse(options)
 
-			var exec cloudify.CloudifyExecutionPost
-			exec.WorkflowId = args[3]
-			exec.DeploymentId = deployment
-			exec.SetJsonParameters(jsonParams)
+			var exec cloudify.ExecutionPost
+			exec.WorkflowID = args[3]
+			exec.DeploymentID = deployment
+			exec.SetJSONParameters(jsonParams)
 
 			cl := getClient()
 			execution, err := cl.PostExecution(exec)
@@ -720,12 +720,12 @@ func executionsOptions(args, options []string) int {
 				return 1
 			}
 
-			var lines [][]string = make([][]string, 1)
+			lines := make([][]string, 1)
 			lines[0] = make([]string, 8)
-			lines[0][0] = execution.Id
-			lines[0][1] = execution.WorkflowId
+			lines[0][0] = execution.ID
+			lines[0][1] = execution.WorkflowID
 			lines[0][2] = execution.Status
-			lines[0][3] = execution.DeploymentId
+			lines[0][3] = execution.DeploymentID
 			lines[0][4] = execution.CreatedAt
 			lines[0][5] = execution.ErrorMessage
 			lines[0][6] = execution.Tenant
@@ -744,14 +744,14 @@ func executionsOptions(args, options []string) int {
 	return 0
 }
 
-func nodesPrint(nodes *cloudify.CloudifyNodes) int {
-	var lines [][]string = make([][]string, len(nodes.Items))
+func nodesPrint(nodes *cloudify.Nodes) int {
+	lines := make([][]string, len(nodes.Items))
 	for pos, node := range nodes.Items {
 		lines[pos] = make([]string, 9)
-		lines[pos][0] = node.Id
-		lines[pos][1] = node.DeploymentId
-		lines[pos][2] = node.BlueprintId
-		lines[pos][3] = node.HostId
+		lines[pos][0] = node.ID
+		lines[pos][1] = node.DeploymentID
+		lines[pos][2] = node.BlueprintID
+		lines[pos][3] = node.HostID
 		lines[pos][4] = node.Type
 		lines[pos][5] = fmt.Sprintf("%d", node.NumberOfInstances)
 		lines[pos][6] = fmt.Sprintf("%d", node.PlannedNumberOfInstances)
@@ -767,7 +767,7 @@ func nodesPrint(nodes *cloudify.CloudifyNodes) int {
 		nodes.Metadata.Pagination.Offset, len(nodes.Items),
 		nodes.Metadata.Pagination.Total)
 	if len(nodes.Items) == 1 {
-		properties, err := nodes.Items[0].GetJsonProperties()
+		properties, err := nodes.Items[0].GetJSONProperties()
 		if err != nil {
 			log.Printf("Cloudify error: %s\n", err.Error())
 			return 1
@@ -856,14 +856,14 @@ func nodesOptions(args, options []string) int {
 	return 0
 }
 
-func nodeInstancesPrint(nodeInstances *cloudify.CloudifyNodeInstances) int {
-	var lines [][]string = make([][]string, len(nodeInstances.Items))
+func nodeInstancesPrint(nodeInstances *cloudify.NodeInstances) int {
+	lines := make([][]string, len(nodeInstances.Items))
 	for pos, nodeInstance := range nodeInstances.Items {
 		lines[pos] = make([]string, 7)
-		lines[pos][0] = nodeInstance.Id
-		lines[pos][1] = nodeInstance.DeploymentId
-		lines[pos][2] = nodeInstance.HostId
-		lines[pos][3] = nodeInstance.NodeId
+		lines[pos][0] = nodeInstance.ID
+		lines[pos][1] = nodeInstance.DeploymentID
+		lines[pos][2] = nodeInstance.HostID
+		lines[pos][3] = nodeInstance.NodeID
 		lines[pos][4] = nodeInstance.State
 		lines[pos][5] = nodeInstance.Tenant
 		lines[pos][6] = nodeInstance.CreatedBy
@@ -876,7 +876,7 @@ func nodeInstancesPrint(nodeInstances *cloudify.CloudifyNodeInstances) int {
 		nodeInstances.Metadata.Pagination.Offset, len(nodeInstances.Items),
 		nodeInstances.Metadata.Pagination.Total)
 	if len(nodeInstances.Items) == 1 {
-		properties, err := nodeInstances.Items[0].GetJsonRuntimeProperties()
+		properties, err := nodeInstances.Items[0].GetJSONRuntimeProperties()
 		if err != nil {
 			log.Printf("Cloudify error: %s\n", err.Error())
 			return 1
@@ -1017,12 +1017,12 @@ func eventsOptions(args, options []string) int {
 				log.Printf("Cloudify error: %s\n", err.Error())
 				return 1
 			}
-			var lines [][]string = make([][]string, len(events.Items))
+			lines := make([][]string, len(events.Items))
 			for pos, event := range events.Items {
 				lines[pos] = make([]string, 5)
 				lines[pos][0] = event.Timestamp
-				lines[pos][1] = event.DeploymentId
-				lines[pos][2] = event.NodeInstanceId
+				lines[pos][1] = event.DeploymentID
+				lines[pos][2] = event.NodeInstanceID
 				lines[pos][3] = event.Operation
 				lines[pos][4] = event.Message
 			}
@@ -1063,10 +1063,10 @@ func pluginsOptions(args, options []string) int {
 				log.Printf("Cloudify error: %s", err.Error())
 				return 1
 			}
-			var lines [][]string = make([][]string, len(plugins.Items))
+			lines := make([][]string, len(plugins.Items))
 			for pos, plugin := range plugins.Items {
 				lines[pos] = make([]string, 9)
-				lines[pos][0] = plugin.Id
+				lines[pos][0] = plugin.ID
 				lines[pos][1] = plugin.PackageName
 				lines[pos][2] = plugin.PackageVersion
 				lines[pos][3] = plugin.Distribution
@@ -1106,7 +1106,7 @@ func main() {
 	}
 
 	args, options := utils.CliArgumentsList(os.Args)
-	var defaultError string = ("Supported commands:\n" +
+	defaultError := ("Supported commands:\n" +
 		"\tblueprints        Handle blueprints on the manager\n" +
 		"\tdeployments       Handle deployments on the Manager\n" +
 		"\tscalegroups       Handle scale groups on the Manager\n" +

@@ -35,17 +35,17 @@ func initFunction() error {
 	return nil
 }
 
-func runAction(cl *cloudify.CloudifyClient, action string, params map[string]interface{}, deployment, instance string) error {
-	log.Printf("Client version %s", cl.GetApiVersion())
+func runAction(cl *cloudify.Client, action string, params map[string]interface{}, deployment, instance string) error {
+	log.Printf("Client version %s", cl.GetAPIVersion())
 	log.Printf("Run %v with %v", action, params)
 
 	err := cl.WaitBeforeRunExecution(deployment)
 	if err != nil {
 		return err
 	}
-	var exec cloudify.CloudifyExecutionPost
-	exec.WorkflowId = "execute_operation"
-	exec.DeploymentId = deployment
+	var exec cloudify.ExecutionPost
+	exec.WorkflowID = "execute_operation"
+	exec.DeploymentID = deployment
 	exec.Parameters = map[string]interface{}{}
 	exec.Parameters["operation"] = action
 	exec.Parameters["node_ids"] = []string{}
@@ -59,7 +59,7 @@ func runAction(cl *cloudify.CloudifyClient, action string, params map[string]int
 		return err
 	}
 
-	log.Printf("Final status for %v, last status: %v", execution.Id, execution.Status)
+	log.Printf("Final status for %v, last status: %v", execution.ID, execution.Status)
 
 	if execution.Status == "failed" {
 		return fmt.Errorf(execution.ErrorMessage)
@@ -67,9 +67,9 @@ func runAction(cl *cloudify.CloudifyClient, action string, params map[string]int
 	return nil
 }
 
-func mountFunction(cl *cloudify.CloudifyClient, path, configJson, deployment, instance string) error {
+func mountFunction(cl *cloudify.Client, path, configJSON, deployment, instance string) error {
 	var inDataParsed map[string]interface{}
-	err := json.Unmarshal([]byte(configJson), &inDataParsed)
+	err := json.Unmarshal([]byte(configJSON), &inDataParsed)
 	if err != nil {
 		return err
 	}
@@ -95,7 +95,7 @@ func mountFunction(cl *cloudify.CloudifyClient, path, configJson, deployment, in
 	return nil
 }
 
-func unMountFunction(cl *cloudify.CloudifyClient, path, deployment, instance string) error {
+func unMountFunction(cl *cloudify.Client, path, deployment, instance string) error {
 	var params = map[string]interface{}{
 		"path": path}
 
@@ -108,17 +108,21 @@ func unMountFunction(cl *cloudify.CloudifyClient, path, deployment, instance str
 	var response MountResponse
 	response.Status = "Success"
 	response.Attached = false
+
 	jsonData, err := json.Marshal(response)
 	if err != nil {
 		return err
-	} else {
-		fmt.Println(string(jsonData))
 	}
+
+	fmt.Println(string(jsonData))
 	return nil
 }
 
-func Run(cl *cloudify.CloudifyClient, args []string, deployment, instance string) int {
-	var message string = "Unknown"
+/*
+Run - execute commands related to mount/unmount on cloudify instance
+*/
+func Run(cl *cloudify.Client, args []string, deployment, instance string) int {
+	message := "Unknown"
 
 	log.Printf("Kubernetes mount called with %+v", args)
 

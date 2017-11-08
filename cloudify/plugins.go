@@ -21,7 +21,7 @@ import (
 	"net/url"
 )
 
-type CloudifyPluginBase struct {
+type PluginBase struct {
 	DistributionRelease string `json:"distribution_release,omitempty"`
 	PackageName         string `json:"package_name,omitempty"`
 	PackageVersion      string `json:"package_version,omitempty"`
@@ -29,9 +29,9 @@ type CloudifyPluginBase struct {
 	SupportedPlatform   string `json:"supported_platform,omitempty"`
 }
 
-type CloudifyPlugin struct {
-	rest.CloudifyIdWithTenant
-	CloudifyPluginBase
+type Plugin struct {
+	rest.CloudifyIDWithTenant
+	PluginBase
 	SupportedPyVersions []string `json:"supported_py_versions,omitempty"`
 	UploadedAt          string   `json:"uploaded_at,omitempty"`
 	ArchiveName         string   `json:"archive_name,omitempty"`
@@ -41,14 +41,14 @@ type CloudifyPlugin struct {
 	Wheels              []string `json:"wheels,omitempty"`
 }
 
-type CloudifyPlugins struct {
+type Plugins struct {
 	rest.CloudifyBaseMessage
 	Metadata rest.CloudifyMetadata `json:"metadata"`
-	Items    []CloudifyPlugin      `json:"items"`
+	Items    []Plugin              `json:"items"`
 }
 
-func (cl *CloudifyClient) GetPlugins(params map[string]string) (*CloudifyPlugins, error) {
-	var plugins CloudifyPlugins
+func (cl *Client) GetPlugins(params map[string]string) (*Plugins, error) {
+	var plugins Plugins
 
 	values := url.Values{}
 	for key, value := range params {

@@ -20,7 +20,7 @@ import (
 	rest "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify/rest"
 )
 
-type CloudifyVersion struct {
+type Version struct {
 	rest.CloudifyBaseMessage
 	Date    string `json:"date"`
 	Edition string `json:"edition"`
@@ -29,23 +29,23 @@ type CloudifyVersion struct {
 	Commit  string `json:"commit"`
 }
 
-type CloudifyInstanceStatus struct {
+type InstanceStatus struct {
 	LoadState   string `json:"LoadState"`
 	Description string `json:"Description"`
 	State       string `json:"state"`
 	MainPID     uint   `json:"MainPID"`
-	Id          string `json:"Id"`
+	ID          string `json:"Id"`
 	ActiveState string `json:"ActiveState"`
 	SubState    string `json:"SubState"`
 }
 
-type CloudifyInstanceService struct {
-	Instances   []CloudifyInstanceStatus `json:"instances"`
-	DisplayName string                   `json:"display_name"`
+type InstanceService struct {
+	Instances   []InstanceStatus `json:"instances"`
+	DisplayName string           `json:"display_name"`
 }
 
-func (s CloudifyInstanceService) Status() string {
-	var state string = "unknown"
+func (s InstanceService) Status() string {
+	state := "unknown"
 
 	for _, instance := range s.Instances {
 		if state != "failed" {
@@ -56,14 +56,14 @@ func (s CloudifyInstanceService) Status() string {
 	return state
 }
 
-type CloudifyStatus struct {
+type Status struct {
 	rest.CloudifyBaseMessage
-	Status   string                    `json:"status"`
-	Services []CloudifyInstanceService `json:"services"`
+	Status   string            `json:"status"`
+	Services []InstanceService `json:"services"`
 }
 
-func (cl *CloudifyClient) GetVersion() (*CloudifyVersion, error) {
-	var ver CloudifyVersion
+func (cl *Client) GetVersion() (*Version, error) {
+	var ver Version
 
 	err := cl.Get("version", &ver)
 	if err != nil {
@@ -73,8 +73,8 @@ func (cl *CloudifyClient) GetVersion() (*CloudifyVersion, error) {
 	return &ver, nil
 }
 
-func (cl *CloudifyClient) GetStatus() (*CloudifyStatus, error) {
-	var stat CloudifyStatus
+func (cl *Client) GetStatus() (*Status, error) {
+	var stat Status
 
 	err := cl.Get("status", &stat)
 	if err != nil {

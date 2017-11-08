@@ -16,9 +16,11 @@ limitations under the License.
 
 package rest
 
-const ApiVersion = "v3.1"
+const APIVersion = "v3.1"
 
-// Credentials
+/*
+CloudifyRestClient - Credentials
+*/
 type CloudifyRestClient struct {
 	restURL  string
 	user     string
@@ -33,7 +35,10 @@ type CloudifyMessageInterface interface {
 	TraceBack() string
 }
 
-// We need Cl prefix for make fields public and use in Marshal func
+/*
+CloudifyBaseMessage - common part of any result from cloudify
+Note: We need Cl prefix for make fields public and use in Marshal func
+*/
 type CloudifyBaseMessage struct {
 	CloudifyMessageInterface
 	ClMessage         string `json:"message,omitempty"`
@@ -45,7 +50,9 @@ func (cm *CloudifyBaseMessage) ErrorCode() string {
 	return cm.ClErrorCode
 }
 
-// Support reuse as error type
+/*
+Error - Support reuse CloudifyBaseMessage as error type
+*/
 func (cm *CloudifyBaseMessage) Error() string {
 	return cm.ClMessage
 }
@@ -54,7 +61,9 @@ func (cm *CloudifyBaseMessage) TraceBack() string {
 	return cm.ClServerTraceback
 }
 
-// Common
+/*
+CloudifyPagination - common struct of any result with pagination
+*/
 type CloudifyPagination struct {
 	Total  uint `json:"total"`
 	Offset uint `json:"offset"`
@@ -65,15 +74,15 @@ type CloudifyMetadata struct {
 	Pagination CloudifyPagination `json:"pagination"`
 }
 
-type CloudifyIdWithTenant struct {
-	Id              string `json:"id"`
+type CloudifyIDWithTenant struct {
+	ID              string `json:"id"`
 	Tenant          string `json:"tenant_name"`
 	CreatedBy       string `json:"created_by"`
 	PrivateResource bool   `json:"private_resource"`
 }
 
 type CloudifyResource struct {
-	CloudifyIdWithTenant
+	CloudifyIDWithTenant
 	Description string `json:"description"`
 	CreatedAt   string `json:"created_at"`
 	UpdatedAt   string `json:"updated_at"`

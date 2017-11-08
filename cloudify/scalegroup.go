@@ -20,7 +20,7 @@ import (
 	"fmt"
 )
 
-func (cl *CloudifyClient) GetDeployment(deploymentID string) (*CloudifyDeployment, error) {
+func (cl *Client) GetDeployment(deploymentID string) (*Deployment, error) {
 	var params = map[string]string{}
 	params["id"] = deploymentID
 	deployments, err := cl.GetDeployments(params)
@@ -33,7 +33,7 @@ func (cl *CloudifyClient) GetDeployment(deploymentID string) (*CloudifyDeploymen
 	return &deployments.Items[0], nil
 }
 
-func (cl *CloudifyClient) GetDeploymentScaleGroup(deploymentID, groupName string) (*ScalingGroup, error) {
+func (cl *Client) GetDeploymentScaleGroup(deploymentID, groupName string) (*ScalingGroup, error) {
 	deployment, err := cl.GetDeployment(deploymentID)
 	if err != nil {
 		return nil, err
@@ -48,7 +48,7 @@ func (cl *CloudifyClient) GetDeploymentScaleGroup(deploymentID, groupName string
 	return nil, fmt.Errorf("No such scale group:%+v", groupName)
 }
 
-func (cl *CloudifyClient) GetDeploymentScaleGroupNodes(deploymentID, groupName, nodeType string) (*CloudifyNodes, error) {
+func (cl *Client) GetDeploymentScaleGroupNodes(deploymentID, groupName, nodeType string) (*Nodes, error) {
 	// get all nodes
 	params := map[string]string{}
 	params["deployment_id"] = deploymentID
@@ -64,15 +64,15 @@ func (cl *CloudifyClient) GetDeploymentScaleGroupNodes(deploymentID, groupName, 
 	}
 
 	// filter by scaling group
-	nodes := []CloudifyNode{}
+	nodes := []Node{}
 	for _, node := range cloudNodes.Items {
-		for _, nodeId := range scaleGroup.Members {
-			if nodeId == node.Id || nodeId == node.HostId {
+		for _, nodeID := range scaleGroup.Members {
+			if nodeID == node.ID || nodeID == node.HostID {
 				nodes = append(nodes, node)
 			}
 		}
 	}
-	var result CloudifyNodes
+	var result Nodes
 	result.Items = nodes
 	result.Metadata.Pagination.Total = uint(len(nodes))
 	result.Metadata.Pagination.Size = uint(len(nodes))
@@ -80,7 +80,7 @@ func (cl *CloudifyClient) GetDeploymentScaleGroupNodes(deploymentID, groupName, 
 	return &result, nil
 }
 
-func (cl *CloudifyClient) GetDeploymentScaleGroupInstances(deploymentID, groupName, nodeType string) (*CloudifyNodeInstances, error) {
+func (cl *Client) GetDeploymentScaleGroupInstances(deploymentID, groupName, nodeType string) (*NodeInstances, error) {
 	// get all instances
 	params := map[string]string{}
 	params["deployment_id"] = deploymentID
@@ -96,15 +96,15 @@ func (cl *CloudifyClient) GetDeploymentScaleGroupInstances(deploymentID, groupNa
 	}
 
 	// filter by scaling group
-	instances := []CloudifyNodeInstance{}
+	instances := []NodeInstance{}
 	for _, instance := range cloudInstances.Items {
 		for _, node := range cloudNodes.Items {
-			if node.Id == instance.NodeId {
+			if node.ID == instance.NodeID {
 				instances = append(instances, instance)
 			}
 		}
 	}
-	var result CloudifyNodeInstances
+	var result NodeInstances
 	result.Items = instances
 	result.Metadata.Pagination.Total = uint(len(instances))
 	result.Metadata.Pagination.Size = uint(len(instances))

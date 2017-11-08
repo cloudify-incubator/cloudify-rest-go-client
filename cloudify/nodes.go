@@ -22,8 +22,8 @@ import (
 	"net/url"
 )
 
-type CloudifyNodePlugin struct {
-	CloudifyPluginBase
+type NodePlugin struct {
+	PluginBase
 	Name     string `json:"name,omitempty"`
 	Executor string `json:"executor,omitempty"`
 	// TODO describe "install_arguments"
@@ -31,26 +31,26 @@ type CloudifyNodePlugin struct {
 	Install bool `json:"install"`
 }
 
-type CloudifyNode struct {
-	rest.CloudifyIdWithTenant
+type Node struct {
+	rest.CloudifyIDWithTenant
 	Operations               map[string]interface{} `json:"operations,omitempty"`
 	Relationships            []interface{}          `json:"relationships,omitempty"`
 	DeployNumberOfInstances  int                    `json:"deploy_number_of_instances"`
 	TypeHierarchy            []string               `json:"type_hierarchy,omitempty"`
-	BlueprintId              string                 `json:"blueprint_id,omitempty"`
+	BlueprintID              string                 `json:"blueprint_id,omitempty"`
 	NumberOfInstances        int                    `json:"number_of_instances"`
-	DeploymentId             string                 `json:"deployment_id,omitempty"`
+	DeploymentID             string                 `json:"deployment_id,omitempty"`
 	Properties               map[string]interface{} `json:"properties,omitempty"`
 	PlannedNumberOfInstances int                    `json:"planned_number_of_instances"`
-	Plugins                  []CloudifyNodePlugin   `json:"plugins,omitempty"`
+	Plugins                  []NodePlugin           `json:"plugins,omitempty"`
 	MaxNumberOfInstances     int                    `json:"max_number_of_instances"`
-	HostId                   string                 `json:"host_id,omitempty"`
+	HostID                   string                 `json:"host_id,omitempty"`
 	MinNumberOfInstances     int                    `json:"min_number_of_instances"`
 	Type                     string                 `json:"type,omitempty"`
 	PluginsToInstall         []interface{}          `json:"plugins_to_install,omitempty"`
 }
 
-func (node *CloudifyNode) GetJsonProperties() (string, error) {
+func (node *Node) GetJSONProperties() (string, error) {
 	jsonData, err := json.Marshal(node.Properties)
 	if err != nil {
 		return "", err
@@ -58,14 +58,14 @@ func (node *CloudifyNode) GetJsonProperties() (string, error) {
 	return string(jsonData), nil
 }
 
-type CloudifyNodes struct {
+type Nodes struct {
 	rest.CloudifyBaseMessage
 	Metadata rest.CloudifyMetadata `json:"metadata"`
-	Items    []CloudifyNode        `json:"items"`
+	Items    []Node                `json:"items"`
 }
 
-func (cl *CloudifyClient) GetNodes(params map[string]string) (*CloudifyNodes, error) {
-	var nodes CloudifyNodes
+func (cl *Client) GetNodes(params map[string]string) (*Nodes, error) {
+	var nodes Nodes
 
 	values := url.Values{}
 	for key, value := range params {
@@ -80,16 +80,16 @@ func (cl *CloudifyClient) GetNodes(params map[string]string) (*CloudifyNodes, er
 	return &nodes, nil
 }
 
-func (cl *CloudifyClient) GetStartedNodesWithType(params map[string]string, nodeType string) (*CloudifyNodes, error) {
+func (cl *Client) GetStartedNodesWithType(params map[string]string, nodeType string) (*Nodes, error) {
 	cloudNodes, err := cl.GetNodes(params)
 	if err != nil {
 		return nil, err
 	}
 
-	nodes := []CloudifyNode{}
+	nodes := []Node{}
 	for _, node := range cloudNodes.Items {
 
-		var notKubernetesHost bool = true
+		notKubernetesHost := true
 		for _, typeName := range node.TypeHierarchy {
 			if typeName == nodeType {
 				notKubernetesHost = false
@@ -108,7 +108,7 @@ func (cl *CloudifyClient) GetStartedNodesWithType(params map[string]string, node
 		// add node to list
 		nodes = append(nodes, node)
 	}
-	var result CloudifyNodes
+	var result Nodes
 	result.Items = nodes
 	result.Metadata.Pagination.Total = uint(len(nodes))
 	result.Metadata.Pagination.Size = uint(len(nodes))

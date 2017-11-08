@@ -7,26 +7,26 @@ import (
 	"io/ioutil"
 )
 
-type CloudifyClient struct {
+type Client struct {
 	restCl *rest.CloudifyRestClient
 }
 
-func NewClient(host, user, password, tenant string) *CloudifyClient {
-	var cliCl CloudifyClient
+func NewClient(host, user, password, tenant string) *Client {
+	var cliCl Client
 	cliCl.restCl = rest.NewClient(host, user, password, tenant)
 	return &cliCl
 }
 
-func (cl *CloudifyClient) EnableDebug() {
+func (cl *Client) EnableDebug() {
 	cl.restCl.Debug = true
 }
 
-func (cl *CloudifyClient) GetApiVersion() string {
-	return rest.ApiVersion
+func (cl *Client) GetAPIVersion() string {
+	return rest.APIVersion
 }
 
-func (cl *CloudifyClient) Get(url string, output rest.CloudifyMessageInterface) error {
-	body, err := cl.restCl.Get(url, rest.JsonContentType)
+func (cl *Client) Get(url string, output rest.CloudifyMessageInterface) error {
+	body, err := cl.restCl.Get(url, rest.JSONContentType)
 	if err != nil {
 		return err
 	}
@@ -42,7 +42,7 @@ func (cl *CloudifyClient) Get(url string, output rest.CloudifyMessageInterface) 
 	return nil
 }
 
-func (cl *CloudifyClient) GetBinary(url, outputPath string) error {
+func (cl *Client) GetBinary(url, outputPath string) error {
 	body, err := cl.restCl.Get(url, rest.DataContentType)
 	if err != nil {
 		return err
@@ -56,7 +56,7 @@ func (cl *CloudifyClient) GetBinary(url, outputPath string) error {
 	return nil
 }
 
-func binaryPut(cl *CloudifyClient, url string, input []byte, inputType string, output rest.CloudifyMessageInterface) error {
+func binaryPut(cl *Client, url string, input []byte, inputType string, output rest.CloudifyMessageInterface) error {
 	body, err := cl.restCl.Put(url, inputType, input)
 	if err != nil {
 		return err
@@ -73,11 +73,11 @@ func binaryPut(cl *CloudifyClient, url string, input []byte, inputType string, o
 	return nil
 }
 
-func (cl *CloudifyClient) PutBinary(url string, data []byte, output rest.CloudifyMessageInterface) error {
+func (cl *Client) PutBinary(url string, data []byte, output rest.CloudifyMessageInterface) error {
 	return binaryPut(cl, url, data, rest.DataContentType, output)
 }
 
-func (cl *CloudifyClient) PutZip(url, path string, output rest.CloudifyMessageInterface) error {
+func (cl *Client) PutZip(url, path string, output rest.CloudifyMessageInterface) error {
 	data, err := utils.DirZipArchive(path)
 	if err != nil {
 		return err
@@ -86,16 +86,16 @@ func (cl *CloudifyClient) PutZip(url, path string, output rest.CloudifyMessageIn
 	return binaryPut(cl, url, data, rest.DataContentType, output)
 }
 
-func (cl *CloudifyClient) Put(url string, input interface{}, output rest.CloudifyMessageInterface) error {
+func (cl *Client) Put(url string, input interface{}, output rest.CloudifyMessageInterface) error {
 	jsonData, err := json.Marshal(input)
 	if err != nil {
 		return err
 	}
 
-	return binaryPut(cl, url, jsonData, rest.JsonContentType, output)
+	return binaryPut(cl, url, jsonData, rest.JSONContentType, output)
 }
 
-func (cl *CloudifyClient) Post(url string, input interface{}, output rest.CloudifyMessageInterface) error {
+func (cl *Client) Post(url string, input interface{}, output rest.CloudifyMessageInterface) error {
 	jsonData, err := json.Marshal(input)
 	if err != nil {
 		return err
@@ -117,7 +117,7 @@ func (cl *CloudifyClient) Post(url string, input interface{}, output rest.Cloudi
 	return nil
 }
 
-func (cl *CloudifyClient) Delete(url string, output rest.CloudifyMessageInterface) error {
+func (cl *Client) Delete(url string, output rest.CloudifyMessageInterface) error {
 	body, err := cl.restCl.Delete(url)
 	if err != nil {
 		return err

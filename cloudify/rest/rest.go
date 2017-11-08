@@ -26,7 +26,14 @@ import (
 	"net/http"
 )
 
-const JsonContentType = "application/json"
+/*
+JSONContentType - type used in communication with manager
+*/
+const JSONContentType = "application/json"
+
+/*
+DataContentType - binary only data, like archives
+*/
 const DataContentType = "application/octet-stream"
 
 func (r *CloudifyRestClient) GetRequest(url, method string, body io.Reader) (*http.Request, error) {
@@ -75,7 +82,7 @@ func (r *CloudifyRestClient) Get(url, acceptedContentType string) ([]byte, error
 	}
 
 	if r.Debug {
-		if acceptedContentType == JsonContentType {
+		if acceptedContentType == JSONContentType {
 			log.Printf("Response %s\n", string(body))
 		} else {
 			log.Printf("Binary response length: %d\n", len(body))
@@ -101,7 +108,7 @@ func (r *CloudifyRestClient) Delete(url string) ([]byte, error) {
 
 	contentType := resp.Header.Get("Content-Type")
 
-	if contentType[:len(JsonContentType)] != JsonContentType {
+	if contentType[:len(JSONContentType)] != JSONContentType {
 		return []byte{}, fmt.Errorf("Wrong content type: %+v", contentType)
 	}
 
@@ -122,7 +129,7 @@ func (r *CloudifyRestClient) Post(url string, data []byte) ([]byte, error) {
 	if err != nil {
 		return []byte{}, err
 	}
-	req.Header.Set("Content-Type", JsonContentType)
+	req.Header.Set("Content-Type", JSONContentType)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -134,7 +141,7 @@ func (r *CloudifyRestClient) Post(url string, data []byte) ([]byte, error) {
 
 	contentType := resp.Header.Get("Content-Type")
 
-	if contentType[:len(JsonContentType)] != JsonContentType {
+	if contentType[:len(JSONContentType)] != JSONContentType {
 		return []byte{}, fmt.Errorf("Wrong content type: %+v", contentType)
 	}
 
@@ -167,7 +174,7 @@ func (r *CloudifyRestClient) Put(url, providedContentType string, data []byte) (
 
 	contentType := resp.Header.Get("Content-Type")
 
-	if contentType[:len(JsonContentType)] != JsonContentType {
+	if contentType[:len(JSONContentType)] != JSONContentType {
 		return []byte{}, fmt.Errorf("Wrong content type: %+v", contentType)
 	}
 
@@ -187,9 +194,9 @@ func NewClient(host, user, password, tenant string) *CloudifyRestClient {
 	var restCl CloudifyRestClient
 	if (host[:len("https://")] == "https://" ||
 		host[:len("http://")] == "http://") && (len(host) >= len("http://")) {
-		restCl.restURL = host + "/api/" + ApiVersion + "/"
+		restCl.restURL = host + "/api/" + APIVersion + "/"
 	} else {
-		restCl.restURL = "http://" + host + "/api/" + ApiVersion + "/"
+		restCl.restURL = "http://" + host + "/api/" + APIVersion + "/"
 	}
 	restCl.user = user
 	restCl.password = password

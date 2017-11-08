@@ -22,19 +22,19 @@ import (
 	"net/url"
 )
 
-type CloudifyNodeInstance struct {
-	rest.CloudifyIdWithTenant
+type NodeInstance struct {
+	rest.CloudifyIDWithTenant
 	Relationships     []interface{}          `json:"relationships,omitempty"`
 	RuntimeProperties map[string]interface{} `json:"runtime_properties,omitempty"`
 	State             string                 `json:"state,omitempty"`
 	Version           int                    `json:"version,omitempty"`
-	HostId            string                 `json:"host_id,omitempty"`
-	DeploymentId      string                 `json:"deployment_id,omitempty"`
-	NodeId            string                 `json:"node_id,omitempty"`
+	HostID            string                 `json:"host_id,omitempty"`
+	DeploymentID      string                 `json:"deployment_id,omitempty"`
+	NodeID            string                 `json:"node_id,omitempty"`
 	// TODO describe "scaling_groups" struct
 }
 
-func (instance *CloudifyNodeInstance) GetJsonRuntimeProperties() (string, error) {
+func (instance *NodeInstance) GetJSONRuntimeProperties() (string, error) {
 	jsonData, err := json.Marshal(instance.RuntimeProperties)
 	if err != nil {
 		return "", err
@@ -42,15 +42,17 @@ func (instance *CloudifyNodeInstance) GetJsonRuntimeProperties() (string, error)
 	return string(jsonData), nil
 }
 
-type CloudifyNodeInstances struct {
+type NodeInstances struct {
 	rest.CloudifyBaseMessage
-	Metadata rest.CloudifyMetadata  `json:"metadata"`
-	Items    []CloudifyNodeInstance `json:"items"`
+	Metadata rest.CloudifyMetadata `json:"metadata"`
+	Items    []NodeInstance        `json:"items"`
 }
 
-/* Get all node instances */
-func (cl *CloudifyClient) GetNodeInstances(params map[string]string) (*CloudifyNodeInstances, error) {
-	var instances CloudifyNodeInstances
+/*
+GetNodeInstances - Get all node instances
+*/
+func (cl *Client) GetNodeInstances(params map[string]string) (*NodeInstances, error) {
+	var instances NodeInstances
 
 	values := url.Values{}
 	for key, value := range params {
@@ -65,9 +67,10 @@ func (cl *CloudifyClient) GetNodeInstances(params map[string]string) (*CloudifyN
 	return &instances, nil
 }
 
-/* Returned list of started node instances with some node type,
- * used mainly for kubernetes */
-func (cl *CloudifyClient) GetStartedNodeInstancesWithType(params map[string]string, nodeType string) (*CloudifyNodeInstances, error) {
+/*
+GetStartedNodeInstancesWithType - Returned list of started node instances with some node type,
+used mainly for kubernetes */
+func (cl *Client) GetStartedNodeInstancesWithType(params map[string]string, nodeType string) (*NodeInstances, error) {
 	nodeInstances, err := cl.GetNodeInstances(params)
 	if err != nil {
 		return nil, err
@@ -82,11 +85,11 @@ func (cl *CloudifyClient) GetStartedNodeInstancesWithType(params map[string]stri
 		return nil, err
 	}
 
-	instances := []CloudifyNodeInstance{}
+	instances := []NodeInstance{}
 	for _, nodeInstance := range nodeInstances.Items {
-		var notKubernetesHost bool = true
+		notKubernetesHost := true
 		for _, node := range nodes.Items {
-			if node.Id == nodeInstance.NodeId {
+			if node.ID == nodeInstance.NodeID {
 				for _, typeName := range node.TypeHierarchy {
 					if typeName == nodeType {
 						notKubernetesHost = false
@@ -107,7 +110,7 @@ func (cl *CloudifyClient) GetStartedNodeInstancesWithType(params map[string]stri
 		// add instance to list
 		instances = append(instances, nodeInstance)
 	}
-	var result CloudifyNodeInstances
+	var result NodeInstances
 	result.Items = instances
 	result.Metadata.Pagination.Total = uint(len(instances))
 	result.Metadata.Pagination.Size = uint(len(instances))
