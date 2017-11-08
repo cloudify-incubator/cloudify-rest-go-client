@@ -18,6 +18,7 @@ package cloudify
 
 import (
 	"fmt"
+	utils "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify/utils"
 )
 
 func (cl *Client) GetDeployment(deploymentID string) (*Deployment, error) {
@@ -111,4 +112,61 @@ func (cl *Client) GetDeploymentScaleGroupInstances(deploymentID, groupName, node
 	result.Metadata.Pagination.Offset = 0
 
 	return &result, nil
+}
+
+/*
+GetDeploymentInstancesScaleGrouped - return instances grouped by scaleing group
+*/
+func (cl *Client) GetDeploymentInstancesScaleGrouped(deploymentID, nodeType string) (map[string]NodeInstances, error) {
+	var result = map[string]NodeInstances{}
+
+	deployment, err := cl.GetDeployment(deploymentID)
+	if err != nil {
+		return result, err
+	}
+
+	var params = map[string]string{}
+	params["deployment_id"] = deploymentID
+	nodes, err := cl.GetStartedNodesWithType(params, nodeType)
+	if err != nil {
+		return result, err
+	}
+
+	cloudInstances, err := cl.GetStartedNodeInstancesWithType(params, nodeType)
+	if err != nil {
+		return result, err
+	}
+
+	if deployment.ScalingGroups != nil {
+		var resultedInstances = []NodeInstance{}
+
+		// check what types we have in members
+		for groupName, scaleGroup := range deployment.ScalingGroups {
+			var supportedMembers = []string{}
+			for _, member := range scaleGroup.Members {
+				supportedMembers = append(supportedMembers, member)
+				for _, node := range nodes.Items {
+					if node.HostID == member {
+						if !utils.InList(supportedMembers, node.ID) {
+							supportedMembers = append(supportedMembers, node.ID)
+						}
+					}
+				}
+			}
+
+			// search instance
+			for _, cloudInstance := range cloudInstances.Items {
+				if utils.InList(supportedMembers, cloudInstance.NodeID) {
+					resultedInstances = append(resultedInstances, cloudInstance)
+				}
+			}
+			var resultInstance NodeInstances
+			resultInstance.Items = resultedInstances
+			resultInstance.Metadata.Pagination.Total = uint(len(resultedInstances))
+			resultInstance.Metadata.Pagination.Size = uint(len(resultedInstances))
+			resultInstance.Metadata.Pagination.Offset = 0
+			result[groupName] = resultInstance
+		}
+	}
+	return result, nil
 }

@@ -338,8 +338,8 @@ func scaleGroupPrint(deploymentScalingGroups map[string]cloudify.ScalingGroup) i
 	return 0
 }
 
-func scaleGroupsOptions(args, options []string) int {
-	defaultError := "info, nodes, instances subcommand with deployment and scalegroup params is required"
+func scalingGroupsOptions(args, options []string) int {
+	defaultError := "info/nodes/instances/groups subcommand with deployment and scalegroup params is required"
 
 	if len(args) < 3 {
 		fmt.Println(defaultError)
@@ -347,9 +347,41 @@ func scaleGroupsOptions(args, options []string) int {
 	}
 
 	switch args[2] {
+	case "groups":
+		{
+			operFlagSet := basicOptions("scaling-groups instances")
+			var deployment string
+			var nodeType string
+			operFlagSet.StringVar(&deployment, "deployment", "",
+				"The unique identifier for the deployment")
+			operFlagSet.StringVar(&nodeType, "node_type",
+				"cloudify.nodes.ApplicationServer.kubernetes.Node",
+				"The unique identifier for the deployment")
+
+			operFlagSet.Parse(options)
+
+			if deployment == "" {
+				fmt.Println("Please provide deployment")
+				return 1
+			}
+
+			cl := getClient()
+			groupedInstances, err := cl.GetDeploymentInstancesScaleGrouped(deployment, nodeType)
+			if err != nil {
+				log.Printf("Cloudify error: %s\n", err.Error())
+				return 1
+			}
+			for groupName, instances := range groupedInstances {
+				fmt.Printf("Scale group: %v\n", groupName)
+				if nodeInstancesPrint(&instances) != 0 {
+					return 1
+				}
+			}
+			return 0
+		}
 	case "instances":
 		{
-			operFlagSet := basicOptions("scalegroups instances")
+			operFlagSet := basicOptions("scaling-groups instances")
 			var deployment string
 			var scalegroup string
 			var nodeType string
@@ -469,7 +501,7 @@ func deploymentsFilter(operFlagSet *flag.FlagSet, options []string) (*cloudify.D
 }
 
 func deploymentsOptions(args, options []string) int {
-	defaultError := "list/create/delete/inputs/outputs/scale-groups subcommand is required"
+	defaultError := "list/create/delete/inputs/outputs/scaling-groups subcommand is required"
 
 	if len(args) < 3 {
 		fmt.Println(defaultError)
@@ -477,7 +509,7 @@ func deploymentsOptions(args, options []string) int {
 	}
 
 	switch args[2] {
-	case "scale-groups":
+	case "scaling-groups":
 		{
 			operFlagSet := basicOptions("deployments scale-groups")
 			deployments, err := deploymentsFilter(operFlagSet, options)
@@ -1109,7 +1141,7 @@ func main() {
 	defaultError := ("Supported commands:\n" +
 		"\tblueprints        Handle blueprints on the manager\n" +
 		"\tdeployments       Handle deployments on the Manager\n" +
-		"\tscalegroups       Handle scale groups on the Manager\n" +
+		"\tscaling-groups    Handle scale groups on the Manager\n" +
 		"\tevents            Show events from workflow executions\n" +
 		"\texecutions        Handle workflow executions\n" +
 		"\tnode-instances    Handle a deployment's node-instances\n" +
@@ -1143,9 +1175,9 @@ func main() {
 		{
 			os.Exit(deploymentsOptions(args, options))
 		}
-	case "scalegroups":
+	case "scaling-groups":
 		{
-			os.Exit(scaleGroupsOptions(args, options))
+			os.Exit(scalingGroupsOptions(args, options))
 		}
 	case "executions":
 		{
