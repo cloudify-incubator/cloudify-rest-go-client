@@ -34,6 +34,103 @@ func (cl *Client) GetDeployment(deploymentID string) (*Deployment, error) {
 	return &deployments.Items[0], nil
 }
 
+/*
+GetDeploymentInstancesHostGrouped - return instances grouped by host
+*/
+func (cl *Client) GetDeploymentInstancesHostGrouped(params map[string]string) (map[string]NodeInstances, error) {
+	var result = map[string]NodeInstances{}
+
+	nodeInstances, err := cl.GetNodeInstances(params)
+	if err != nil {
+		return result, err
+	}
+
+	for _, nodeInstance := range nodeInstances.Items {
+		if nodeInstance.HostID != "" {
+			// add instance list if is not existed
+			if _, ok := result[nodeInstance.HostID]; ok == false {
+				result[nodeInstance.HostID] = NodeInstances{}
+			}
+
+			nodeHostInstance := result[nodeInstance.HostID]
+
+			nodeHostInstance.Items = append(
+				nodeHostInstance.Items, nodeInstance,
+			)
+
+			nodeHostInstance.Metadata.Pagination.Total++
+			nodeHostInstance.Metadata.Pagination.Size++
+
+			result[nodeInstance.HostID] = nodeHostInstance
+		}
+	}
+	return result, nil
+}
+
+/*
+GetStartedNodeInstancesWithType - Returned list of started node instances with some node type,
+used mainly for kubernetes, also check that all instances related to same hostId started */
+func (cl *Client) GetStartedNodeInstancesWithType(params map[string]string, nodeType string) (*NodeInstances, error) {
+	nodeInstancesGrouped, err := cl.GetDeploymentInstancesHostGrouped(params)
+	if err != nil {
+		return nil, err
+	}
+
+	var nodeParams = map[string]string{}
+	if val, ok := params["deployment_id"]; ok {
+		nodeParams["deployment_id"] = val
+	}
+	nodes, err := cl.GetNodes(nodeParams)
+	if err != nil {
+		return nil, err
+	}
+
+	instances := []NodeInstance{}
+	for _, nodeInstances := range nodeInstancesGrouped {
+		// check that all nodes on same hostID started
+		allStarted := true
+		for _, nodeInstance := range nodeInstances.Items {
+			if nodeInstance.State != "started" {
+				allStarted = false
+				break
+			}
+		}
+
+		if !allStarted {
+			continue
+		}
+
+		// check type
+		for _, nodeInstance := range nodeInstances.Items {
+			notKubernetesHost := true
+			for _, node := range nodes.Items {
+				if node.ID == nodeInstance.NodeID {
+					for _, typeName := range node.TypeHierarchy {
+						if typeName == nodeType {
+							notKubernetesHost = false
+							break
+						}
+					}
+				}
+			}
+
+			if notKubernetesHost {
+				continue
+			}
+
+			// add instance to list
+			instances = append(instances, nodeInstance)
+		}
+	}
+	var result NodeInstances
+	result.Items = instances
+	result.Metadata.Pagination.Total = uint(len(instances))
+	result.Metadata.Pagination.Size = uint(len(instances))
+	result.Metadata.Pagination.Offset = 0
+
+	return &result, nil
+}
+
 func (cl *Client) GetDeploymentScaleGroup(deploymentID, groupName string) (*ScalingGroup, error) {
 	deployment, err := cl.GetDeployment(deploymentID)
 	if err != nil {
@@ -166,39 +263,6 @@ func (cl *Client) GetDeploymentInstancesScaleGrouped(deploymentID, nodeType stri
 			resultInstance.Metadata.Pagination.Size = uint(len(resultedInstances))
 			resultInstance.Metadata.Pagination.Offset = 0
 			result[groupName] = resultInstance
-		}
-	}
-	return result, nil
-}
-
-/*
-GetDeploymentInstancesHostGrouped - return instances grouped by host
-*/
-func (cl *Client) GetDeploymentInstancesHostGrouped(params map[string]string) (map[string]NodeInstances, error) {
-	var result = map[string]NodeInstances{}
-
-	nodeInstances, err := cl.GetNodeInstances(params)
-	if err != nil {
-		return result, err
-	}
-
-	for _, nodeInstance := range nodeInstances.Items {
-		if nodeInstance.HostID != "" {
-			// add instance list if is not existed
-			if _, ok := result[nodeInstance.HostID]; ok == false {
-				result[nodeInstance.HostID] = NodeInstances{}
-			}
-
-			nodeHostInstance := result[nodeInstance.HostID]
-
-			nodeHostInstance.Items = append(
-				nodeHostInstance.Items, nodeInstance,
-			)
-
-			nodeHostInstance.Metadata.Pagination.Total++
-			nodeHostInstance.Metadata.Pagination.Size++
-
-			result[nodeInstance.HostID] = nodeHostInstance
 		}
 	}
 	return result, nil
