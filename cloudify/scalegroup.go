@@ -170,3 +170,36 @@ func (cl *Client) GetDeploymentInstancesScaleGrouped(deploymentID, nodeType stri
 	}
 	return result, nil
 }
+
+/*
+GetDeploymentInstancesHostGrouped - return instances grouped by host
+*/
+func (cl *Client) GetDeploymentInstancesHostGrouped(params map[string]string) (map[string]NodeInstances, error) {
+	var result = map[string]NodeInstances{}
+
+	nodeInstances, err := cl.GetNodeInstances(params)
+	if err != nil {
+		return result, err
+	}
+
+	for _, nodeInstance := range nodeInstances.Items {
+		if nodeInstance.HostID != "" {
+			// add instance list if is not existed
+			if _, ok := result[nodeInstance.HostID]; ok == false {
+				result[nodeInstance.HostID] = NodeInstances{}
+			}
+
+			nodeHostInstance := result[nodeInstance.HostID]
+
+			nodeHostInstance.Items = append(
+				nodeHostInstance.Items, nodeInstance,
+			)
+
+			nodeHostInstance.Metadata.Pagination.Total++
+			nodeHostInstance.Metadata.Pagination.Size++
+
+			result[nodeInstance.HostID] = nodeHostInstance
+		}
+	}
+	return result, nil
+}

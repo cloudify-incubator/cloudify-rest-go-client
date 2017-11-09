@@ -911,30 +911,46 @@ func nodeInstancesPrint(nodeInstances *cloudify.NodeInstances) int {
 		"Id", "Deployment id", "Host id", "Node id", "State", "Tenant",
 		"Created by", "Scaling Group",
 	}, lines)
-	fmt.Printf("Showed %d+%d/%d results. Use offset/size for get more.\n",
-		nodeInstances.Metadata.Pagination.Offset, len(nodeInstances.Items),
-		nodeInstances.Metadata.Pagination.Total)
-	if len(nodeInstances.Items) == 1 {
-		properties, err := nodeInstances.Items[0].GetJSONRuntimeProperties()
-		if err != nil {
-			log.Printf("Cloudify error: %s\n", err.Error())
-			return 1
-		}
-		fmt.Printf("Runtime properties: %s\n", properties)
-	} else {
-		fmt.Printf("Limit to one row if you want to check RuntimeProperties\n")
-	}
 	return 0
 }
 
 func nodeInstancesOptions(args, options []string) int {
-	defaultError := "list/started subcommand is required"
+	defaultError := "list/started/host-grouped subcommand is required"
 
 	if len(args) < 3 {
 		fmt.Println(defaultError)
 		return 1
 	}
 	switch args[2] {
+	case "host-grouped":
+		{
+			operFlagSet := basicOptions("node-instances host-grouped")
+			var deployment string
+			operFlagSet.StringVar(&deployment, "deployment", "",
+				"The unique identifier for the deployment")
+
+			operFlagSet.Parse(options)
+
+			var params = map[string]string{}
+
+			if deployment != "" {
+				params["deployment_id"] = deployment
+			}
+
+			cl := getClient()
+			groupedInstances, err := cl.GetDeploymentInstancesHostGrouped(params)
+			if err != nil {
+				log.Printf("Cloudify error: %s\n", err.Error())
+				return 1
+			}
+			for hostID, instances := range groupedInstances {
+				fmt.Printf("HostID: %v\n", hostID)
+				if nodeInstancesPrint(&instances) != 0 {
+					return 1
+				}
+			}
+			return 0
+		}
 	case "started":
 		{
 			operFlagSet := basicOptions("node-instances started")
@@ -980,12 +996,15 @@ func nodeInstancesOptions(args, options []string) int {
 			var node string
 			var deployment string
 			var instance string
+			var state string
 			operFlagSet.StringVar(&instance, "instance", "",
 				"The unique identifier for the instance")
 			operFlagSet.StringVar(&node, "node", "",
 				"The unique identifier for the node")
 			operFlagSet.StringVar(&deployment, "deployment", "",
 				"The unique identifier for the deployment")
+			operFlagSet.StringVar(&state, "state", "",
+				"Instance state")
 
 			params := parsePagination(operFlagSet, options)
 
@@ -998,6 +1017,9 @@ func nodeInstancesOptions(args, options []string) int {
 			if deployment != "" {
 				params["deployment_id"] = deployment
 			}
+			if state != "" {
+				params["state"] = state
+			}
 
 			cl := getClient()
 			nodeInstances, err := cl.GetNodeInstances(params)
@@ -1005,7 +1027,22 @@ func nodeInstancesOptions(args, options []string) int {
 				log.Printf("Cloudify error: %s\n", err.Error())
 				return 1
 			}
-			return nodeInstancesPrint(nodeInstances)
+			if nodeInstancesPrint(nodeInstances) != 0 {
+				return 1
+			}
+			fmt.Printf("Showed %d+%d/%d results. Use offset/size for get more.\n",
+				nodeInstances.Metadata.Pagination.Offset, len(nodeInstances.Items),
+				nodeInstances.Metadata.Pagination.Total)
+			if len(nodeInstances.Items) == 1 {
+				properties, err := nodeInstances.Items[0].GetJSONRuntimeProperties()
+				if err != nil {
+					log.Printf("Cloudify error: %s\n", err.Error())
+					return 1
+				}
+				fmt.Printf("Runtime properties: %s\n", properties)
+			} else {
+				fmt.Printf("Limit to one row if you want to check RuntimeProperties\n")
+			}
 		}
 	default:
 		{
