@@ -354,9 +354,9 @@ func scalingGroupsOptions(args, options []string) int {
 			var nodeType string
 			operFlagSet.StringVar(&deployment, "deployment", "",
 				"The unique identifier for the deployment")
-			operFlagSet.StringVar(&nodeType, "node_type",
+			operFlagSet.StringVar(&nodeType, "node-type",
 				"cloudify.nodes.ApplicationServer.kubernetes.Node",
-				"The unique identifier for the deployment")
+				"Filter by node type")
 
 			operFlagSet.Parse(options)
 
@@ -389,9 +389,9 @@ func scalingGroupsOptions(args, options []string) int {
 				"The unique identifier for the deployment")
 			operFlagSet.StringVar(&scalegroup, "scalegroup", "",
 				"The unique identifier for the scalegroup")
-			operFlagSet.StringVar(&nodeType, "node_type",
+			operFlagSet.StringVar(&nodeType, "node-type",
 				"cloudify.nodes.ApplicationServer.kubernetes.Node",
-				"The unique identifier for the deployment")
+				"Filter by node type")
 
 			operFlagSet.Parse(options)
 
@@ -422,9 +422,9 @@ func scalingGroupsOptions(args, options []string) int {
 				"The unique identifier for the deployment")
 			operFlagSet.StringVar(&scalegroup, "scalegroup", "",
 				"The unique identifier for the scalegroup")
-			operFlagSet.StringVar(&nodeType, "node_type",
+			operFlagSet.StringVar(&nodeType, "node-type",
 				"cloudify.nodes.ApplicationServer.kubernetes.Node",
-				"The unique identifier for the deployment")
+				"Filter by node type")
 
 			operFlagSet.Parse(options)
 
@@ -825,13 +825,16 @@ func nodesOptions(args, options []string) int {
 			var node string
 			var deployment string
 			var nodeType string
+			var hostID string
 			operFlagSet.StringVar(&node, "node", "",
 				"The unique identifier for the node")
 			operFlagSet.StringVar(&deployment, "deployment", "",
 				"The unique identifier for the deployment")
-			operFlagSet.StringVar(&nodeType, "node_type",
+			operFlagSet.StringVar(&nodeType, "node-type",
 				"cloudify.nodes.ApplicationServer.kubernetes.Node",
-				"The unique identifier for the deployment")
+				"Filter by node type")
+			operFlagSet.StringVar(&hostID, "host-id", "",
+				"Filter by hostID")
 
 			operFlagSet.Parse(options)
 
@@ -842,6 +845,9 @@ func nodesOptions(args, options []string) int {
 			}
 			if deployment != "" {
 				params["deployment_id"] = deployment
+			}
+			if hostID != "" {
+				params["host_id"] = hostID
 			}
 
 			cl := getClient()
@@ -926,8 +932,11 @@ func nodeInstancesOptions(args, options []string) int {
 		{
 			operFlagSet := basicOptions("node-instances host-grouped")
 			var deployment string
+			var hostID string
 			operFlagSet.StringVar(&deployment, "deployment", "",
 				"The unique identifier for the deployment")
+			operFlagSet.StringVar(&hostID, "host-id", "",
+				"Filter by hostID")
 
 			operFlagSet.Parse(options)
 
@@ -935,6 +944,9 @@ func nodeInstancesOptions(args, options []string) int {
 
 			if deployment != "" {
 				params["deployment_id"] = deployment
+			}
+			if hostID != "" {
+				params["host_id"] = hostID
 			}
 
 			cl := getClient()
@@ -958,15 +970,18 @@ func nodeInstancesOptions(args, options []string) int {
 			var deployment string
 			var nodeType string
 			var instance string
+			var hostID string
 			operFlagSet.StringVar(&instance, "instance", "",
 				"The unique identifier for the instance")
 			operFlagSet.StringVar(&node, "node", "",
 				"The unique identifier for the node")
 			operFlagSet.StringVar(&deployment, "deployment", "",
 				"The unique identifier for the deployment")
-			operFlagSet.StringVar(&nodeType, "node_type",
+			operFlagSet.StringVar(&nodeType, "node-type",
 				"cloudify.nodes.ApplicationServer.kubernetes.Node",
-				"The unique identifier for the deployment")
+				"Filter by node type")
+			operFlagSet.StringVar(&hostID, "host-id", "",
+				"Filter by hostID")
 
 			operFlagSet.Parse(options)
 
@@ -980,6 +995,9 @@ func nodeInstancesOptions(args, options []string) int {
 			}
 			if deployment != "" {
 				params["deployment_id"] = deployment
+			}
+			if hostID != "" {
+				params["host_id"] = hostID
 			}
 
 			cl := getClient()
