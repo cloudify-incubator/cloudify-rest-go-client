@@ -920,34 +920,80 @@ func nodeInstancesPrint(nodeInstances *cloudify.NodeInstances) int {
 	return 0
 }
 
+func parseInstancesFlags(operFlagSet *flag.FlagSet, options []string) map[string]string {
+	var node string
+	var deployment string
+	var instance string
+	var state string
+	var hostID string
+
+	operFlagSet.StringVar(&instance, "instance", "",
+		"The unique identifier for the instance")
+	operFlagSet.StringVar(&node, "node", "",
+		"The unique identifier for the node")
+	operFlagSet.StringVar(&deployment, "deployment", "",
+		"The unique identifier for the deployment")
+	operFlagSet.StringVar(&state, "state", "",
+		"Filter by  state")
+	operFlagSet.StringVar(&hostID, "host-id", "",
+		"Filter by hostID")
+
+	operFlagSet.Parse(options)
+
+	params := parsePagination(operFlagSet, options)
+
+	if instance != "" {
+		params["id"] = instance
+	}
+	if node != "" {
+		params["node_id"] = node
+	}
+	if deployment != "" {
+		params["deployment_id"] = deployment
+	}
+	if state != "" {
+		params["state"] = state
+	}
+
+	if hostID != "" {
+		params["host_id"] = hostID
+	}
+	return params
+}
+
 func nodeInstancesOptions(args, options []string) int {
-	defaultError := "list/started/host-grouped subcommand is required"
+	defaultError := "list/started/host-grouped/node-grouped subcommand is required"
 
 	if len(args) < 3 {
 		fmt.Println(defaultError)
 		return 1
 	}
 	switch args[2] {
+	case "node-grouped":
+		{
+			operFlagSet := basicOptions("node-instances node-grouped")
+
+			params := parseInstancesFlags(operFlagSet, options)
+
+			cl := getClient()
+			groupedInstances, err := cl.GetDeploymentInstancesNodeGrouped(params)
+			if err != nil {
+				log.Printf("Cloudify error: %s\n", err.Error())
+				return 1
+			}
+			for nodeID, instances := range groupedInstances {
+				fmt.Printf("NodeID: %v\n", nodeID)
+				if nodeInstancesPrint(&instances) != 0 {
+					return 1
+				}
+			}
+			return 0
+		}
 	case "host-grouped":
 		{
 			operFlagSet := basicOptions("node-instances host-grouped")
-			var deployment string
-			var hostID string
-			operFlagSet.StringVar(&deployment, "deployment", "",
-				"The unique identifier for the deployment")
-			operFlagSet.StringVar(&hostID, "host-id", "",
-				"Filter by hostID")
 
-			operFlagSet.Parse(options)
-
-			var params = map[string]string{}
-
-			if deployment != "" {
-				params["deployment_id"] = deployment
-			}
-			if hostID != "" {
-				params["host_id"] = hostID
-			}
+			params := parseInstancesFlags(operFlagSet, options)
 
 			cl := getClient()
 			groupedInstances, err := cl.GetDeploymentInstancesHostGrouped(params)
@@ -966,39 +1012,12 @@ func nodeInstancesOptions(args, options []string) int {
 	case "started":
 		{
 			operFlagSet := basicOptions("node-instances started")
-			var node string
-			var deployment string
 			var nodeType string
-			var instance string
-			var hostID string
-			operFlagSet.StringVar(&instance, "instance", "",
-				"The unique identifier for the instance")
-			operFlagSet.StringVar(&node, "node", "",
-				"The unique identifier for the node")
-			operFlagSet.StringVar(&deployment, "deployment", "",
-				"The unique identifier for the deployment")
 			operFlagSet.StringVar(&nodeType, "node-type",
 				"cloudify.nodes.ApplicationServer.kubernetes.Node",
 				"Filter by node type")
-			operFlagSet.StringVar(&hostID, "host-id", "",
-				"Filter by hostID")
 
-			operFlagSet.Parse(options)
-
-			var params = map[string]string{}
-
-			if instance != "" {
-				params["id"] = instance
-			}
-			if node != "" {
-				params["node_id"] = node
-			}
-			if deployment != "" {
-				params["deployment_id"] = deployment
-			}
-			if hostID != "" {
-				params["host_id"] = hostID
-			}
+			params := parseInstancesFlags(operFlagSet, options)
 
 			cl := getClient()
 			nodeInstances, err := cl.GetStartedNodeInstancesWithType(params, nodeType)
@@ -1011,33 +1030,8 @@ func nodeInstancesOptions(args, options []string) int {
 	case "list":
 		{
 			operFlagSet := basicOptions("node-instances list")
-			var node string
-			var deployment string
-			var instance string
-			var state string
-			operFlagSet.StringVar(&instance, "instance", "",
-				"The unique identifier for the instance")
-			operFlagSet.StringVar(&node, "node", "",
-				"The unique identifier for the node")
-			operFlagSet.StringVar(&deployment, "deployment", "",
-				"The unique identifier for the deployment")
-			operFlagSet.StringVar(&state, "state", "",
-				"Instance state")
 
-			params := parsePagination(operFlagSet, options)
-
-			if instance != "" {
-				params["id"] = instance
-			}
-			if node != "" {
-				params["node_id"] = node
-			}
-			if deployment != "" {
-				params["deployment_id"] = deployment
-			}
-			if state != "" {
-				params["state"] = state
-			}
+			params := parseInstancesFlags(operFlagSet, options)
 
 			cl := getClient()
 			nodeInstances, err := cl.GetNodeInstances(params)

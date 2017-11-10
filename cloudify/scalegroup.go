@@ -68,6 +68,39 @@ func (cl *Client) GetDeploymentInstancesHostGrouped(params map[string]string) (m
 }
 
 /*
+GetDeploymentInstancesNodeGrouped - return instances grouped by node
+*/
+func (cl *Client) GetDeploymentInstancesNodeGrouped(params map[string]string) (map[string]NodeInstances, error) {
+	var result = map[string]NodeInstances{}
+
+	nodeInstances, err := cl.GetNodeInstances(params)
+	if err != nil {
+		return result, err
+	}
+
+	for _, nodeInstance := range nodeInstances.Items {
+		if nodeInstance.NodeID != "" {
+			// add instance list if is not existed
+			if _, ok := result[nodeInstance.NodeID]; ok == false {
+				result[nodeInstance.NodeID] = NodeInstances{}
+			}
+
+			nodeHostInstance := result[nodeInstance.NodeID]
+
+			nodeHostInstance.Items = append(
+				nodeHostInstance.Items, nodeInstance,
+			)
+
+			nodeHostInstance.Metadata.Pagination.Total++
+			nodeHostInstance.Metadata.Pagination.Size++
+
+			result[nodeInstance.NodeID] = nodeHostInstance
+		}
+	}
+	return result, nil
+}
+
+/*
 GetStartedNodeInstancesWithType - Returned list of started node instances with some node type,
 used mainly for kubernetes, also check that all instances related to same hostId started */
 func (cl *Client) GetStartedNodeInstancesWithType(params map[string]string, nodeType string) (*NodeInstances, error) {
