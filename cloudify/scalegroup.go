@@ -101,8 +101,59 @@ func (cl *Client) GetDeploymentInstancesNodeGrouped(params map[string]string) (m
 }
 
 /*
+GetNodeInstancesWithType - Returned list of started node instances with some node type,
+used mainly for kubernetes, also check that all instances related to same hostId started
+*/
+func (cl *Client) GetNodeInstancesWithType(params map[string]string, nodeType string) (*NodeInstances, error) {
+	nodeInstances, err := cl.GetNodeInstances(params)
+	if err != nil {
+		return nil, err
+	}
+
+	var nodeParams = map[string]string{}
+	if val, ok := params["deployment_id"]; ok {
+		nodeParams["deployment_id"] = val
+	}
+	nodes, err := cl.GetNodes(nodeParams)
+	if err != nil {
+		return nil, err
+	}
+
+	instances := []NodeInstance{}
+	for _, nodeInstance := range nodeInstances.Items {
+		notKubernetesHost := true
+		for _, node := range nodes.Items {
+			if node.ID == nodeInstance.NodeID {
+				for _, typeName := range node.TypeHierarchy {
+					if typeName == nodeType {
+						notKubernetesHost = false
+						break
+					}
+				}
+			}
+		}
+
+		if notKubernetesHost {
+			continue
+		}
+
+		// add instance to list
+		instances = append(instances, nodeInstance)
+	}
+	var result NodeInstances
+	result.Items = instances
+	result.Metadata.Pagination.Total = uint(len(instances))
+	result.Metadata.Pagination.Size = uint(len(instances))
+	result.Metadata.Pagination.Offset = 0
+
+	return &result, nil
+}
+
+/*
 GetStartedNodeInstancesWithType - Returned list of started node instances with some node type,
-used mainly for kubernetes, also check that all instances related to same hostId started */
+used mainly for kubernetes, also check that all instances related to same hostId started
+Useful for scale only.
+*/
 func (cl *Client) GetStartedNodeInstancesWithType(params map[string]string, nodeType string) (*NodeInstances, error) {
 	nodeInstancesGrouped, err := cl.GetDeploymentInstancesHostGrouped(params)
 	if err != nil {

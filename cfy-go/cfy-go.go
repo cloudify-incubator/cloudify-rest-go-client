@@ -962,7 +962,7 @@ func parseInstancesFlags(operFlagSet *flag.FlagSet, options []string) map[string
 }
 
 func nodeInstancesOptions(args, options []string) int {
-	defaultError := "list/started/host-grouped/node-grouped subcommand is required"
+	defaultError := "list/started/host-grouped/node-grouped/by-type subcommand is required"
 
 	if len(args) < 3 {
 		fmt.Println(defaultError)
@@ -1008,6 +1008,24 @@ func nodeInstancesOptions(args, options []string) int {
 				}
 			}
 			return 0
+		}
+	case "by-type":
+		{
+			operFlagSet := basicOptions("node-instances started")
+			var nodeType string
+			operFlagSet.StringVar(&nodeType, "node-type",
+				"cloudify.nodes.ApplicationServer.kubernetes.Node",
+				"Filter by node type")
+
+			params := parseInstancesFlags(operFlagSet, options)
+
+			cl := getClient()
+			nodeInstances, err := cl.GetNodeInstancesWithType(params, nodeType)
+			if err != nil {
+				log.Printf("Cloudify error: %s\n", err.Error())
+				return 1
+			}
+			return nodeInstancesPrint(nodeInstances)
 		}
 	case "started":
 		{
