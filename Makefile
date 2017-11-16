@@ -13,6 +13,7 @@ reformat:
 	rm -rfv bin/*
 	gofmt -w src/${PACKAGEPATH}/cloudify/rest/*.go
 	gofmt -w src/${PACKAGEPATH}/cloudify/utils/*.go
+	gofmt -w src/${PACKAGEPATH}/cloudify/tests/*.go
 	gofmt -w src/${PACKAGEPATH}/cloudify/*.go
 	gofmt -w src/${PACKAGEPATH}/cfy-go/*.go
 	gofmt -w src/${PACKAGEPATH}/kubernetes/*.go
@@ -80,4 +81,6 @@ bin/cfy-go: src/${PACKAGEPATH}/cfy-go/cfy-go.go ${CFYGOLIBS}
 
 .PHONY: test
 test:
-	go test ./src/${PACKAGEPATH}/...
+	go test -cover ./src/${PACKAGEPATH}/...
+	go get github.com/golang/lint/golint
+	golint ./src/${PACKAGEPATH}/...

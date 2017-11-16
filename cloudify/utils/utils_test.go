@@ -21,18 +21,18 @@ import (
 	"testing"
 )
 
-type testpair struct {
+type cliTestpair struct {
 	input  []string
 	output [2][]string
 }
 
-var tests = []testpair{
+var cliTests = []cliTestpair{
 	{[]string{"cfy-go", "status"}, [2][]string{{"cfy-go", "status"}, {}}},
 	{[]string{"cfy-go", "status", "-user", "admin"}, [2][]string{{"cfy-go", "status"}, {"-user", "admin"}}},
 }
 
 func TestCliArgumentsList(t *testing.T) {
-	for _, pair := range tests {
+	for _, pair := range cliTests {
 		args, options := CliArgumentsList(pair.input)
 
 		if !reflect.DeepEqual(args, pair.output[0]) {
@@ -51,5 +51,14 @@ func TestCliArgumentsList(t *testing.T) {
 			)
 		}
 
+	}
+}
+
+func TestInList(t *testing.T) {
+	if InList([]string{"a", "b"}, "c") {
+		t.Error("Recheck 'c' not in ['a', 'b'] ")
+	}
+	if !InList([]string{"a", "b"}, "b") {
+		t.Error("Recheck 'b' in ['a', 'b'] ")
 	}
 }

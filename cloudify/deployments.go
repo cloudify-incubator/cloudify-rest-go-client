@@ -22,22 +22,20 @@ import (
 	"net/url"
 )
 
-/*
-Workflow - inforamtion about workflow
-
-Check https://blog.golang.org/json-and-go for more info about json marshaling.
-*/
+// Workflow - information about workflow
 type Workflow struct {
 	CreatedAt  string                 `json:"created_at"`
 	Name       string                 `json:"name"`
 	Parameters map[string]interface{} `json:"parameters"`
 }
 
+// DeploymentPost - create deployment struct
 type DeploymentPost struct {
 	BlueprintID string                 `json:"blueprint_id"`
 	Inputs      map[string]interface{} `json:"inputs"`
 }
 
+// SetJSONInputs - set inputs from json string
 func (depl *DeploymentPost) SetJSONInputs(inputs string) error {
 	if len(inputs) == 0 {
 		depl.Inputs = map[string]interface{}{}
@@ -47,6 +45,7 @@ func (depl *DeploymentPost) SetJSONInputs(inputs string) error {
 	return json.Unmarshal([]byte(inputs), &depl.Inputs)
 }
 
+// GetJSONInputs - get inputs as json string
 func (depl *DeploymentPost) GetJSONInputs() (string, error) {
 	jsonData, err := json.Marshal(depl.Inputs)
 	if err != nil {
@@ -55,6 +54,7 @@ func (depl *DeploymentPost) GetJSONInputs() (string, error) {
 	return string(jsonData), nil
 }
 
+// ScalingGroupProperties - scaling group properties struct
 type ScalingGroupProperties struct {
 	MinInstances     int `json:"min_instances"`
 	PlannedInstances int `json:"planned_instances"`
@@ -63,13 +63,16 @@ type ScalingGroupProperties struct {
 	CurrentInstances int `json:"current_instances"`
 }
 
+// ScalingGroup - Scaling group struct
 type ScalingGroup struct {
 	Properties ScalingGroupProperties `json:"properties"`
 	Members    []string               `json:"members"`
 }
+
+// Deployment - deployment struct
 type Deployment struct {
 	// have id, owner information
-	rest.CloudifyResource
+	rest.Resource
 	// contain information from post
 	DeploymentPost
 	Permalink     string                  `json:"permalink"`
@@ -82,6 +85,7 @@ type Deployment struct {
 	// TODO describe "scaling_groups" struct
 }
 
+// GetJSONOutputs - get deployments outputs as json string
 func (depl *Deployment) GetJSONOutputs() (string, error) {
 	jsonData, err := json.Marshal(depl.Outputs)
 	if err != nil {
@@ -90,6 +94,7 @@ func (depl *Deployment) GetJSONOutputs() (string, error) {
 	return string(jsonData), nil
 }
 
+// GetJSONInputs - get deployments inputs as json string
 func (depl *Deployment) GetJSONInputs() (string, error) {
 	jsonData, err := json.Marshal(depl.Inputs)
 	if err != nil {
@@ -98,18 +103,21 @@ func (depl *Deployment) GetJSONInputs() (string, error) {
 	return string(jsonData), nil
 }
 
+// DeploymentGet - information about deployment on server
 type DeploymentGet struct {
 	// can be response from api
-	rest.CloudifyBaseMessage
+	rest.BaseMessage
 	Deployment
 }
 
+// Deployments - response with list deployments
 type Deployments struct {
-	rest.CloudifyBaseMessage
-	Metadata rest.CloudifyMetadata `json:"metadata"`
-	Items    []Deployment          `json:"items"`
+	rest.BaseMessage
+	Metadata rest.Metadata `json:"metadata"`
+	Items    []Deployment  `json:"items"`
 }
 
+// GetDeployments - get deployments list from server filtered by params
 func (cl *Client) GetDeployments(params map[string]string) (*Deployments, error) {
 	var deployments Deployments
 
@@ -126,6 +134,7 @@ func (cl *Client) GetDeployments(params map[string]string) (*Deployments, error)
 	return &deployments, nil
 }
 
+// DeleteDeployments - delete deployment by ID
 func (cl *Client) DeleteDeployments(deploymentID string) (*DeploymentGet, error) {
 	var deployment DeploymentGet
 
@@ -137,6 +146,7 @@ func (cl *Client) DeleteDeployments(deploymentID string) (*DeploymentGet, error)
 	return &deployment, nil
 }
 
+// CreateDeployments - create deployment
 func (cl *Client) CreateDeployments(deploymentID string, depl DeploymentPost) (*DeploymentGet, error) {
 	var deployment DeploymentGet
 

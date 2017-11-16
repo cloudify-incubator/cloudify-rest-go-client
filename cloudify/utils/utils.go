@@ -28,6 +28,7 @@ import (
 	"unicode/utf8"
 )
 
+//printBottomLine - print "+-...-+" line as bottom
 func printBottomLine(columnSizes []int) {
 	fmt.Printf("+")
 	for _, size := range columnSizes {
@@ -37,6 +38,7 @@ func printBottomLine(columnSizes []int) {
 	fmt.Printf("\n")
 }
 
+//printLine - print "| <text> |" from text columns/lines
 func printLine(columnSizes []int, lines []string) {
 	fmt.Printf("|")
 	for col, size := range columnSizes {
@@ -47,6 +49,7 @@ func printLine(columnSizes []int, lines []string) {
 	fmt.Printf("\n")
 }
 
+//PrintTable - print table with column titles and several lines
 func PrintTable(titles []string, lines [][]string) {
 	columnSizes := make([]int, len(titles))
 
@@ -77,9 +80,7 @@ func PrintTable(titles []string, lines [][]string) {
 	printBottomLine(columnSizes)
 }
 
-/*
-CliArgumentsList - return clean list of arguments and options
-*/
+//CliArgumentsList - return clean list of arguments and options
 func CliArgumentsList(osArgs []string) (arguments []string, options []string) {
 	for pos, str := range osArgs {
 		if str[:1] == "-" {
@@ -89,6 +90,7 @@ func CliArgumentsList(osArgs []string) (arguments []string, options []string) {
 	return osArgs, []string{}
 }
 
+//DirZipArchive - create archive from directory and return as bytes array
 func DirZipArchive(parentDir string) ([]byte, error) {
 	// Create a buffer to write our archive to.
 	buf := new(bytes.Buffer)
@@ -130,6 +132,7 @@ func DirZipArchive(parentDir string) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
+//InList - return true if string is already in list
 func InList(source []string, value string) bool {
 	for _, inList := range source {
 		if inList == value {

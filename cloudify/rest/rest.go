@@ -26,18 +26,24 @@ import (
 	"net/http"
 )
 
-/*
-JSONContentType - type used in communication with manager
-*/
+// JSONContentType - type used in communication with manager
 const JSONContentType = "application/json"
 
-/*
-DataContentType - binary only data, like archives
-*/
+// DataContentType - binary only data, like archives
 const DataContentType = "application/octet-stream"
 
-func (r *CloudifyRestClient) GetRequest(url, method string, body io.Reader) (*http.Request, error) {
-	if r.Debug {
+// HTTPClient - Credentials for cloudify
+type HTTPClient struct {
+	restURL  string
+	user     string
+	password string
+	tenant   string
+	debug    bool
+}
+
+// getRequest - create new request by params
+func (r *HTTPClient) getRequest(url, method string, body io.Reader) (*http.Request, error) {
+	if r.debug {
 		log.Printf("Use: %v:%v@%v#%s\n", r.user, r.password, r.restURL+url, r.tenant)
 	}
 
@@ -56,8 +62,9 @@ func (r *CloudifyRestClient) GetRequest(url, method string, body io.Reader) (*ht
 	return req, nil
 }
 
-func (r *CloudifyRestClient) Get(url, acceptedContentType string) ([]byte, error) {
-	req, err := r.GetRequest(url, "GET", nil)
+// Get - http(s) get request
+func (r *HTTPClient) Get(url, acceptedContentType string) ([]byte, error) {
+	req, err := r.getRequest(url, "GET", nil)
 	if err != nil {
 		return []byte{}, err
 	}
@@ -81,7 +88,7 @@ func (r *CloudifyRestClient) Get(url, acceptedContentType string) ([]byte, error
 		return []byte{}, err
 	}
 
-	if r.Debug {
+	if r.debug {
 		if acceptedContentType == JSONContentType {
 			log.Printf("Response %s\n", string(body))
 		} else {
@@ -92,8 +99,9 @@ func (r *CloudifyRestClient) Get(url, acceptedContentType string) ([]byte, error
 	return body, nil
 }
 
-func (r *CloudifyRestClient) Delete(url string) ([]byte, error) {
-	req, err := r.GetRequest(url, "DELETE", nil)
+// Delete - http(s) delete request
+func (r *HTTPClient) Delete(url string) ([]byte, error) {
+	req, err := r.getRequest(url, "DELETE", nil)
 	if err != nil {
 		return []byte{}, err
 	}
@@ -117,15 +125,16 @@ func (r *CloudifyRestClient) Delete(url string) ([]byte, error) {
 		return []byte{}, err
 	}
 
-	if r.Debug {
+	if r.debug {
 		log.Printf("Response %s\n", string(body))
 	}
 
 	return body, nil
 }
 
-func (r *CloudifyRestClient) Post(url string, data []byte) ([]byte, error) {
-	req, err := r.GetRequest(url, "POST", bytes.NewBuffer(data))
+// Post - http(s) post request
+func (r *HTTPClient) Post(url string, data []byte) ([]byte, error) {
+	req, err := r.getRequest(url, "POST", bytes.NewBuffer(data))
 	if err != nil {
 		return []byte{}, err
 	}
@@ -150,15 +159,16 @@ func (r *CloudifyRestClient) Post(url string, data []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	if r.Debug {
+	if r.debug {
 		log.Printf("Response %s\n", string(body))
 	}
 
 	return body, nil
 }
 
-func (r *CloudifyRestClient) Put(url, providedContentType string, data []byte) ([]byte, error) {
-	req, err := r.GetRequest(url, "PUT", bytes.NewBuffer(data))
+// Put - http(s) put request
+func (r *HTTPClient) Put(url, providedContentType string, data []byte) ([]byte, error) {
+	req, err := r.getRequest(url, "PUT", bytes.NewBuffer(data))
 	if err != nil {
 		return []byte{}, err
 	}
@@ -183,15 +193,26 @@ func (r *CloudifyRestClient) Put(url, providedContentType string, data []byte) (
 		return []byte{}, err
 	}
 
-	if r.Debug {
+	if r.debug {
 		log.Printf("Response %s\n", string(body))
 	}
 
 	return body, nil
 }
 
-func NewClient(host, user, password, tenant string) *CloudifyRestClient {
-	var restCl CloudifyRestClient
+// GetDebug - get current debug state
+func (r *HTTPClient) GetDebug() bool {
+	return r.debug
+}
+
+// SetDebug - change current debug state
+func (r *HTTPClient) SetDebug(state bool) {
+	r.debug = state
+}
+
+// NewClient - create new http(s) client
+func NewClient(host, user, password, tenant string) ConnectionOperationsInterface {
+	var restCl HTTPClient
 	if (host[:len("https://")] == "https://" ||
 		host[:len("http://")] == "http://") && (len(host) >= len("http://")) {
 		restCl.restURL = host + "/api/" + APIVersion + "/"
@@ -201,6 +222,6 @@ func NewClient(host, user, password, tenant string) *CloudifyRestClient {
 	restCl.user = user
 	restCl.password = password
 	restCl.tenant = tenant
-	restCl.Debug = false
+	restCl.debug = false
 	return &restCl
 }

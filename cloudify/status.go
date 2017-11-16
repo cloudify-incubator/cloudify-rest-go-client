@@ -20,8 +20,9 @@ import (
 	rest "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify/rest"
 )
 
+// Version - information about manager version
 type Version struct {
-	rest.CloudifyBaseMessage
+	rest.BaseMessage
 	Date    string `json:"date"`
 	Edition string `json:"edition"`
 	Version string `json:"version"`
@@ -29,6 +30,7 @@ type Version struct {
 	Commit  string `json:"commit"`
 }
 
+// InstanceStatus - system service status
 type InstanceStatus struct {
 	LoadState   string `json:"LoadState"`
 	Description string `json:"Description"`
@@ -39,11 +41,13 @@ type InstanceStatus struct {
 	SubState    string `json:"SubState"`
 }
 
+// InstanceService - information about system service started on manager
 type InstanceService struct {
 	Instances   []InstanceStatus `json:"instances"`
 	DisplayName string           `json:"display_name"`
 }
 
+// Status - current status for service
 func (s InstanceService) Status() string {
 	state := "unknown"
 
@@ -56,12 +60,14 @@ func (s InstanceService) Status() string {
 	return state
 }
 
+// Status - response from server about current status
 type Status struct {
-	rest.CloudifyBaseMessage
+	rest.BaseMessage
 	Status   string            `json:"status"`
 	Services []InstanceService `json:"services"`
 }
 
+// GetVersion - manager version
 func (cl *Client) GetVersion() (*Version, error) {
 	var ver Version
 
@@ -73,6 +79,7 @@ func (cl *Client) GetVersion() (*Version, error) {
 	return &ver, nil
 }
 
+// GetStatus - manager status
 func (cl *Client) GetStatus() (*Status, error) {
 	var stat Status
 

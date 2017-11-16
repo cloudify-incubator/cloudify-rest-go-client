@@ -25,12 +25,14 @@ import (
 	"time"
 )
 
+// ExecutionPost - information for create new execution
 type ExecutionPost struct {
 	WorkflowID   string                 `json:"workflow_id"`
 	DeploymentID string                 `json:"deployment_id"`
 	Parameters   map[string]interface{} `json:"parameters"`
 }
 
+// SetJSONParameters - set parameters for execution (use before send)
 func (exec *ExecutionPost) SetJSONParameters(parameters string) error {
 	if len(parameters) == 0 {
 		exec.Parameters = map[string]interface{}{}
@@ -44,9 +46,10 @@ func (exec *ExecutionPost) SetJSONParameters(parameters string) error {
 	return nil
 }
 
+// Execution - information about execution on manager
 type Execution struct {
 	// have id, owner information
-	rest.CloudifyResource
+	rest.Resource
 	// contain information from post
 	ExecutionPost
 	IsSystemWorkflow bool   `json:"is_system_workflow"`
@@ -55,22 +58,22 @@ type Execution struct {
 	Status           string `json:"status"`
 }
 
+// ExecutionGet - response from manager about selected execution
 type ExecutionGet struct {
 	// can be response from api
-	rest.CloudifyBaseMessage
+	rest.BaseMessage
 	Execution
 }
 
+// Executions - response from manager about several executions
 type Executions struct {
-	rest.CloudifyBaseMessage
-	Metadata rest.CloudifyMetadata `json:"metadata"`
-	Items    []Execution           `json:"items"`
+	rest.BaseMessage
+	Metadata rest.Metadata `json:"metadata"`
+	Items    []Execution   `json:"items"`
 }
 
-/*
-GetExecutions - return list of execution on manager
-NOTE: change params type if you want use non uniq values in params
-*/
+// GetExecutions - return list of execution on manager
+// NOTE: change params type if you want use non uniq values in params
 func (cl *Client) GetExecutions(params map[string]string) (*Executions, error) {
 	var executions Executions
 
@@ -87,9 +90,7 @@ func (cl *Client) GetExecutions(params map[string]string) (*Executions, error) {
 	return &executions, nil
 }
 
-/*
-PostExecution - run executions without waiting
-*/
+// PostExecution - run executions without waiting
 func (cl *Client) PostExecution(exec ExecutionPost) (*ExecutionGet, error) {
 	var execution ExecutionGet
 
@@ -103,9 +104,7 @@ func (cl *Client) PostExecution(exec ExecutionPost) (*ExecutionGet, error) {
 	return &execution, nil
 }
 
-/*
-WaitBeforeRunExecution - wait while all other executions will be finished
-*/
+// WaitBeforeRunExecution - wait while all other executions will be finished
 func (cl *Client) WaitBeforeRunExecution(deploymentID string) error {
 	for true {
 		var params = map[string]string{}
@@ -120,7 +119,7 @@ func (cl *Client) WaitBeforeRunExecution(deploymentID string) error {
 				return fmt.Errorf(execution.ErrorMessage)
 			}
 			if execution.Status == "pending" || execution.Status == "started" || execution.Status == "cancelling" {
-				if cl.restCl.Debug {
+				if cl.restCl.GetDebug() {
 					log.Printf("Check status for %v, last status: %v", execution.ID, execution.Status)
 				}
 				time.Sleep(15 * time.Second)
@@ -135,11 +134,9 @@ func (cl *Client) WaitBeforeRunExecution(deploymentID string) error {
 	return nil
 }
 
-/*
-RunExecution - Run executions and wait results
-execPost: executions description for run
-fullFinish: wait to full finish
-*/
+// RunExecution - Run executions and wait results
+// execPost: executions description for run
+// fullFinish: wait to full finish
 func (cl *Client) RunExecution(execPost ExecutionPost, fullFinish bool) (*Execution, error) {
 	var execution Execution
 	executionGet, err := cl.PostExecution(execPost)
@@ -148,7 +145,7 @@ func (cl *Client) RunExecution(execPost ExecutionPost, fullFinish bool) (*Execut
 	}
 	execution = executionGet.Execution
 	for execution.Status == "pending" || (execution.Status == "started" && fullFinish) {
-		if cl.restCl.Debug {
+		if cl.restCl.GetDebug() {
 			log.Printf("Check status for %v, last status: %v", execution.ID, execution.Status)
 		}
 

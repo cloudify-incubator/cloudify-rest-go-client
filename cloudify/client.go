@@ -7,25 +7,35 @@ import (
 	"io/ioutil"
 )
 
+//Client - struct with connection settings for connect to manager
 type Client struct {
-	restCl *rest.CloudifyRestClient
+	restCl rest.ConnectionOperationsInterface
 }
 
-func NewClient(host, user, password, tenant string) *Client {
+//ClientFromConnection - return new client with internally use provided connection
+func ClientFromConnection(conn rest.ConnectionOperationsInterface) *Client {
 	var cliCl Client
-	cliCl.restCl = rest.NewClient(host, user, password, tenant)
+	cliCl.restCl = conn
 	return &cliCl
 }
 
-func (cl *Client) EnableDebug() {
-	cl.restCl.Debug = true
+//NewClient - return new connection with params
+func NewClient(host, user, password, tenant string) *Client {
+	return ClientFromConnection(rest.NewClient(host, user, password, tenant))
 }
 
+//EnableDebug - Enable debug on current connection
+func (cl *Client) EnableDebug() {
+	cl.restCl.SetDebug(true)
+}
+
+//GetAPIVersion - return currently supported api version
 func (cl *Client) GetAPIVersion() string {
 	return rest.APIVersion
 }
 
-func (cl *Client) Get(url string, output rest.CloudifyMessageInterface) error {
+//Get - get cloudify object from server
+func (cl *Client) Get(url string, output rest.MessageInterface) error {
 	body, err := cl.restCl.Get(url, rest.JSONContentType)
 	if err != nil {
 		return err
@@ -42,6 +52,7 @@ func (cl *Client) Get(url string, output rest.CloudifyMessageInterface) error {
 	return nil
 }
 
+//GetBinary - get binary object from manager without any kind of unmarshaling
 func (cl *Client) GetBinary(url, outputPath string) error {
 	body, err := cl.restCl.Get(url, rest.DataContentType)
 	if err != nil {
@@ -56,7 +67,8 @@ func (cl *Client) GetBinary(url, outputPath string) error {
 	return nil
 }
 
-func binaryPut(cl *Client, url string, input []byte, inputType string, output rest.CloudifyMessageInterface) error {
+//binaryPut - store/send object to manger without marshaling, response will be unmarshaled
+func binaryPut(cl *Client, url string, input []byte, inputType string, output rest.MessageInterface) error {
 	body, err := cl.restCl.Put(url, inputType, input)
 	if err != nil {
 		return err
@@ -73,11 +85,13 @@ func binaryPut(cl *Client, url string, input []byte, inputType string, output re
 	return nil
 }
 
-func (cl *Client) PutBinary(url string, data []byte, output rest.CloudifyMessageInterface) error {
+//PutBinary - store/send binary object to manger without marshaling, response will be unmarshaled
+func (cl *Client) PutBinary(url string, data []byte, output rest.MessageInterface) error {
 	return binaryPut(cl, url, data, rest.DataContentType, output)
 }
 
-func (cl *Client) PutZip(url, path string, output rest.CloudifyMessageInterface) error {
+//PutZip - store/send path as archive to manger without marshaling, response will be unmarshaled
+func (cl *Client) PutZip(url, path string, output rest.MessageInterface) error {
 	data, err := utils.DirZipArchive(path)
 	if err != nil {
 		return err
@@ -86,7 +100,8 @@ func (cl *Client) PutZip(url, path string, output rest.CloudifyMessageInterface)
 	return binaryPut(cl, url, data, rest.DataContentType, output)
 }
 
-func (cl *Client) Put(url string, input interface{}, output rest.CloudifyMessageInterface) error {
+//Put - send object to manager(mainly replece old one)
+func (cl *Client) Put(url string, input interface{}, output rest.MessageInterface) error {
 	jsonData, err := json.Marshal(input)
 	if err != nil {
 		return err
@@ -95,7 +110,8 @@ func (cl *Client) Put(url string, input interface{}, output rest.CloudifyMessage
 	return binaryPut(cl, url, jsonData, rest.JSONContentType, output)
 }
 
-func (cl *Client) Post(url string, input interface{}, output rest.CloudifyMessageInterface) error {
+//Post - send cloudify object to manager
+func (cl *Client) Post(url string, input interface{}, output rest.MessageInterface) error {
 	jsonData, err := json.Marshal(input)
 	if err != nil {
 		return err
@@ -117,7 +133,8 @@ func (cl *Client) Post(url string, input interface{}, output rest.CloudifyMessag
 	return nil
 }
 
-func (cl *Client) Delete(url string, output rest.CloudifyMessageInterface) error {
+//Delete - delete cloudify object on manager
+func (cl *Client) Delete(url string, output rest.MessageInterface) error {
 	body, err := cl.restCl.Delete(url)
 	if err != nil {
 		return err

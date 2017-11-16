@@ -22,6 +22,7 @@ import (
 	"net/url"
 )
 
+// NodePlugin - information about plugin used by node
 type NodePlugin struct {
 	PluginBase
 	Name     string `json:"name,omitempty"`
@@ -31,8 +32,9 @@ type NodePlugin struct {
 	Install bool `json:"install"`
 }
 
+// Node - information about cloudify node
 type Node struct {
-	rest.CloudifyIDWithTenant
+	rest.ObjectIDWithTenant
 	Operations               map[string]interface{} `json:"operations,omitempty"`
 	Relationships            []interface{}          `json:"relationships,omitempty"`
 	DeployNumberOfInstances  int                    `json:"deploy_number_of_instances"`
@@ -50,6 +52,7 @@ type Node struct {
 	PluginsToInstall         []interface{}          `json:"plugins_to_install,omitempty"`
 }
 
+// GetJSONProperties - properties related to node
 func (node *Node) GetJSONProperties() (string, error) {
 	jsonData, err := json.Marshal(node.Properties)
 	if err != nil {
@@ -58,12 +61,14 @@ func (node *Node) GetJSONProperties() (string, error) {
 	return string(jsonData), nil
 }
 
+// Nodes - response from manager with nodes list
 type Nodes struct {
-	rest.CloudifyBaseMessage
-	Metadata rest.CloudifyMetadata `json:"metadata"`
-	Items    []Node                `json:"items"`
+	rest.BaseMessage
+	Metadata rest.Metadata `json:"metadata"`
+	Items    []Node        `json:"items"`
 }
 
+// GetNodes - return nodes filtered by params
 func (cl *Client) GetNodes(params map[string]string) (*Nodes, error) {
 	var nodes Nodes
 
@@ -80,6 +85,7 @@ func (cl *Client) GetNodes(params map[string]string) (*Nodes, error) {
 	return &nodes, nil
 }
 
+// GetStartedNodesWithType - return nodes specified type with more than zero instances
 func (cl *Client) GetStartedNodesWithType(params map[string]string, nodeType string) (*Nodes, error) {
 	cloudNodes, err := cl.GetNodes(params)
 	if err != nil {

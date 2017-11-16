@@ -21,6 +21,7 @@ import (
 	"net/url"
 )
 
+// PluginBase - common part for any response about plugin
 type PluginBase struct {
 	DistributionRelease string `json:"distribution_release,omitempty"`
 	PackageName         string `json:"package_name,omitempty"`
@@ -29,8 +30,9 @@ type PluginBase struct {
 	SupportedPlatform   string `json:"supported_platform,omitempty"`
 }
 
+// Plugin - information about cloudify plugin
 type Plugin struct {
-	rest.CloudifyIDWithTenant
+	rest.ObjectIDWithTenant
 	PluginBase
 	SupportedPyVersions []string `json:"supported_py_versions,omitempty"`
 	UploadedAt          string   `json:"uploaded_at,omitempty"`
@@ -41,12 +43,14 @@ type Plugin struct {
 	Wheels              []string `json:"wheels,omitempty"`
 }
 
+// Plugins - response with list plugins
 type Plugins struct {
-	rest.CloudifyBaseMessage
-	Metadata rest.CloudifyMetadata `json:"metadata"`
-	Items    []Plugin              `json:"items"`
+	rest.BaseMessage
+	Metadata rest.Metadata `json:"metadata"`
+	Items    []Plugin      `json:"items"`
 }
 
+// GetPlugins - return list plugins on manger filtered by params
 func (cl *Client) GetPlugins(params map[string]string) (*Plugins, error) {
 	var plugins Plugins
 

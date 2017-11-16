@@ -24,25 +24,29 @@ import (
 	"path/filepath"
 )
 
+//Blueprint - struct for descrine information about cloudify blueprint
 type Blueprint struct {
 	// have id, owner information
-	rest.CloudifyResource
+	rest.Resource
 	MainFileName string `json:"main_file_name"`
 	// TODO describe "plan" struct
 }
 
+//BlueprintGet - Struct returned to get call with blueprint id
 type BlueprintGet struct {
 	// can be response from api
-	rest.CloudifyBaseMessage
+	rest.BaseMessage
 	Blueprint
 }
 
+//Blueprints - struct returned to call for get blueprints by filter
 type Blueprints struct {
-	rest.CloudifyBaseMessage
-	Metadata rest.CloudifyMetadata `json:"metadata"`
-	Items    []Blueprint           `json:"items"`
+	rest.BaseMessage
+	Metadata rest.Metadata `json:"metadata"`
+	Items    []Blueprint   `json:"items"`
 }
 
+//GetBlueprints - return blueprints from manager with fileter by params
 func (cl *Client) GetBlueprints(params map[string]string) (*Blueprints, error) {
 	var blueprints Blueprints
 
@@ -59,6 +63,7 @@ func (cl *Client) GetBlueprints(params map[string]string) (*Blueprints, error) {
 	return &blueprints, nil
 }
 
+//DeleteBlueprints - delete blueprint by id
 func (cl *Client) DeleteBlueprints(blueprintID string) (*BlueprintGet, error) {
 	var blueprint BlueprintGet
 
@@ -70,6 +75,7 @@ func (cl *Client) DeleteBlueprints(blueprintID string) (*BlueprintGet, error) {
 	return &blueprint, nil
 }
 
+//DownloadBlueprints - download blueprint by id
 func (cl *Client) DownloadBlueprints(blueprintID string) (string, error) {
 	fileName := blueprintID + ".tar.gz"
 
@@ -86,6 +92,7 @@ func (cl *Client) DownloadBlueprints(blueprintID string) (string, error) {
 	return fileName, nil
 }
 
+//UploadBlueprint - upload blueprint with name and path to blueprint in filesystem
 func (cl *Client) UploadBlueprint(blueprintID, path string) (*BlueprintGet, error) {
 
 	absPath, errAbs := filepath.Abs(path)

@@ -21,6 +21,7 @@ import (
 	utils "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify/utils"
 )
 
+// GetDeployment - return deployment by ID
 func (cl *Client) GetDeployment(deploymentID string) (*Deployment, error) {
 	var params = map[string]string{}
 	params["id"] = deploymentID
@@ -34,9 +35,7 @@ func (cl *Client) GetDeployment(deploymentID string) (*Deployment, error) {
 	return &deployments.Items[0], nil
 }
 
-/*
-GetDeploymentInstancesHostGrouped - return instances grouped by host
-*/
+// GetDeploymentInstancesHostGrouped - return instances grouped by host
 func (cl *Client) GetDeploymentInstancesHostGrouped(params map[string]string) (map[string]NodeInstances, error) {
 	var result = map[string]NodeInstances{}
 
@@ -67,9 +66,7 @@ func (cl *Client) GetDeploymentInstancesHostGrouped(params map[string]string) (m
 	return result, nil
 }
 
-/*
-GetDeploymentInstancesNodeGrouped - return instances grouped by node
-*/
+// GetDeploymentInstancesNodeGrouped - return instances grouped by node
 func (cl *Client) GetDeploymentInstancesNodeGrouped(params map[string]string) (map[string]NodeInstances, error) {
 	var result = map[string]NodeInstances{}
 
@@ -100,10 +97,8 @@ func (cl *Client) GetDeploymentInstancesNodeGrouped(params map[string]string) (m
 	return result, nil
 }
 
-/*
-GetNodeInstancesWithType - Returned list of started node instances with some node type,
-used mainly for kubernetes, also check that all instances related to same hostId started
-*/
+// GetNodeInstancesWithType - Returned list of started node instances with some node type,
+// used mainly for kubernetes, also check that all instances related to same hostId started
 func (cl *Client) GetNodeInstancesWithType(params map[string]string, nodeType string) (*NodeInstances, error) {
 	nodeInstances, err := cl.GetNodeInstances(params)
 	if err != nil {
@@ -149,11 +144,9 @@ func (cl *Client) GetNodeInstancesWithType(params map[string]string, nodeType st
 	return &result, nil
 }
 
-/*
-GetStartedNodeInstancesWithType - Returned list of started node instances with some node type,
-used mainly for kubernetes, also check that all instances related to same hostId started
-Useful for scale only.
-*/
+// GetStartedNodeInstancesWithType - Returned list of started node instances with some node type,
+// used mainly for kubernetes, also check that all instances related to same hostId started
+// Useful for scale only.
 func (cl *Client) GetStartedNodeInstancesWithType(params map[string]string, nodeType string) (*NodeInstances, error) {
 	nodeInstancesGrouped, err := cl.GetDeploymentInstancesHostGrouped(params)
 	if err != nil {
@@ -215,6 +208,7 @@ func (cl *Client) GetStartedNodeInstancesWithType(params map[string]string, node
 	return &result, nil
 }
 
+// GetDeploymentScaleGroup - return scaling group by name and deployment
 func (cl *Client) GetDeploymentScaleGroup(deploymentID, groupName string) (*ScalingGroup, error) {
 	deployment, err := cl.GetDeployment(deploymentID)
 	if err != nil {
@@ -230,6 +224,7 @@ func (cl *Client) GetDeploymentScaleGroup(deploymentID, groupName string) (*Scal
 	return nil, fmt.Errorf("No such scale group:%+v", groupName)
 }
 
+// GetDeploymentScaleGroupNodes - return nodes related to scaling group
 func (cl *Client) GetDeploymentScaleGroupNodes(deploymentID, groupName, nodeType string) (*Nodes, error) {
 	// get all nodes
 	params := map[string]string{}
@@ -262,6 +257,7 @@ func (cl *Client) GetDeploymentScaleGroupNodes(deploymentID, groupName, nodeType
 	return &result, nil
 }
 
+// GetDeploymentScaleGroupInstances - return instances related to scaling group
 func (cl *Client) GetDeploymentScaleGroupInstances(deploymentID, groupName, nodeType string) (*NodeInstances, error) {
 	// get all instances
 	params := map[string]string{}
@@ -295,9 +291,7 @@ func (cl *Client) GetDeploymentScaleGroupInstances(deploymentID, groupName, node
 	return &result, nil
 }
 
-/*
-GetDeploymentInstancesScaleGrouped - return instances grouped by scaleing group
-*/
+// GetDeploymentInstancesScaleGrouped - return instances grouped by scaleing group
 func (cl *Client) GetDeploymentInstancesScaleGrouped(deploymentID, nodeType string) (map[string]NodeInstances, error) {
 	var result = map[string]NodeInstances{}
 

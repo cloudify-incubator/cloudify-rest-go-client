@@ -16,74 +16,76 @@ limitations under the License.
 
 package rest
 
+// APIVersion - currently supported version of Cloudify API
 const APIVersion = "v3.1"
 
-/*
-CloudifyRestClient - Credentials
-*/
-type CloudifyRestClient struct {
-	restURL  string
-	user     string
-	password string
-	tenant   string
-	Debug    bool
-}
-
-type CloudifyMessageInterface interface {
+// MessageInterface - Interface for any cloudify error resoponse
+type MessageInterface interface {
 	ErrorCode() string
 	Error() string
 	TraceBack() string
 }
 
-/*
-CloudifyBaseMessage - common part of any result from cloudify
-Note: We need Cl prefix for make fields public and use in Marshal func
-*/
-type CloudifyBaseMessage struct {
-	CloudifyMessageInterface
+// BaseMessage - common part of any result from cloudify
+// Note: We need Cl prefix for make fields public and use in Marshal func
+// Check https://blog.golang.org/json-and-go for more info about json marshaling.
+type BaseMessage struct {
+	MessageInterface
 	ClMessage         string `json:"message,omitempty"`
 	ClErrorCode       string `json:"error_code,omitempty"`
 	ClServerTraceback string `json:"server_traceback,omitempty"`
 }
 
-func (cm *CloudifyBaseMessage) ErrorCode() string {
+// ErrorCode - current error code if any
+func (cm *BaseMessage) ErrorCode() string {
 	return cm.ClErrorCode
 }
 
-/*
-Error - Support reuse CloudifyBaseMessage as error type
-*/
-func (cm *CloudifyBaseMessage) Error() string {
+// Error - Support reuse BaseMessage as error type
+func (cm *BaseMessage) Error() string {
 	return cm.ClMessage
 }
 
-func (cm *CloudifyBaseMessage) TraceBack() string {
+// TraceBack - traceback from response
+func (cm *BaseMessage) TraceBack() string {
 	return cm.ClServerTraceback
 }
 
-/*
-CloudifyPagination - common struct of any result with pagination
-*/
-type CloudifyPagination struct {
+// Pagination - common struct of any result with pagination
+type Pagination struct {
 	Total  uint `json:"total"`
 	Offset uint `json:"offset"`
 	Size   uint `json:"size"`
 }
 
-type CloudifyMetadata struct {
-	Pagination CloudifyPagination `json:"pagination"`
+// Metadata - common struct of any result sevaral items in response
+type Metadata struct {
+	Pagination Pagination `json:"pagination"`
 }
 
-type CloudifyIDWithTenant struct {
+// ObjectIDWithTenant - common struct for any response with object id and tenant
+type ObjectIDWithTenant struct {
 	ID              string `json:"id"`
 	Tenant          string `json:"tenant_name"`
 	CreatedBy       string `json:"created_by"`
 	PrivateResource bool   `json:"private_resource"`
 }
 
-type CloudifyResource struct {
-	CloudifyIDWithTenant
+// Resource - common struct for any object from cloudify with description
+type Resource struct {
+	ObjectIDWithTenant
 	Description string `json:"description"`
 	CreatedAt   string `json:"created_at"`
 	UpdatedAt   string `json:"updated_at"`
+}
+
+// ConnectionOperationsInterface - mandatory methods for any cloudify connection
+// For now implemented only http/https version
+type ConnectionOperationsInterface interface {
+	Get(url, acceptedContentType string) ([]byte, error)
+	Delete(url string) ([]byte, error)
+	Post(url string, data []byte) ([]byte, error)
+	Put(url, providedContentType string, data []byte) ([]byte, error)
+	SetDebug(bool)
+	GetDebug() bool
 }

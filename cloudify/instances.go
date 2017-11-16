@@ -22,16 +22,15 @@ import (
 	"net/url"
 )
 
-/*
-NodeInstanceScalingGroup - short information(ID+Name) about scaling group related to instance
-*/
+// NodeInstanceScalingGroup - short information(ID+Name) about scaling group related to instance
 type NodeInstanceScalingGroup struct {
 	Name string `json:"name,omitempty"`
 	ID   string `json:"id,omitempty"`
 }
 
+// NodeInstance - cloudify node instance struct
 type NodeInstance struct {
-	rest.CloudifyIDWithTenant
+	rest.ObjectIDWithTenant
 	Relationships     []interface{}              `json:"relationships,omitempty"`
 	RuntimeProperties map[string]interface{}     `json:"runtime_properties,omitempty"`
 	State             string                     `json:"state,omitempty"`
@@ -42,6 +41,7 @@ type NodeInstance struct {
 	ScalingGroups     []NodeInstanceScalingGroup `json:"scaling_groups,omitempty"`
 }
 
+// GetJSONRuntimeProperties - instance runtime properties returnd as json string
 func (instance *NodeInstance) GetJSONRuntimeProperties() (string, error) {
 	jsonData, err := json.Marshal(instance.RuntimeProperties)
 	if err != nil {
@@ -50,15 +50,14 @@ func (instance *NodeInstance) GetJSONRuntimeProperties() (string, error) {
 	return string(jsonData), nil
 }
 
+// NodeInstances - cloudify manager response with list instances
 type NodeInstances struct {
-	rest.CloudifyBaseMessage
-	Metadata rest.CloudifyMetadata `json:"metadata"`
-	Items    []NodeInstance        `json:"items"`
+	rest.BaseMessage
+	Metadata rest.Metadata  `json:"metadata"`
+	Items    []NodeInstance `json:"items"`
 }
 
-/*
-GetNodeInstances - Get all node instances
-*/
+// GetNodeInstances - Get all node instances
 func (cl *Client) GetNodeInstances(params map[string]string) (*NodeInstances, error) {
 	var instances NodeInstances
 

@@ -21,6 +21,7 @@ import (
 	"net/url"
 )
 
+// Event - infromation about cloudify event
 type Event struct {
 	NodeInstanceID    string `json:"node_instance_id"`
 	EventType         string `json:"event_type"`
@@ -37,12 +38,14 @@ type Event struct {
 	Message           string `json:"message"`
 }
 
+// Events - cloudify response with events list
 type Events struct {
-	rest.CloudifyBaseMessage
-	Metadata rest.CloudifyMetadata `json:"metadata"`
-	Items    []Event               `json:"items"`
+	rest.BaseMessage
+	Metadata rest.Metadata `json:"metadata"`
+	Items    []Event       `json:"items"`
 }
 
+// GetEvents - get events list filtered by params
 func (cl *Client) GetEvents(params map[string]string) (*Events, error) {
 	var events Events
 
