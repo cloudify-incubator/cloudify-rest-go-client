@@ -15,6 +15,8 @@ limitations under the License.
 */
 
 /*
+Deployments
+
 deployments - Handle deployments on the Manager
 
 	create - Create a deployment [manager only]. Partially implemented, you can set inputs only as json string.

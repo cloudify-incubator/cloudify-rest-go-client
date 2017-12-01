@@ -15,6 +15,8 @@ limitations under the License.
 */
 
 /*
+Scaling Groups
+
 scaling-groups - operations related to Scaling Groups
 
 	groups: check nodes in group - recheck code used in get scaling group by instance(hostname) in autoscale

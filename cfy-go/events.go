@@ -15,6 +15,8 @@ limitations under the License.
 */
 
 /*
+Events
+
 events - Show events from workflow executions
 
 	delete - Delete deployment events [manager only]. Not Implemented.

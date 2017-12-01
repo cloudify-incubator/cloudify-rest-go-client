@@ -76,7 +76,10 @@ Not implemeted commands:
 	users: Handle Cloudify users
 	workflows: Handle deployment workflows
 
-blueprints - manage blueprints on the manager:
+Bluprint
+
+For use blueprint related command use cfy-go blueprints, it provide fuctionality
+for manage blueprints on the manager:
 
 	create-requirements - Create pip-requirements. Not Implemented.
 

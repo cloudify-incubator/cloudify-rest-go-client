@@ -15,6 +15,8 @@ limitations under the License.
 */
 
 /*
+Status
+
 status - Show manager status [manager only].
 
 	Manager state: Show service list on manager

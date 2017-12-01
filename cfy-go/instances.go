@@ -15,6 +15,8 @@ limitations under the License.
 */
 
 /*
+Node Instances
+
 node-instances - Handle a deployment's node-instances.
 
 	get: Retrieve node-instance information [manager only]

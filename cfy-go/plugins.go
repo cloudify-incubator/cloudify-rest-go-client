@@ -15,6 +15,8 @@ limitations under the License.
 */
 
 /*
+Plugins
+
 plugins - Handle plugins on the manager
 
 	delete: Delete a plugin [manager only]. Not Implemented.

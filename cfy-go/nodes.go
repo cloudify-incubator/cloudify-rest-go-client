@@ -15,6 +15,8 @@ limitations under the License.
 */
 
 /*
+Nodes
+
 nodes - Handle a deployment's nodes
 
 	get: Retrieve node information [manager only]
