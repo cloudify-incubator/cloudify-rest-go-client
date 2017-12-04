@@ -55,6 +55,13 @@ func TestCliArgumentsList(t *testing.T) {
 	}
 }
 
+func ExampleCliArgumentsList() {
+	args, options := CliArgumentsList(
+		[]string{"cfy-go", "status", "-user", "admin"})
+	fmt.Printf("Args: %v, Options: %v.", args, options)
+	// Output: Args: [cfy-go status], Options: [-user admin].
+}
+
 func TestInList(t *testing.T) {
 	if InList([]string{"a", "b"}, "c") {
 		t.Error("Recheck 'c' not in ['a', 'b'] ")
@@ -69,4 +76,14 @@ func ExampleInList() {
 		fmt.Print("'c' not in ['a', 'b'] list.")
 	}
 	// Output: 'c' not in ['a', 'b'] list.
+}
+
+func ExamplePrintTable() {
+	PrintTable([]string{"1", "2", "3"}, [][]string{{"a", "-b", "c"}, {"d", "e", "-f-"}})
+	// Output: +---+----+-----+
+	// | 1 | 2  | 3   |
+	// +---+----+-----+
+	// | a | -b | c   |
+	// | d | e  | -f- |
+	// +---+----+-----+
 }
