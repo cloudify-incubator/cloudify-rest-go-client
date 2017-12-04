@@ -17,6 +17,7 @@ limitations under the License.
 package utils
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 )
@@ -61,4 +62,11 @@ func TestInList(t *testing.T) {
 	if !InList([]string{"a", "b"}, "b") {
 		t.Error("Recheck 'b' in ['a', 'b'] ")
 	}
+}
+
+func ExampleInList() {
+	if !InList([]string{"a", "b"}, "c") {
+		fmt.Print("'c' not in ['a', 'b'] list.")
+	}
+	// Output: 'c' not in ['a', 'b'] list.
 }

@@ -14,6 +14,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+/*
+Package tests - fake classes for api testing.
+*/
 package tests
 
 // FakeClient - fake clent for tests

@@ -36,7 +36,6 @@ executions - Handle workflow executions
 
 		cfy-go executions start uninstall -deployment deployment
 */
-
 package main
 
 import (

@@ -14,6 +14,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+/*
+Package kubernetes - Flex Volume Driver.
+Driver implementation Flex Volume for kubernetes. Has implemetation for init,
+mount, unmount calls.
+*/
 package kubernetes
 
 import (
