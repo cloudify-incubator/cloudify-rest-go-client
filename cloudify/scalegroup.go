@@ -209,19 +209,19 @@ func (cl *Client) GetStartedNodeInstancesWithType(params map[string]string, node
 }
 
 // GetDeploymentScaleGroup - return scaling group by name and deployment
-func (cl *Client) GetDeploymentScaleGroup(deploymentID, groupName string) (*ScalingGroup, error) {
+func (cl *Client) GetDeploymentScaleGroup(deploymentID, scaleGroupName string) (*ScalingGroup, error) {
 	deployment, err := cl.GetDeployment(deploymentID)
 	if err != nil {
 		return nil, err
 	}
 	if deployment.ScalingGroups != nil {
 		for groupName, scaleGroup := range deployment.ScalingGroups {
-			if groupName == groupName {
+			if scaleGroupName == groupName {
 				return &scaleGroup, nil
 			}
 		}
 	}
-	return nil, fmt.Errorf("No such scale group:%+v", groupName)
+	return nil, fmt.Errorf("No such scale group:%+v", scaleGroupName)
 }
 
 // GetDeploymentScaleGroupNodes - return nodes related to scaling group
@@ -313,10 +313,9 @@ func (cl *Client) GetDeploymentInstancesScaleGrouped(deploymentID, nodeType stri
 	}
 
 	if deployment.ScalingGroups != nil {
-		var resultedInstances = []NodeInstance{}
-
 		// check what types we have in members
 		for groupName, scaleGroup := range deployment.ScalingGroups {
+			var resultedInstances = []NodeInstance{}
 			var supportedMembers = []string{}
 			for _, member := range scaleGroup.Members {
 				supportedMembers = append(supportedMembers, member)
