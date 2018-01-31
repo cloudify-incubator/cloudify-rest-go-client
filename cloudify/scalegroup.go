@@ -144,6 +144,37 @@ func (cl *Client) GetNodeInstancesWithType(params map[string]string, nodeType st
 	return &result, nil
 }
 
+// GetAliveNodeInstancesWithType - Returned list of alive node instances with some node type,
+// used mainly for kubernetes, need to get instances that can be joined to cluster
+// Useful for cloudprovider logic only.
+func (cl *Client) GetAliveNodeInstancesWithType(params map[string]string, nodeType string) (*NodeInstances, error) {
+	nodeInstances, err := cl.GetNodeInstancesWithType(params, nodeType)
+	if err != nil {
+		return nil, err
+	}
+
+	// starting only because we restart kubelet after join
+	aliveStates := []string{
+		// "initializing", "creating", // workflow started for instance
+		// "created", "configuring", // create action, had ip
+		"configured", "starting", // configure action, joined to cluster
+		"started", // everything done
+	}
+	instances := []NodeInstance{}
+	for _, instance := range nodeInstances.Items {
+		if utils.InList(aliveStates, instance.State) {
+			instances = append(instances, instance)
+		}
+	}
+	var result NodeInstances
+	result.Items = instances
+	result.Metadata.Pagination.Total = uint(len(instances))
+	result.Metadata.Pagination.Size = uint(len(instances))
+	result.Metadata.Pagination.Offset = 0
+
+	return &result, nil
+}
+
 // GetStartedNodeInstancesWithType - Returned list of started node instances with some node type,
 // used mainly for kubernetes, also check that all instances related to same hostId started
 // Useful for scale only.

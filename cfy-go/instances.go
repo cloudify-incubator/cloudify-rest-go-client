@@ -31,6 +31,10 @@ node-instances - Handle a deployment's node-instances.
 
 		cfy-go node-instances started -deployment <deployment_name>
 
+	alive: check created instances in deployment (all, without filter by scaling group)
+
+		cfy-go node-instances alive -deployment <deployment_name>
+
 	host-grouped: list instances grouped by hostID
 
 		cfy-go node-instances host-grouped
@@ -191,6 +195,24 @@ func nodeInstancesOptions(args, options []string) int {
 
 			cl := getClient()
 			nodeInstances, err := cl.GetStartedNodeInstancesWithType(params, nodeType)
+			if err != nil {
+				log.Printf("Cloudify error: %s\n", err.Error())
+				return 1
+			}
+			return nodeInstancesPrint(nodeInstances)
+		}
+	case "alive":
+		{
+			operFlagSet := basicOptions("node-instances alive")
+			var nodeType string
+			operFlagSet.StringVar(&nodeType, "node-type",
+				"cloudify.nodes.ApplicationServer.kubernetes.Node",
+				"Filter by node type: cloudify.nodes.ApplicationServer.kubernetes.{Node|LoadBalancer}")
+
+			params := parseInstancesFlags(operFlagSet, options)
+
+			cl := getClient()
+			nodeInstances, err := cl.GetAliveNodeInstancesWithType(params, nodeType)
 			if err != nil {
 				log.Printf("Cloudify error: %s\n", err.Error())
 				return 1
