@@ -91,7 +91,7 @@ func parsePagination(operFlagSet *flag.FlagSet, options []string) map[string]str
 	return params
 }
 
-var versionString = "0.1"
+var versionString = "0.2"
 
 func main() {
 	f, err := os.OpenFile("/var/log/cloudify.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)

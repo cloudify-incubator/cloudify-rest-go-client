@@ -35,6 +35,10 @@ node-instances - Handle a deployment's node-instances.
 
 		cfy-go node-instances alive -deployment <deployment_name>
 
+	loadbalancer: return list of loadbalancers, by default returned free nodes
+
+		cfy-go node-instances alive -deployment <deployment_name>
+
 	host-grouped: list instances grouped by hostID
 
 		cfy-go node-instances host-grouped
@@ -118,7 +122,7 @@ func parseInstancesFlags(operFlagSet *flag.FlagSet, options []string) map[string
 }
 
 func nodeInstancesOptions(args, options []string) int {
-	defaultError := "list/started/host-grouped/node-grouped/by-type subcommand is required"
+	defaultError := "list/started/host-grouped/node-grouped/by-type/alive/loadbalancer subcommand is required"
 
 	if len(args) < 3 {
 		fmt.Println(defaultError)
@@ -164,6 +168,39 @@ func nodeInstancesOptions(args, options []string) int {
 				}
 			}
 			return 0
+		}
+	case "loadbalancer":
+		{
+			operFlagSet := basicOptions("node-instances loadbalancer")
+			var nodeType string
+			operFlagSet.StringVar(&nodeType, "node-type",
+				"cloudify.nodes.ApplicationServer.kubernetes.LoadBalancer",
+				"Filter by node type")
+
+			var loadbalancerName string
+			var loadbalancerNamespace string
+			var loadbalancerCluster string
+			operFlagSet.StringVar(&loadbalancerName, "loadbalancer-name",
+				"",
+				"Filter by loadbalancer name")
+			operFlagSet.StringVar(&loadbalancerNamespace, "loadbalancer-namespace",
+				"",
+				"Filter by loadbalancer namespace name")
+			operFlagSet.StringVar(&loadbalancerCluster, "loadbalancer-cluster",
+				"",
+				"Filter by loadbalancer cluster name")
+
+			params := parseInstancesFlags(operFlagSet, options)
+
+			cl := getClient()
+			nodeInstances, err := cl.GetLoadBalancerInstances(params, loadbalancerCluster,
+				loadbalancerNamespace, loadbalancerName, nodeType)
+			log.Printf("%+v\n", nodeInstances.Items)
+			if err != nil {
+				log.Printf("Cloudify error: %s\n", err.Error())
+				return 1
+			}
+			return nodeInstancesPrint(nodeInstances)
 		}
 	case "by-type":
 		{

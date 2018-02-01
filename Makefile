@@ -59,6 +59,7 @@ CLOUDIFYCOMMON := \
 	src/${PACKAGEPATH}/cloudify/nodes.go \
 	src/${PACKAGEPATH}/cloudify/plugins.go \
 	src/${PACKAGEPATH}/cloudify/instances.go \
+	src/${PACKAGEPATH}/cloudify/loadbalancer.go \
 	src/${PACKAGEPATH}/cloudify/events.go \
 	src/${PACKAGEPATH}/cloudify/blueprints.go \
 	src/${PACKAGEPATH}/cloudify/status.go \
