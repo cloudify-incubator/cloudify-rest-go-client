@@ -16,11 +16,6 @@ limitations under the License.
 
 package cloudify
 
-import (
-	"fmt"
-	"reflect"
-)
-
 // GetLoadBalancerInstances - return loadbalancer by name/namespace/cluster
 func (cl *Client) GetLoadBalancerInstances(params map[string]string, clusterName, namespace, name, nodeType string) (*NodeInstances, error) {
 	nodeInstancesList, err := cl.GetAliveNodeInstancesWithType(params, nodeType)
@@ -34,7 +29,6 @@ func (cl *Client) GetLoadBalancerInstances(params map[string]string, clusterName
 		if nodeInstance.RuntimeProperties != nil {
 			// cluster
 			if v, ok := nodeInstance.RuntimeProperties["proxy_cluster"]; ok == true {
-				fmt.Printf("'%+v'(%+v) == '%+v'\n", v, reflect.TypeOf(v), clusterName)
 				switch v.(type) {
 				case string:
 					{
@@ -53,11 +47,9 @@ func (cl *Client) GetLoadBalancerInstances(params map[string]string, clusterName
 
 			// name
 			if v, ok := nodeInstance.RuntimeProperties["proxy_name"]; ok == true {
-				fmt.Printf("'%+v'(%+v) == '%+v'\n", v, reflect.TypeOf(v), name)
 				switch v.(type) {
 				case string:
 					{
-						fmt.Printf("'%+v' == '%+v'", v.(string), name)
 						if v.(string) != name {
 							// node with different name
 							continue
@@ -73,7 +65,6 @@ func (cl *Client) GetLoadBalancerInstances(params map[string]string, clusterName
 
 			// name space
 			if v, ok := nodeInstance.RuntimeProperties["proxy_namespace"]; ok == true {
-				fmt.Printf("'%+v'(%+v) == '%+v'\n", v, reflect.TypeOf(v), namespace)
 				switch v.(type) {
 				case string:
 					{
