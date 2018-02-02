@@ -140,7 +140,7 @@ func scalingGroupsOptions(args, options []string) int {
 		}
 	case "nodes":
 		{
-			operFlagSet := basicOptions("scalegroups nodes")
+			operFlagSet := basicOptions("scaling-groups nodes")
 			var deployment string
 			var scalegroup string
 			var nodeType string
@@ -173,7 +173,7 @@ func scalingGroupsOptions(args, options []string) int {
 		}
 	case "info":
 		{
-			operFlagSet := basicOptions("scalegroups info")
+			operFlagSet := basicOptions("scaling-groups info")
 			var deployment string
 			var scalegroup string
 			operFlagSet.StringVar(&deployment, "deployment", "",

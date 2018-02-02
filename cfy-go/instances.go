@@ -63,7 +63,18 @@ func nodeInstancesPrint(nodeInstances *cloudify.NodeInstances) int {
 				scaleGroups = append(scaleGroups, scaleGroup.Name)
 			}
 		}
-		lines[pos] = make([]string, 8)
+		jsonString, err := nodeInstance.GetJSONRuntimeProperties()
+		if err != nil {
+			log.Printf("Cloudify error: %s\n", err.Error())
+			jsonString = ""
+		}
+
+		var propertiesString string = jsonString
+		if len(jsonString) > 40 {
+			propertiesString = jsonString[0:37] + "..."
+		}
+
+		lines[pos] = make([]string, 9)
 		lines[pos][0] = nodeInstance.ID
 		lines[pos][1] = nodeInstance.DeploymentID
 		lines[pos][2] = nodeInstance.HostID
@@ -72,10 +83,11 @@ func nodeInstancesPrint(nodeInstances *cloudify.NodeInstances) int {
 		lines[pos][5] = nodeInstance.Tenant
 		lines[pos][6] = nodeInstance.CreatedBy
 		lines[pos][7] = strings.Join(scaleGroups, ", ")
+		lines[pos][8] = propertiesString
 	}
 	utils.PrintTable([]string{
 		"Id", "Deployment id", "Host id", "Node id", "State", "Tenant",
-		"Created by", "Scaling Group",
+		"Created by", "Scaling Group", "Properties",
 	}, lines)
 	return 0
 }
