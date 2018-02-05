@@ -45,6 +45,10 @@ deployments - Handle deployments on the Manager
 	scaling-groups - check limits for scaling group
 
 		cfy-go deployments scaling-groups -deployment <deployment_name>
+
+	groups - list of node groups
+
+		cfy-go deployments groups -deployment <deployment_name>
 */
 package main
 
@@ -72,8 +76,25 @@ func deploymentsFilter(operFlagSet *flag.FlagSet, options []string) (*cloudify.D
 	return cl.GetDeployments(params)
 }
 
+func groupPrint(deploymentScalingGroups map[string]cloudify.NodeGroup) int {
+	lines := make([][]string, len(deploymentScalingGroups))
+	var pos int
+	if deploymentScalingGroups != nil {
+		for groupName, nodeGroup := range deploymentScalingGroups {
+			lines[pos] = make([]string, 2)
+			lines[pos][0] = groupName
+			lines[pos][1] = strings.Join(nodeGroup.Members, ", ")
+			pos++
+		}
+	}
+	utils.PrintTable([]string{
+		"Group name", "Members",
+	}, lines)
+	return 0
+}
+
 func deploymentsOptions(args, options []string) int {
-	defaultError := "list/create/delete/inputs/outputs/scaling-groups subcommand is required"
+	defaultError := "list/create/delete/inputs/outputs/groups/scaling-groups subcommand is required"
 
 	if len(args) < 3 {
 		fmt.Println(defaultError)
@@ -90,8 +111,24 @@ func deploymentsOptions(args, options []string) int {
 				return 1
 			}
 			for _, deployment := range deployments.Items {
-				fmt.Printf("Scale group: %v\n", deployment.ID)
+				fmt.Printf("Scale group in: %v\n", deployment.ID)
 				scaleGroupPrint(deployment.ScalingGroups)
+			}
+			fmt.Printf("Showed %d+%d/%d results. Use offset/size for get more.\n",
+				deployments.Metadata.Pagination.Offset, len(deployments.Items),
+				deployments.Metadata.Pagination.Total)
+		}
+	case "groups":
+		{
+			operFlagSet := basicOptions("deployments groups")
+			deployments, err := deploymentsFilter(operFlagSet, options)
+			if err != nil {
+				log.Printf("Cloudify error: %s\n", err.Error())
+				return 1
+			}
+			for _, deployment := range deployments.Items {
+				fmt.Printf("Node Group in: %v\n", deployment.ID)
+				groupPrint(deployment.Groups)
 			}
 			fmt.Printf("Showed %d+%d/%d results. Use offset/size for get more.\n",
 				deployments.Metadata.Pagination.Offset, len(deployments.Items),

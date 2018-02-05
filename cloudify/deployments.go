@@ -69,6 +69,13 @@ type ScalingGroup struct {
 	Members    []string               `json:"members"`
 }
 
+// NodeGroup - Node group struct
+type NodeGroup struct {
+	Members []string `json:"members"`
+	// TODO use correct type for "policies" struct
+	Policies map[string]interface{} `json:"policies"`
+}
+
 // Deployment - deployment struct
 type Deployment struct {
 	// have id, owner information
@@ -79,10 +86,11 @@ type Deployment struct {
 	Workflows     []Workflow              `json:"workflows"`
 	Outputs       map[string]interface{}  `json:"outputs"`
 	ScalingGroups map[string]ScalingGroup `json:"scaling_groups"`
-	// TODO describe "policy_types" struct
-	// TODO describe "policy_triggers" struct
-	// TODO describe "groups" struct
-	// TODO describe "scaling_groups" struct
+	Groups        map[string]NodeGroup    `json:"groups"`
+	// TODO use correct type for "policy_types" struct
+	PolicyTypes map[string]interface{} `json:"policy_types"`
+	// TODO use correct type for "policy_triggers" struct
+	PolicyTriggers map[string]interface{} `json:"policy_triggers"`
 }
 
 // GetJSONOutputs - get deployments outputs as json string

@@ -66,8 +66,10 @@ func PrintTable(titles []string, lines [][]string) {
 	// column value sizes
 	for _, values := range lines {
 		for col, name := range values {
-			if columnSizes[col] < utf8.RuneCountInString(name) {
-				columnSizes[col] = utf8.RuneCountInString(name)
+			if col < len(columnSizes) {
+				if columnSizes[col] < utf8.RuneCountInString(name) {
+					columnSizes[col] = utf8.RuneCountInString(name)
+				}
 			}
 		}
 	}

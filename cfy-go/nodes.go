@@ -28,6 +28,10 @@ nodes - Handle a deployment's nodes
 
 		cfy-go nodes list
 
+	full: List nodes for a deployment [manager only], with groups names
+
+		cfy-go nodes full
+
 	started - check started nodes in deployment (all, without filter by scaling group)
 
 		cfy-go nodes started -deployment deployment
@@ -41,6 +45,26 @@ import (
 	utils "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify/utils"
 	"log"
 )
+
+func nodesGroupPrint(nodes *cloudify.NodeWithGroups) int {
+	lines := make([][]string, len(nodes.Items))
+	for pos, node := range nodes.Items {
+		lines[pos] = make([]string, 6)
+		lines[pos][0] = node.ID
+		lines[pos][1] = node.DeploymentID
+		lines[pos][2] = node.HostID
+		lines[pos][3] = node.Type
+		lines[pos][4] = node.ScalingGroupName
+		lines[pos][5] = node.GroupName
+	}
+	utils.PrintTable([]string{
+		"Id", "Deployment id", "Host id", "Type", "Group", "Scaling Group",
+	}, lines)
+	fmt.Printf("Showed %d+%d/%d results. Use offset/size for get more.\n",
+		nodes.Metadata.Pagination.Offset, len(nodes.Items),
+		nodes.Metadata.Pagination.Total)
+	return 0
+}
 
 func nodesPrint(nodes *cloudify.Nodes) int {
 	lines := make([][]string, len(nodes.Items))
@@ -78,7 +102,7 @@ func nodesPrint(nodes *cloudify.Nodes) int {
 }
 
 func nodesOptions(args, options []string) int {
-	defaultError := "list/started subcommand is required"
+	defaultError := "list/full/started subcommand is required"
 
 	if len(args) < 3 {
 		fmt.Println(defaultError)
@@ -124,6 +148,33 @@ func nodesOptions(args, options []string) int {
 				return 1
 			}
 			return nodesPrint(nodes)
+		}
+	case "full":
+		{
+			operFlagSet := basicOptions("nodes full")
+			var node string
+			var deployment string
+			operFlagSet.StringVar(&node, "node", "",
+				"The unique identifier for the node")
+			operFlagSet.StringVar(&deployment, "deployment", "",
+				"The unique identifier for the deployment")
+
+			params := parsePagination(operFlagSet, options)
+
+			if node != "" {
+				params["id"] = node
+			}
+			if deployment != "" {
+				params["deployment_id"] = deployment
+			}
+
+			cl := getClient()
+			nodes, err := cl.GetNodesFull(params)
+			if err != nil {
+				log.Printf("Cloudify error: %s\n", err.Error())
+				return 1
+			}
+			return nodesGroupPrint(nodes)
 		}
 	case "list":
 		{

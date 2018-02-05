@@ -68,6 +68,23 @@ type Nodes struct {
 	Items    []Node        `json:"items"`
 }
 
+// NodeWithGroup - full information about cloudify node
+type NodeWithGroup struct {
+	ID               string `json:"id"`
+	DeploymentID     string `json:"deployment_id,omitempty"`
+	Type             string `json:"type,omitempty"`
+	HostID           string `json:"host_id,omitempty"`
+	ScalingGroupName string `json:"scaling_group"`
+	GroupName        string `json:"group"`
+}
+
+// NodeWithGroups - response from manager with nodes list
+type NodeWithGroups struct {
+	rest.BaseMessage
+	Metadata rest.Metadata   `json:"metadata"`
+	Items    []NodeWithGroup `json:"items"`
+}
+
 // GetNodes - return nodes filtered by params
 func (cl *Client) GetNodes(params map[string]string) (*Nodes, error) {
 	var nodes Nodes
@@ -83,6 +100,39 @@ func (cl *Client) GetNodes(params map[string]string) (*Nodes, error) {
 	}
 
 	return &nodes, nil
+}
+
+// GetNodesFull - return nodes filtered by params
+func (cl *Client) GetNodesFull(params map[string]string) (*NodeWithGroups, error) {
+	var nodes Nodes
+	var NodeWithGroups NodeWithGroups
+
+	values := url.Values{}
+	for key, value := range params {
+		values.Set(key, value)
+	}
+
+	err := cl.Get("nodes?"+values.Encode(), &nodes)
+	if err != nil {
+		return nil, err
+	}
+
+	infoNodes := []NodeWithGroup{}
+	for _, node := range nodes.Items {
+		fullInfo := NodeWithGroup{}
+		fullInfo.ID = node.ID
+		fullInfo.DeploymentID = node.DeploymentID
+		fullInfo.Type = node.Type
+		fullInfo.HostID = node.HostID
+		fullInfo.ScalingGroupName = ""
+		fullInfo.GroupName = ""
+		infoNodes = append(infoNodes, fullInfo)
+	}
+
+	NodeWithGroups.Items = infoNodes
+	NodeWithGroups.Metadata = nodes.Metadata
+
+	return &NodeWithGroups, nil
 }
 
 // GetStartedNodesWithType - return nodes specified type with more than zero instances
