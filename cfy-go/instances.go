@@ -69,7 +69,7 @@ func nodeInstancesPrint(nodeInstances *cloudify.NodeInstances) int {
 			jsonString = ""
 		}
 
-		var propertiesString string = jsonString
+		var propertiesString = jsonString
 		if len(jsonString) > 40 {
 			propertiesString = jsonString[0:37] + "..."
 		}

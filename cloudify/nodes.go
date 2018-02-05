@@ -19,6 +19,7 @@ package cloudify
 import (
 	"encoding/json"
 	rest "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify/rest"
+	utils "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify/utils"
 	"net/url"
 )
 
@@ -105,14 +106,24 @@ func (cl *Client) GetNodes(params map[string]string) (*Nodes, error) {
 // GetNodesFull - return nodes filtered by params
 func (cl *Client) GetNodesFull(params map[string]string) (*NodeWithGroups, error) {
 	var nodes Nodes
-	var NodeWithGroups NodeWithGroups
+	var nodeWithGroups NodeWithGroups
+
+	deploymentParams := map[string]string{}
 
 	values := url.Values{}
 	for key, value := range params {
 		values.Set(key, value)
+		if key == "deployment_id" {
+			deploymentParams["deployment_id"] = value
+		}
 	}
 
 	err := cl.Get("nodes?"+values.Encode(), &nodes)
+	if err != nil {
+		return nil, err
+	}
+
+	deployments, err := cl.GetDeployments(deploymentParams)
 	if err != nil {
 		return nil, err
 	}
@@ -126,13 +137,27 @@ func (cl *Client) GetNodesFull(params map[string]string) (*NodeWithGroups, error
 		fullInfo.HostID = node.HostID
 		fullInfo.ScalingGroupName = ""
 		fullInfo.GroupName = ""
+		for _, deployment := range deployments.Items {
+			if deployment.ID == node.DeploymentID {
+				for scaleGroupName, scaleGroup := range deployment.ScalingGroups {
+					if utils.InList(scaleGroup.Members, node.ID) {
+						fullInfo.ScalingGroupName = scaleGroupName
+					}
+				}
+				for groupName, group := range deployment.Groups {
+					if utils.InList(group.Members, node.ID) {
+						fullInfo.GroupName = groupName
+					}
+				}
+			}
+		}
 		infoNodes = append(infoNodes, fullInfo)
 	}
 
-	NodeWithGroups.Items = infoNodes
-	NodeWithGroups.Metadata = nodes.Metadata
+	nodeWithGroups.Items = infoNodes
+	nodeWithGroups.Metadata = nodes.Metadata
 
-	return &NodeWithGroups, nil
+	return &nodeWithGroups, nil
 }
 
 // GetStartedNodesWithType - return nodes specified type with more than zero instances

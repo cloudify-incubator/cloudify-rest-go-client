@@ -54,8 +54,8 @@ func nodesGroupPrint(nodes *cloudify.NodeWithGroups) int {
 		lines[pos][1] = node.DeploymentID
 		lines[pos][2] = node.HostID
 		lines[pos][3] = node.Type
-		lines[pos][4] = node.ScalingGroupName
-		lines[pos][5] = node.GroupName
+		lines[pos][4] = node.GroupName
+		lines[pos][5] = node.ScalingGroupName
 	}
 	utils.PrintTable([]string{
 		"Id", "Deployment id", "Host id", "Type", "Group", "Scaling Group",
@@ -154,10 +154,14 @@ func nodesOptions(args, options []string) int {
 			operFlagSet := basicOptions("nodes full")
 			var node string
 			var deployment string
+			var nodeType string
 			operFlagSet.StringVar(&node, "node", "",
 				"The unique identifier for the node")
 			operFlagSet.StringVar(&deployment, "deployment", "",
 				"The unique identifier for the deployment")
+			operFlagSet.StringVar(&nodeType, "node-type",
+				"",
+				"Filter by node type")
 
 			params := parsePagination(operFlagSet, options)
 
@@ -166,6 +170,9 @@ func nodesOptions(args, options []string) int {
 			}
 			if deployment != "" {
 				params["deployment_id"] = deployment
+			}
+			if nodeType != "" {
+				params["type"] = nodeType
 			}
 
 			cl := getClient()
@@ -181,10 +188,14 @@ func nodesOptions(args, options []string) int {
 			operFlagSet := basicOptions("nodes list")
 			var node string
 			var deployment string
+			var nodeType string
 			operFlagSet.StringVar(&node, "node", "",
 				"The unique identifier for the node")
 			operFlagSet.StringVar(&deployment, "deployment", "",
 				"The unique identifier for the deployment")
+			operFlagSet.StringVar(&nodeType, "node-type",
+				"",
+				"Filter by node type")
 
 			params := parsePagination(operFlagSet, options)
 
@@ -193,6 +204,9 @@ func nodesOptions(args, options []string) int {
 			}
 			if deployment != "" {
 				params["deployment_id"] = deployment
+			}
+			if nodeType != "" {
+				params["type"] = nodeType
 			}
 
 			cl := getClient()
