@@ -114,7 +114,8 @@ func main() {
 		"\tplugins           Handle plugins on the manager\n" +
 		"\tstatus            Show manager status\n" +
 		"\tkubernetes        Additional kubernetes operations\n" +
-		"\tversion           Show client version.\n")
+		"\tversion           Show client version.\n" +
+		"\ttenants           Show tenants on the manager")
 
 	if len(args) < 2 {
 		fmt.Println(defaultError)
@@ -167,6 +168,12 @@ func main() {
 		{
 			os.Exit(kubernetesOptions(args, options))
 		}
+
+	case "tenants":
+		{
+			os.Exit(tenantsOptions(args, options))
+		}
+
 	default:
 		{
 			fmt.Println(defaultError)
