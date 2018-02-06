@@ -47,7 +47,7 @@ func (cl *Client) GetNodesFull(params map[string]string) (*NodeWithGroups, error
 	}
 
 	if value, ok := params["deployment_id"]; ok == true {
-		deploymentParams["deployment_id"] = value
+		deploymentParams["id"] = value
 	}
 
 	deployments, err := cl.GetDeployments(deploymentParams)
