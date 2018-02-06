@@ -70,7 +70,6 @@ Not implemeted commands:
 	snapshots: Handle manager snapshots.
 	ssh: Connect using SSH [manager only].
 	teardown: Teardown a manager [manager only]
-	tenants: Handle Cloudify tenants (Premium feature)
 	uninstall: Uninstall an application blueprint [manager only]
 	user-groups: Handle Cloudify user groups (Premium feature)
 	users: Handle Cloudify users
