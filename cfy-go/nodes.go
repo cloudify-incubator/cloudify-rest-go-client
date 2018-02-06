@@ -28,9 +28,9 @@ nodes - Handle a deployment's nodes
 
 		cfy-go nodes list
 
-	full: List nodes for a deployment [manager only], with groups names
+	group: List nodes for a deployment [manager only], with groups names
 
-		cfy-go nodes full
+		cfy-go nodes group
 
 	started - check started nodes in deployment (all, without filter by scaling group)
 
@@ -102,7 +102,7 @@ func nodesPrint(nodes *cloudify.Nodes) int {
 }
 
 func nodesOptions(args, options []string) int {
-	defaultError := "list/full/started subcommand is required"
+	defaultError := "list/group/started subcommand is required"
 
 	if len(args) < 3 {
 		fmt.Println(defaultError)
@@ -149,9 +149,9 @@ func nodesOptions(args, options []string) int {
 			}
 			return nodesPrint(nodes)
 		}
-	case "full":
+	case "group":
 		{
-			operFlagSet := basicOptions("nodes full")
+			operFlagSet := basicOptions("nodes group")
 			var node string
 			var deployment string
 			var nodeType string

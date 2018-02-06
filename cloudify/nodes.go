@@ -19,7 +19,6 @@ package cloudify
 import (
 	"encoding/json"
 	rest "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify/rest"
-	utils "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify/utils"
 	"net/url"
 )
 
@@ -69,23 +68,6 @@ type Nodes struct {
 	Items    []Node        `json:"items"`
 }
 
-// NodeWithGroup - full information about cloudify node
-type NodeWithGroup struct {
-	ID               string `json:"id"`
-	DeploymentID     string `json:"deployment_id,omitempty"`
-	Type             string `json:"type,omitempty"`
-	HostID           string `json:"host_id,omitempty"`
-	ScalingGroupName string `json:"scaling_group"`
-	GroupName        string `json:"group"`
-}
-
-// NodeWithGroups - response from manager with nodes list
-type NodeWithGroups struct {
-	rest.BaseMessage
-	Metadata rest.Metadata   `json:"metadata"`
-	Items    []NodeWithGroup `json:"items"`
-}
-
 // GetNodes - return nodes filtered by params
 func (cl *Client) GetNodes(params map[string]string) (*Nodes, error) {
 	var nodes Nodes
@@ -101,99 +83,4 @@ func (cl *Client) GetNodes(params map[string]string) (*Nodes, error) {
 	}
 
 	return &nodes, nil
-}
-
-// GetNodesFull - return nodes filtered by params
-func (cl *Client) GetNodesFull(params map[string]string) (*NodeWithGroups, error) {
-	var nodes Nodes
-	var nodeWithGroups NodeWithGroups
-
-	deploymentParams := map[string]string{}
-
-	values := url.Values{}
-	for key, value := range params {
-		values.Set(key, value)
-		if key == "deployment_id" {
-			deploymentParams["deployment_id"] = value
-		}
-	}
-
-	err := cl.Get("nodes?"+values.Encode(), &nodes)
-	if err != nil {
-		return nil, err
-	}
-
-	deployments, err := cl.GetDeployments(deploymentParams)
-	if err != nil {
-		return nil, err
-	}
-
-	infoNodes := []NodeWithGroup{}
-	for _, node := range nodes.Items {
-		fullInfo := NodeWithGroup{}
-		fullInfo.ID = node.ID
-		fullInfo.DeploymentID = node.DeploymentID
-		fullInfo.Type = node.Type
-		fullInfo.HostID = node.HostID
-		fullInfo.ScalingGroupName = ""
-		fullInfo.GroupName = ""
-		for _, deployment := range deployments.Items {
-			if deployment.ID == node.DeploymentID {
-				for scaleGroupName, scaleGroup := range deployment.ScalingGroups {
-					if utils.InList(scaleGroup.Members, node.ID) {
-						fullInfo.ScalingGroupName = scaleGroupName
-					}
-				}
-				for groupName, group := range deployment.Groups {
-					if utils.InList(group.Members, node.ID) {
-						fullInfo.GroupName = groupName
-					}
-				}
-			}
-		}
-		infoNodes = append(infoNodes, fullInfo)
-	}
-
-	nodeWithGroups.Items = infoNodes
-	nodeWithGroups.Metadata = nodes.Metadata
-
-	return &nodeWithGroups, nil
-}
-
-// GetStartedNodesWithType - return nodes specified type with more than zero instances
-func (cl *Client) GetStartedNodesWithType(params map[string]string, nodeType string) (*Nodes, error) {
-	cloudNodes, err := cl.GetNodes(params)
-	if err != nil {
-		return nil, err
-	}
-
-	nodes := []Node{}
-	for _, node := range cloudNodes.Items {
-
-		notKubernetesHost := true
-		for _, typeName := range node.TypeHierarchy {
-			if typeName == nodeType {
-				notKubernetesHost = false
-				break
-			}
-		}
-
-		if notKubernetesHost {
-			continue
-		}
-
-		if node.NumberOfInstances <= 0 {
-			continue
-		}
-
-		// add node to list
-		nodes = append(nodes, node)
-	}
-	var result Nodes
-	result.Items = nodes
-	result.Metadata.Pagination.Total = uint(len(nodes))
-	result.Metadata.Pagination.Size = uint(len(nodes))
-	result.Metadata.Pagination.Offset = 0
-
-	return &result, nil
 }

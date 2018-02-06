@@ -23,9 +23,9 @@ import (
 
 // Tenant - information about cloudify tenant
 type Tenant struct {
-	Name         string `json:"name"`
-	Users        int  `json:"users"`
-	Groups       int  `json:"groups"`
+	Name   string `json:"name"`
+	Users  int    `json:"users"`
+	Groups int    `json:"groups"`
 }
 
 // Tenants - cloudify response with tenants list

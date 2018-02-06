@@ -56,7 +56,7 @@ func tenantsOptions(args, options []string) int {
 				lines[pos][1] = strconv.Itoa(tenant.Users)
 				lines[pos][2] = strconv.Itoa(tenant.Groups)
 			}
-			utils.PrintTable([]string{"name", "users", "groups",}, lines)
+			utils.PrintTable([]string{"name", "users", "groups"}, lines)
 			fmt.Printf("Showed %d+%d/%d results. Use offset/size for get more.\n",
 				tenants.Metadata.Pagination.Offset, len(tenants.Items),
 				tenants.Metadata.Pagination.Total)

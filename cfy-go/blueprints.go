@@ -33,6 +33,7 @@ Usage:
 		status            Show manager status
 		kubernetes        Additional kubernetes operations
 		version           Show client version.
+		tenants           Show tenants on the manager
 
 Common parameters for commands required network communication:
 
