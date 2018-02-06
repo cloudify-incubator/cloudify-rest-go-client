@@ -1,4 +1,6 @@
 # cloudify-rest-go-client
+[![Circle CI](https://circleci.com/gh/cloudify-incubator/cloudify-rest-go-client/tree/master.svg?style=shield)](https://circleci.com/gh/cloudify-incubator/cloudify-rest-go-client/tree/master)
+
 cfy-go implements CLI for cloudify client.
 If we compare to official cfy command cfy-go has implementation for only external commands.
 
