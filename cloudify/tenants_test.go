@@ -17,10 +17,9 @@ limitations under the License.
 package cloudify
 
 import (
+	"fmt"
 	tests "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify/tests"
 	"testing"
-	"github.com/stretchr/testify/assert"
-	"fmt"
 )
 
 const tenantsResponce = `{
@@ -72,9 +71,9 @@ func TestGetTenants(t *testing.T) {
 	offset := int(tenants.Metadata.Pagination.Offset)
 	size := int(tenants.Metadata.Pagination.Size)
 
-	assert.Equal(t, 3,lines, "The number of tenants should be 3")
-	assert.Equal(t, 3, total, "The number of tenants should be 3")
-	assert.Equal(t, 0, offset, "The offset of tenants page should be 0")
-	assert.Equal(t, 100, size, "The size of of tenants page should be 100")
+	tests.AssertEqual(t, 3, lines, "The number of tenants should be 3")
+	tests.AssertEqual(t, 3, total, "The number of tenants should be 3")
+	tests.AssertEqual(t, 0, offset, "The offset of tenants page should be 0")
+	tests.AssertEqual(t, 100, size, "The size of of tenants page should be 100")
 
 }

@@ -57,6 +57,7 @@ CLOUDIFYCOMMON := \
 	src/${PACKAGEPATH}/cloudify/scalegroup.go \
 	src/${PACKAGEPATH}/cloudify/scalenodes.go \
 	src/${PACKAGEPATH}/cloudify/client.go \
+	src/${PACKAGEPATH}/cloudify/agentfile.go \
 	src/${PACKAGEPATH}/cloudify/nodes.go \
 	src/${PACKAGEPATH}/cloudify/plugins.go \
 	src/${PACKAGEPATH}/cloudify/instances.go \
