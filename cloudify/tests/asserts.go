@@ -14,28 +14,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package cloudify
+/*
+Package tests - fake classes for api testing.
+*/
+package tests
 
 import (
-	"fmt"
-	tests "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify/tests"
 	"testing"
 )
 
-// TestGetVersion - check GetVersion
-func TestGetAPIVersion(t *testing.T) {
-	var conn tests.FakeClient
-	conn.GetResponse = []byte(versionResponce)
-	conn.GetError = nil
-	cl := ClientFromConnection(&conn)
-	version := cl.GetAPIVersion()
-	if version != "v3.1" {
-		t.Errorf("Recheck unmarshal for 'version' field '%s'", version)
+// AssertEqual - check values
+func AssertEqual(t *testing.T, value, needed interface{}, format string, v ...interface{}) {
+	if value != needed {
+		t.Errorf(format, v...)
 	}
-}
-
-func ExampleClient() {
-	cl := NewClient("localhost", "admin", "password", "default_tenant", "")
-	fmt.Printf("Version: %s", cl.GetAPIVersion())
-	// Output: Version: v3.1
 }

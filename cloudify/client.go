@@ -23,26 +23,55 @@ import (
 	"io/ioutil"
 )
 
+// ClientConfig - all configuration fields for connection
+type ClientConfig struct {
+	Host      string
+	User      string
+	Password  string
+	Tenant    string
+	Debug     bool
+	AgentFile string
+}
+
 //Client - struct with connection settings for connect to manager
 type Client struct {
-	restCl rest.ConnectionOperationsInterface
+	ClientConfig
+	RestClCache rest.ConnectionOperationsInterface
+}
+
+func (cl *Client) restCl() rest.ConnectionOperationsInterface {
+	var conn rest.ConnectionOperationsInterface
+	if cl.RestClCache != nil {
+		conn = cl.RestClCache
+	} else {
+		cl.updateHostFromAgent()
+		conn = rest.NewClient(cl.Host, cl.User, cl.Password, cl.Tenant)
+	}
+	conn.SetDebug(cl.Debug)
+	return conn
 }
 
 //ClientFromConnection - return new client with internally use provided connection
 func ClientFromConnection(conn rest.ConnectionOperationsInterface) *Client {
 	var cliCl Client
-	cliCl.restCl = conn
+	cliCl.RestClCache = conn
 	return &cliCl
 }
 
 //NewClient - return new connection with params
-func NewClient(host, user, password, tenant string) *Client {
-	return ClientFromConnection(rest.NewClient(host, user, password, tenant))
+func NewClient(host, user, password, tenant, agentFile string) *Client {
+	var cliCl Client
+	cliCl.Host = host
+	cliCl.User = user
+	cliCl.Password = password
+	cliCl.Tenant = tenant
+	cliCl.AgentFile = agentFile
+	return &cliCl
 }
 
 //EnableDebug - Enable debug on current connection
 func (cl *Client) EnableDebug() {
-	cl.restCl.SetDebug(true)
+	cl.Debug = true
 }
 
 //GetAPIVersion - return currently supported api version
@@ -52,7 +81,7 @@ func (cl *Client) GetAPIVersion() string {
 
 //Get - get cloudify object from server
 func (cl *Client) Get(url string, output rest.MessageInterface) error {
-	body, err := cl.restCl.Get(url, rest.JSONContentType)
+	body, err := cl.restCl().Get(url, rest.JSONContentType)
 	if err != nil {
 		return err
 	}
@@ -70,7 +99,7 @@ func (cl *Client) Get(url string, output rest.MessageInterface) error {
 
 //GetBinary - get binary object from manager without any kind of unmarshaling
 func (cl *Client) GetBinary(url, outputPath string) error {
-	body, err := cl.restCl.Get(url, rest.DataContentType)
+	body, err := cl.restCl().Get(url, rest.DataContentType)
 	if err != nil {
 		return err
 	}
@@ -85,7 +114,7 @@ func (cl *Client) GetBinary(url, outputPath string) error {
 
 //binaryPut - store/send object to manger without marshaling, response will be unmarshaled
 func binaryPut(cl *Client, url string, input []byte, inputType string, output rest.MessageInterface) error {
-	body, err := cl.restCl.Put(url, inputType, input)
+	body, err := cl.restCl().Put(url, inputType, input)
 	if err != nil {
 		return err
 	}
@@ -133,7 +162,7 @@ func (cl *Client) Post(url string, input interface{}, output rest.MessageInterfa
 		return err
 	}
 
-	body, err := cl.restCl.Post(url, jsonData)
+	body, err := cl.restCl().Post(url, jsonData)
 	if err != nil {
 		return err
 	}
@@ -151,7 +180,7 @@ func (cl *Client) Post(url string, input interface{}, output rest.MessageInterfa
 
 //Delete - delete cloudify object on manager
 func (cl *Client) Delete(url string, output rest.MessageInterface) error {
-	body, err := cl.restCl.Delete(url)
+	body, err := cl.restCl().Delete(url)
 	if err != nil {
 		return err
 	}

@@ -142,15 +142,9 @@ func TestGetStatus(t *testing.T) {
 	if err != nil {
 		t.Error("Recheck error reporting")
 	}
-	if status.Status != "running" {
-		t.Errorf("Recheck unmarshal for 'status' field '%s'", status.Status)
-	}
-	if status.Services[0].Status() != "unknown" {
-		t.Errorf("Recheck unmarshal for 'status' in first service '%s'", status.Services[0].Status())
-	}
-	if status.Services[1].Status() != "running" {
-		t.Errorf("Recheck unmarshal for 'status' in second service '%s'", status.Services[1].Status())
-	}
+	tests.AssertEqual(t, status.Status, "running", "Recheck unmarshal for 'status' field '%s'", status.Status)
+	tests.AssertEqual(t, status.Services[0].Status(), "unknown", "Recheck unmarshal for 'status' in first service '%s'", status.Services[0].Status())
+	tests.AssertEqual(t, status.Services[1].Status(), "running", "Recheck unmarshal for 'status' in second service '%s'", status.Services[1].Status())
 }
 
 const versionResponce = `{
@@ -171,7 +165,5 @@ func TestGetVersion(t *testing.T) {
 	if err != nil {
 		t.Error("Recheck error reporting")
 	}
-	if version.Version != "17.6.30" {
-		t.Errorf("Recheck unmarshal for 'version' field '%s'", version.Version)
-	}
+	tests.AssertEqual(t, version.Version, "17.6.30", "Recheck unmarshal for 'version' field '%s'", version.Version)
 }

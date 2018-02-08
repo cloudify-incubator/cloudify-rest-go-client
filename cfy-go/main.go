@@ -29,6 +29,7 @@ var host string
 var user string
 var password string
 var tenant string
+var agent string
 var cfyDebug bool
 
 func basicOptions(name string) *flag.FlagSet {
@@ -63,6 +64,10 @@ func basicOptions(name string) *flag.FlagSet {
 	commonFlagSet.StringVar(&tenant, "tenant", defaultTenant,
 		"Manager tenant or CFY_TENANT in env")
 
+	var defaultAgent = os.Getenv("CFY_AGENT")
+	commonFlagSet.StringVar(&agent, "agent-file", defaultAgent,
+		"Cfy agent path or CFY_AGENT in env")
+
 	commonFlagSet.BoolVar(&cfyDebug, "debug", false,
 		"Manager debug or CFY_DEBUG in env")
 
@@ -70,7 +75,7 @@ func basicOptions(name string) *flag.FlagSet {
 }
 
 func getClient() *cloudify.Client {
-	cl := cloudify.NewClient(host, user, password, tenant)
+	cl := cloudify.NewClient(host, user, password, tenant, agent)
 	if cfyDebug {
 		cl.EnableDebug()
 	}

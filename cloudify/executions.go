@@ -119,7 +119,7 @@ func (cl *Client) WaitBeforeRunExecution(deploymentID string) error {
 				return fmt.Errorf(execution.ErrorMessage)
 			}
 			if execution.Status == "pending" || execution.Status == "started" || execution.Status == "cancelling" {
-				if cl.restCl.GetDebug() {
+				if cl.restCl().GetDebug() {
 					log.Printf("Check status for %v, last status: %v", execution.ID, execution.Status)
 				}
 				time.Sleep(15 * time.Second)
@@ -145,7 +145,7 @@ func (cl *Client) RunExecution(execPost ExecutionPost, fullFinish bool) (*Execut
 	}
 	execution = executionGet.Execution
 	for execution.Status == "pending" || (execution.Status == "started" && fullFinish) {
-		if cl.restCl.GetDebug() {
+		if cl.restCl().GetDebug() {
 			log.Printf("Check status for %v, last status: %v", execution.ID, execution.Status)
 		}
 
