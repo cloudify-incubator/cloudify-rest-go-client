@@ -21,7 +21,6 @@ import (
 	"fmt"
 	rest "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify/rest"
 	"log"
-	"net/url"
 	"time"
 )
 
@@ -77,10 +76,7 @@ type Executions struct {
 func (cl *Client) GetExecutions(params map[string]string) (*Executions, error) {
 	var executions Executions
 
-	values := url.Values{}
-	for key, value := range params {
-		values.Set(key, value)
-	}
+	values := cl.stringMapToURLValue(params)
 
 	err := cl.Get("executions?"+values.Encode(), &executions)
 	if err != nil {

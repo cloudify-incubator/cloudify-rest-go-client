@@ -19,7 +19,7 @@ package cloudify
 import (
 	"encoding/json"
 	rest "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify/rest"
-	"net/url"
+	utils "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify/utils"
 )
 
 // NodePlugin - information about plugin used by node
@@ -68,14 +68,22 @@ type Nodes struct {
 	Items    []Node        `json:"items"`
 }
 
+func (nl *Nodes) GetNodeNamesWithType(nodeType string) []string {
+	nodeIDS := []string{}
+
+	for _, node := range nl.Items {
+		if utils.InList(node.TypeHierarchy, nodeType) {
+			nodeIDS = append(nodeIDS, node.ID)
+		}
+	}
+	return nodeIDS
+}
+
 // GetNodes - return nodes filtered by params
 func (cl *Client) GetNodes(params map[string]string) (*Nodes, error) {
 	var nodes Nodes
 
-	values := url.Values{}
-	for key, value := range params {
-		values.Set(key, value)
-	}
+	values := cl.stringMapToURLValue(params)
 
 	err := cl.Get("nodes?"+values.Encode(), &nodes)
 	if err != nil {

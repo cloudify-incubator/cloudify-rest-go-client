@@ -18,6 +18,7 @@ package cloudify
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 )
@@ -32,15 +33,11 @@ func (cl *Client) updateHostFromAgent() {
 	if cl.AgentFile != "" {
 		var agentConfig CFYAgentConfig
 		if configJSON, err := ioutil.ReadFile(cl.AgentFile); err != nil {
-			if cl.Debug {
-				log.Printf("Can't load config: %s\n", err.Error())
-			}
+			cl.debugLogf("Can't load config: %s\n", err.Error())
 		} else {
 			err = json.Unmarshal(configJSON, &agentConfig)
 			if err != nil {
-				if cl.Debug {
-					log.Printf("Can't parse config: %s\n", err.Error())
-				}
+				cl.debugLogf("Can't parse config: %s\n", err.Error())
 			} else {
 				if agentConfig.RestPort != "" {
 					cl.Host = "https://" + agentConfig.RestHost + ":" + agentConfig.RestPort
@@ -52,8 +49,39 @@ func (cl *Client) updateHostFromAgent() {
 	}
 }
 
-func (cl *Client) printf(format string, v ...interface{}) {
+func (cl *Client) debugLogf(format string, v ...interface{}) {
 	if cl.Debug {
 		log.Printf(format, v...)
 	}
+}
+
+// ValidateBaseConnection - check configuration params (without tenant)
+func ValidateBaseConnection(cloudConfig ClientConfig) error {
+	if len(cloudConfig.Host) == 0 && len(cloudConfig.AgentFile) == 0 {
+		return fmt.Errorf("You have empty host")
+	}
+
+	if len(cloudConfig.User) == 0 {
+		return fmt.Errorf("You have empty user")
+	}
+
+	if len(cloudConfig.Password) == 0 {
+		return fmt.Errorf("You have empty password")
+	}
+
+	return nil
+}
+
+// ValidateConnectionTenant - check configuration params
+func ValidateConnectionTenant(cloudConfig ClientConfig) error {
+	err := ValidateBaseConnection(cloudConfig)
+	if err != nil {
+		return nil
+	}
+
+	if len(cloudConfig.Tenant) == 0 {
+		return fmt.Errorf("You have empty tenant")
+	}
+
+	return nil
 }

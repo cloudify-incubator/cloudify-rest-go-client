@@ -19,7 +19,6 @@ package cloudify
 import (
 	"encoding/json"
 	rest "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify/rest"
-	"net/url"
 )
 
 // Workflow - information about workflow
@@ -129,10 +128,7 @@ type Deployments struct {
 func (cl *Client) GetDeployments(params map[string]string) (*Deployments, error) {
 	var deployments Deployments
 
-	values := url.Values{}
-	for key, value := range params {
-		values.Set(key, value)
-	}
+	values := cl.stringMapToURLValue(params)
 
 	err := cl.Get("deployments?"+values.Encode(), &deployments)
 	if err != nil {

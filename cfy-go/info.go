@@ -55,7 +55,7 @@ func infoOptions(args, options []string) int {
 				log.Printf("Cloudify error: %s\n", err.Error())
 				return 1
 			}
-			fmt.Printf("Retrieving manager services status... [ip=%v]\n", host)
+			fmt.Printf("Retrieving manager services status... [ip=%v]\n", cl.Host)
 			fmt.Printf("Manager status: %v\n", stat.Status)
 			fmt.Printf("Services:\n")
 			lines := make([][]string, len(stat.Services))
@@ -78,7 +78,7 @@ func infoOptions(args, options []string) int {
 				return 1
 			}
 
-			fmt.Printf("Retrieving manager services version... [ip=%v]\n", host)
+			fmt.Printf("Retrieving manager services version... [ip=%v]\n", cl.Host)
 			utils.PrintTable([]string{"Version", "Edition", "Api Version"},
 				[][]string{{ver.Version, ver.Edition, cl.GetAPIVersion()}})
 		}

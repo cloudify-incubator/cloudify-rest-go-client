@@ -22,7 +22,6 @@ package cloudify
 import (
 	"fmt"
 	rest "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify/rest"
-	"net/url"
 	"os"
 	"path/filepath"
 )
@@ -53,10 +52,7 @@ type Blueprints struct {
 func (cl *Client) GetBlueprints(params map[string]string) (*Blueprints, error) {
 	var blueprints Blueprints
 
-	values := url.Values{}
-	for key, value := range params {
-		values.Set(key, value)
-	}
+	values := cl.stringMapToURLValue(params)
 
 	err := cl.Get("blueprints?"+values.Encode(), &blueprints)
 	if err != nil {

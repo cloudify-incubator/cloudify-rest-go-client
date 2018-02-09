@@ -44,11 +44,15 @@ type HTTPClient struct {
 	debug    bool
 }
 
+func (r *HTTPClient) debugLogf(format string, v ...interface{}) {
+	if r.debug {
+		log.Printf(format, v...)
+	}
+}
+
 // getRequest - create new request by params
 func (r *HTTPClient) getRequest(url, method string, body io.Reader) (*http.Request, error) {
-	if r.debug {
-		log.Printf("Use: %v:%v@%v#%s\n", r.user, r.password, r.restURL+url, r.tenant)
-	}
+	r.debugLogf("Use: %v:%v@%v#%s\n", r.user, r.password, r.restURL+url, r.tenant)
 
 	var authString string
 	authString = r.user + ":" + r.password
@@ -91,12 +95,10 @@ func (r *HTTPClient) Get(url, acceptedContentType string) ([]byte, error) {
 		return []byte{}, err
 	}
 
-	if r.debug {
-		if acceptedContentType == JSONContentType {
-			log.Printf("Response %s\n", string(body))
-		} else {
-			log.Printf("Binary response length: %d\n", len(body))
-		}
+	if acceptedContentType == JSONContentType {
+		r.debugLogf("Response %s\n", string(body))
+	} else {
+		r.debugLogf("Binary response length: %d\n", len(body))
 	}
 
 	return body, nil
@@ -128,9 +130,7 @@ func (r *HTTPClient) Delete(url string) ([]byte, error) {
 		return []byte{}, err
 	}
 
-	if r.debug {
-		log.Printf("Response %s\n", string(body))
-	}
+	r.debugLogf("Response %s\n", string(body))
 
 	return body, nil
 }
@@ -162,9 +162,7 @@ func (r *HTTPClient) Post(url string, data []byte) ([]byte, error) {
 		return nil, err
 	}
 
-	if r.debug {
-		log.Printf("Response %s\n", string(body))
-	}
+	r.debugLogf("Response %s\n", string(body))
 
 	return body, nil
 }
@@ -196,9 +194,7 @@ func (r *HTTPClient) Put(url, providedContentType string, data []byte) ([]byte, 
 		return []byte{}, err
 	}
 
-	if r.debug {
-		log.Printf("Response %s\n", string(body))
-	}
+	r.debugLogf("Response %s\n", string(body))
 
 	return body, nil
 }
@@ -216,8 +212,8 @@ func (r *HTTPClient) SetDebug(state bool) {
 // NewClient - create new http(s) client
 func NewClient(host, user, password, tenant string) ConnectionOperationsInterface {
 	var restCl HTTPClient
-	if (host[:len("https://")] == "https://" ||
-		host[:len("http://")] == "http://") && (len(host) >= len("http://")) {
+	if len(host) >= len("http://") && (host[:len("https://")] == "https://" ||
+		host[:len("http://")] == "http://") {
 		restCl.restURL = host + "/api/" + APIVersion + "/"
 	} else {
 		restCl.restURL = "http://" + host + "/api/" + APIVersion + "/"

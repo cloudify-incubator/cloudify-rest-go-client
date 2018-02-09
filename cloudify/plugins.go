@@ -18,7 +18,6 @@ package cloudify
 
 import (
 	rest "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify/rest"
-	"net/url"
 )
 
 // PluginBase - common part for any response about plugin
@@ -54,10 +53,7 @@ type Plugins struct {
 func (cl *Client) GetPlugins(params map[string]string) (*Plugins, error) {
 	var plugins Plugins
 
-	values := url.Values{}
-	for key, value := range params {
-		values.Set(key, value)
-	}
+	values := cl.stringMapToURLValue(params)
 
 	err := cl.Get("plugins?"+values.Encode(), &plugins)
 	if err != nil {
