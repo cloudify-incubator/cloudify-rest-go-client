@@ -68,6 +68,7 @@ type Nodes struct {
 	Items    []Node        `json:"items"`
 }
 
+// GetNodeNamesWithType - Return all Node ID's with specific type
 func (nl *Nodes) GetNodeNamesWithType(nodeType string) []string {
 	nodeIDS := []string{}
 
