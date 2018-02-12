@@ -35,6 +35,32 @@ type NodeWithGroups struct {
 	Items    []NodeWithGroup `json:"items"`
 }
 
+// SelfUpdateGroups - go by nodes and update group if we have some additional info from parent
+func (nwg *NodeWithGroups) SelfUpdateGroups() {
+	for childInd, child := range nwg.Items {
+		if child.HostID != child.ID {
+			// skip filled
+			if child.GroupName != "" &&
+				child.ScalingGroupName != "" {
+				continue
+			}
+
+			// go by childs
+			for _, host := range nwg.Items {
+				if child.HostID == host.ID &&
+					child.DeploymentID == host.DeploymentID {
+					if child.GroupName == "" {
+						nwg.Items[childInd].GroupName = host.GroupName
+					}
+					if child.ScalingGroupName == "" {
+						nwg.Items[childInd].ScalingGroupName = host.ScalingGroupName
+					}
+				}
+			}
+		}
+	}
+}
+
 // GetNodesFull - return nodes filtered by params
 func (cl *Client) GetNodesFull(params map[string]string) (*NodeWithGroups, error) {
 	var nodeWithGroups NodeWithGroups
@@ -80,25 +106,12 @@ func (cl *Client) GetNodesFull(params map[string]string) (*NodeWithGroups, error
 		infoNodes = append(infoNodes, fullInfo)
 	}
 
-	// update group names from parent
-	for childInd, child := range infoNodes {
-		if child.HostID != child.ID {
-			if child.GroupName == "" || child.ScalingGroupName == "" {
-				for _, host := range infoNodes {
-					if child.HostID == host.ID && child.DeploymentID == host.DeploymentID {
-						if child.GroupName == "" {
-							infoNodes[childInd].GroupName = host.GroupName
-						}
-						if child.ScalingGroupName == "" {
-							infoNodes[childInd].ScalingGroupName = host.ScalingGroupName
-						}
-					}
-				}
-			}
-		}
-	}
+	// We only repack values from Nodes to new struct without total/offset changes
 	nodeWithGroups.Items = infoNodes
 	nodeWithGroups.Metadata = nodes.Metadata
+
+	// update child
+	nodeWithGroups.SelfUpdateGroups()
 
 	return &nodeWithGroups, nil
 }
@@ -113,22 +126,14 @@ func (cl *Client) GetStartedNodesWithType(params map[string]string, nodeType str
 	nodes := []Node{}
 	for _, node := range cloudNodes.Items {
 
-		if !utils.InList(node.TypeHierarchy, nodeType) {
-			continue
-		}
-
-		if node.NumberOfInstances <= 0 {
+		if !utils.InList(node.TypeHierarchy, nodeType) ||
+			node.NumberOfInstances <= 0 {
 			continue
 		}
 
 		// add node to list
 		nodes = append(nodes, node)
 	}
-	var result Nodes
-	result.Items = nodes
-	result.Metadata.Pagination.Total = uint(len(nodes))
-	result.Metadata.Pagination.Size = uint(len(nodes))
-	result.Metadata.Pagination.Offset = 0
 
-	return &result, nil
+	return cl.listNodeToNodes(nodes), nil
 }

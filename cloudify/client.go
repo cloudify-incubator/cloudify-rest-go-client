@@ -21,28 +21,30 @@ import (
 	rest "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify/rest"
 	utils "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify/utils"
 	"io/ioutil"
+	"net/url"
 )
 
 // ClientConfig - all configuration fields for connection
 type ClientConfig struct {
-	Host      string
-	User      string
-	Password  string
-	Tenant    string
-	Debug     bool
-	AgentFile string
+	Host      string `json:"host,omitempty"`
+	User      string `json:"user,omitempty"`
+	Password  string `json:"password,omitempty"`
+	Tenant    string `json:"tenant,omitempty"`
+	AgentFile string `json:"agent,omitempty"`
+	Debug     bool   `json:"debug,omitempty"`
 }
 
 //Client - struct with connection settings for connect to manager
 type Client struct {
 	ClientConfig
-	RestClCache rest.ConnectionOperationsInterface
+	restClCache rest.ConnectionOperationsInterface
 }
 
+//restCl - return client connection
 func (cl *Client) restCl() rest.ConnectionOperationsInterface {
 	var conn rest.ConnectionOperationsInterface
-	if cl.RestClCache != nil {
-		conn = cl.RestClCache
+	if cl.restClCache != nil {
+		conn = cl.restClCache
 	} else {
 		cl.updateHostFromAgent()
 		conn = rest.NewClient(cl.Host, cl.User, cl.Password, cl.Tenant)
@@ -51,21 +53,33 @@ func (cl *Client) restCl() rest.ConnectionOperationsInterface {
 	return conn
 }
 
+//CacheConnection - lock connection, don't reread agent file
+func (cl *Client) CacheConnection() {
+	// already cached
+	if cl.restClCache != nil {
+		return
+	}
+	// cache connection
+	cl.restClCache = cl.restCl()
+}
+
+//ResetConnection - reset cached connection settings, need to recreate connection
+// if you have used ClientFromConnection
+func (cl *Client) ResetConnection() {
+	cl.restClCache = nil
+}
+
 //ClientFromConnection - return new client with internally use provided connection
 func ClientFromConnection(conn rest.ConnectionOperationsInterface) *Client {
 	var cliCl Client
-	cliCl.RestClCache = conn
+	cliCl.restClCache = conn
 	return &cliCl
 }
 
 //NewClient - return new connection with params
-func NewClient(host, user, password, tenant, agentFile string) *Client {
+func NewClient(cloudConfig ClientConfig) *Client {
 	var cliCl Client
-	cliCl.Host = host
-	cliCl.User = user
-	cliCl.Password = password
-	cliCl.Tenant = tenant
-	cliCl.AgentFile = agentFile
+	cliCl.ClientConfig = cloudConfig
 	return &cliCl
 }
 
@@ -194,4 +208,13 @@ func (cl *Client) Delete(url string, output rest.MessageInterface) error {
 		return output
 	}
 	return nil
+}
+
+// stringMapToURLValue - convert map[string]string -> url.Values
+func (cl *Client) stringMapToURLValue(params map[string]string) url.Values {
+	values := url.Values{}
+	for key, value := range params {
+		values.Set(key, value)
+	}
+	return values
 }

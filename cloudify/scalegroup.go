@@ -53,6 +53,7 @@ func (cl *Client) GetDeploymentInstancesHostGrouped(params map[string]string) (m
 
 			nodeHostInstance := result[nodeInstance.HostID]
 
+			// we repack intances to new struct so we need to update size/total
 			nodeHostInstance.Items = append(
 				nodeHostInstance.Items, nodeInstance,
 			)
@@ -97,6 +98,26 @@ func (cl *Client) GetDeploymentInstancesNodeGrouped(params map[string]string) (m
 	return result, nil
 }
 
+// listNodeInstanceToNodeInstances - convert simple list of NodeInstance's to NodeInstances
+func (cl *Client) listNodeInstanceToNodeInstances(instances []NodeInstance) *NodeInstances {
+	var result NodeInstances
+	result.Items = instances
+	result.Metadata.Pagination.Total = uint(len(instances))
+	result.Metadata.Pagination.Size = uint(len(instances))
+	result.Metadata.Pagination.Offset = 0
+	return &result
+}
+
+// listNodeToNodes - convert simple list of Node's to Nodes
+func (cl *Client) listNodeToNodes(nodes []Node) *Nodes {
+	var result Nodes
+	result.Items = nodes
+	result.Metadata.Pagination.Total = uint(len(nodes))
+	result.Metadata.Pagination.Size = uint(len(nodes))
+	result.Metadata.Pagination.Offset = 0
+	return &result
+}
+
 // GetNodeInstancesWithType - Returned list of started node instances with some node type,
 // used mainly for kubernetes, also check that all instances related to same hostId started
 func (cl *Client) GetNodeInstancesWithType(params map[string]string, nodeType string) (*NodeInstances, error) {
@@ -114,34 +135,19 @@ func (cl *Client) GetNodeInstancesWithType(params map[string]string, nodeType st
 		return nil, err
 	}
 
+	nodesWithCorrectType := nodes.GetNodeNamesWithType(nodeType)
+
 	instances := []NodeInstance{}
 	for _, nodeInstance := range nodeInstances.Items {
-		notKubernetesHost := true
-		for _, node := range nodes.Items {
-			if node.ID == nodeInstance.NodeID {
-				for _, typeName := range node.TypeHierarchy {
-					if typeName == nodeType {
-						notKubernetesHost = false
-						break
-					}
-				}
-			}
-		}
-
-		if notKubernetesHost {
+		if !utils.InList(nodesWithCorrectType, nodeInstance.NodeID) {
 			continue
 		}
 
 		// add instance to list
 		instances = append(instances, nodeInstance)
 	}
-	var result NodeInstances
-	result.Items = instances
-	result.Metadata.Pagination.Total = uint(len(instances))
-	result.Metadata.Pagination.Size = uint(len(instances))
-	result.Metadata.Pagination.Offset = 0
 
-	return &result, nil
+	return cl.listNodeInstanceToNodeInstances(instances), nil
 }
 
 // GetAliveNodeInstancesWithType - Returned list of alive node instances with some node type,
@@ -166,13 +172,8 @@ func (cl *Client) GetAliveNodeInstancesWithType(params map[string]string, nodeTy
 			instances = append(instances, instance)
 		}
 	}
-	var result NodeInstances
-	result.Items = instances
-	result.Metadata.Pagination.Total = uint(len(instances))
-	result.Metadata.Pagination.Size = uint(len(instances))
-	result.Metadata.Pagination.Offset = 0
 
-	return &result, nil
+	return cl.listNodeInstanceToNodeInstances(instances), nil
 }
 
 // GetStartedNodeInstancesWithType - Returned list of started node instances with some node type,
@@ -193,36 +194,16 @@ func (cl *Client) GetStartedNodeInstancesWithType(params map[string]string, node
 		return nil, err
 	}
 
+	nodesWithCorrectType := nodes.GetNodeNamesWithType(nodeType)
 	instances := []NodeInstance{}
 	for _, nodeInstances := range nodeInstancesGrouped {
-		// check that all nodes on same hostID started
-		allStarted := true
-		for _, nodeInstance := range nodeInstances.Items {
-			if nodeInstance.State != "started" {
-				allStarted = false
-				break
-			}
-		}
-
-		if !allStarted {
+		if nodeInstances.AllAreStarted() {
 			continue
 		}
 
 		// check type
 		for _, nodeInstance := range nodeInstances.Items {
-			notKubernetesHost := true
-			for _, node := range nodes.Items {
-				if node.ID == nodeInstance.NodeID {
-					for _, typeName := range node.TypeHierarchy {
-						if typeName == nodeType {
-							notKubernetesHost = false
-							break
-						}
-					}
-				}
-			}
-
-			if notKubernetesHost {
+			if !utils.InList(nodesWithCorrectType, nodeInstance.NodeID) {
 				continue
 			}
 
@@ -230,13 +211,8 @@ func (cl *Client) GetStartedNodeInstancesWithType(params map[string]string, node
 			instances = append(instances, nodeInstance)
 		}
 	}
-	var result NodeInstances
-	result.Items = instances
-	result.Metadata.Pagination.Total = uint(len(instances))
-	result.Metadata.Pagination.Size = uint(len(instances))
-	result.Metadata.Pagination.Offset = 0
 
-	return &result, nil
+	return cl.listNodeInstanceToNodeInstances(instances), nil
 }
 
 // GetDeploymentScaleGroup - return scaling group by name and deployment
@@ -280,12 +256,8 @@ func (cl *Client) GetDeploymentScaleGroupNodes(deploymentID, groupName, nodeType
 			}
 		}
 	}
-	var result Nodes
-	result.Items = nodes
-	result.Metadata.Pagination.Total = uint(len(nodes))
-	result.Metadata.Pagination.Size = uint(len(nodes))
-	result.Metadata.Pagination.Offset = 0
-	return &result, nil
+
+	return cl.listNodeToNodes(nodes), nil
 }
 
 // GetDeploymentScaleGroupInstances - return instances related to scaling group
@@ -313,13 +285,8 @@ func (cl *Client) GetDeploymentScaleGroupInstances(deploymentID, groupName, node
 			}
 		}
 	}
-	var result NodeInstances
-	result.Items = instances
-	result.Metadata.Pagination.Total = uint(len(instances))
-	result.Metadata.Pagination.Size = uint(len(instances))
-	result.Metadata.Pagination.Offset = 0
 
-	return &result, nil
+	return cl.listNodeInstanceToNodeInstances(instances), nil
 }
 
 // GetDeploymentInstancesScaleGrouped - return instances grouped by scaleing group
@@ -365,12 +332,8 @@ func (cl *Client) GetDeploymentInstancesScaleGrouped(deploymentID, nodeType stri
 					resultedInstances = append(resultedInstances, cloudInstance)
 				}
 			}
-			var resultInstance NodeInstances
-			resultInstance.Items = resultedInstances
-			resultInstance.Metadata.Pagination.Total = uint(len(resultedInstances))
-			resultInstance.Metadata.Pagination.Size = uint(len(resultedInstances))
-			resultInstance.Metadata.Pagination.Offset = 0
-			result[groupName] = resultInstance
+
+			result[groupName] = *cl.listNodeInstanceToNodeInstances(resultedInstances)
 		}
 	}
 	return result, nil

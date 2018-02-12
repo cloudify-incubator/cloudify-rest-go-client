@@ -18,7 +18,6 @@ package cloudify
 
 import (
 	rest "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify/rest"
-	"net/url"
 )
 
 // Tenant - information about cloudify tenant
@@ -39,10 +38,7 @@ type Tenants struct {
 func (cl *Client) GetTenants(params map[string]string) (*Tenants, error) {
 	var tenants Tenants
 
-	values := url.Values{}
-	for key, value := range params {
-		values.Set(key, value)
-	}
+	values := cl.stringMapToURLValue(params)
 
 	err := cl.Get("tenants?"+values.Encode(), &tenants)
 	if err != nil {

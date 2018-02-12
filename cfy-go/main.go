@@ -25,12 +25,7 @@ import (
 	"os"
 )
 
-var host string
-var user string
-var password string
-var tenant string
-var agent string
-var cfyDebug bool
+var cloudConfig cloudify.ClientConfig
 
 func basicOptions(name string) *flag.FlagSet {
 	var commonFlagSet *flag.FlagSet
@@ -40,45 +35,46 @@ func basicOptions(name string) *flag.FlagSet {
 	if defaultHost == "" {
 		defaultHost = "localhost"
 	}
-	commonFlagSet.StringVar(&host, "host", defaultHost,
+	commonFlagSet.StringVar(&cloudConfig.Host, "host", defaultHost,
 		"Manager host name or CFY_HOST in env")
 
 	var defaultUser = os.Getenv("CFY_USER")
 	if defaultUser == "" {
 		defaultUser = "admin"
 	}
-	commonFlagSet.StringVar(&user, "user", defaultUser,
+	commonFlagSet.StringVar(&cloudConfig.User, "user", defaultUser,
 		"Manager user name or CFY_USER in env")
 
 	var defaultPassword = os.Getenv("CFY_PASSWORD")
 	if defaultPassword == "" {
 		defaultPassword = "secret"
 	}
-	commonFlagSet.StringVar(&password, "password", defaultPassword,
+	commonFlagSet.StringVar(&cloudConfig.Password, "password", defaultPassword,
 		"Manager user password or CFY_PASSWORD in env")
 
 	var defaultTenant = os.Getenv("CFY_TENANT")
 	if defaultTenant == "" {
 		defaultTenant = "default_tenant"
 	}
-	commonFlagSet.StringVar(&tenant, "tenant", defaultTenant,
+	commonFlagSet.StringVar(&cloudConfig.Tenant, "tenant", defaultTenant,
 		"Manager tenant or CFY_TENANT in env")
 
 	var defaultAgent = os.Getenv("CFY_AGENT")
-	commonFlagSet.StringVar(&agent, "agent-file", defaultAgent,
+	commonFlagSet.StringVar(&cloudConfig.AgentFile, "agent-file", defaultAgent,
 		"Cfy agent path or CFY_AGENT in env")
 
-	commonFlagSet.BoolVar(&cfyDebug, "debug", false,
+	commonFlagSet.BoolVar(&cloudConfig.Debug, "debug", false,
 		"Manager debug or CFY_DEBUG in env")
 
 	return commonFlagSet
 }
 
 func getClient() *cloudify.Client {
-	cl := cloudify.NewClient(host, user, password, tenant, agent)
-	if cfyDebug {
-		cl.EnableDebug()
+	err := cloudify.ValidateBaseConnection(cloudConfig)
+	if err != nil {
+		log.Printf("Possible issues with config: %s\n", err.Error())
 	}
+	cl := cloudify.NewClient(cloudConfig)
 	return cl
 }
 

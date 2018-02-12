@@ -19,7 +19,6 @@ package cloudify
 import (
 	"encoding/json"
 	rest "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify/rest"
-	"net/url"
 )
 
 // NodeInstanceScalingGroup - short information(ID+Name) about scaling group related to instance
@@ -61,10 +60,7 @@ type NodeInstances struct {
 func (cl *Client) GetNodeInstances(params map[string]string) (*NodeInstances, error) {
 	var instances NodeInstances
 
-	values := url.Values{}
-	for key, value := range params {
-		values.Set(key, value)
-	}
+	values := cl.stringMapToURLValue(params)
 
 	err := cl.Get("node-instances?"+values.Encode(), &instances)
 	if err != nil {
@@ -72,4 +68,15 @@ func (cl *Client) GetNodeInstances(params map[string]string) (*NodeInstances, er
 	}
 
 	return &instances, nil
+}
+
+// AllAreStarted - check that all instances in list are started
+func (ni *NodeInstances) AllAreStarted() bool {
+	// check that all nodes on same hostID started
+	for _, nodeInstance := range ni.Items {
+		if nodeInstance.State != "started" {
+			return false
+		}
+	}
+	return true
 }

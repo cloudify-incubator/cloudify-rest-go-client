@@ -35,7 +35,12 @@ func TestGetAPIVersion(t *testing.T) {
 }
 
 func ExampleClient() {
-	cl := NewClient("localhost", "admin", "password", "default_tenant", "")
+	cl := NewClient(ClientConfig{
+		Host:     "localhost",
+		User:     "admin",
+		Password: "password",
+		Tenant:   "default_tenant",
+	})
 	fmt.Printf("Version: %s", cl.GetAPIVersion())
 	// Output: Version: v3.1
 }

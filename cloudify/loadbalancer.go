@@ -86,11 +86,6 @@ func (cl *Client) GetLoadBalancerInstances(params map[string]string, clusterName
 			instances = append(instances, nodeInstance)
 		}
 	}
-	var result NodeInstances
-	result.Items = instances
-	result.Metadata.Pagination.Total = uint(len(instances))
-	result.Metadata.Pagination.Size = uint(len(instances))
-	result.Metadata.Pagination.Offset = 0
 
-	return &result, nil
+	return cl.listNodeInstanceToNodeInstances(instances), nil
 }
