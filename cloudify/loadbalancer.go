@@ -25,66 +25,21 @@ func (cl *Client) GetLoadBalancerInstances(params map[string]string, clusterName
 
 	instances := []NodeInstance{}
 	for _, nodeInstance := range nodeInstancesList.Items {
-		// check runtime properties
-		if nodeInstance.RuntimeProperties != nil {
-			// cluster
-			if v, ok := nodeInstance.RuntimeProperties["proxy_cluster"]; ok == true {
-				switch v.(type) {
-				case string:
-					{
-						if v.(string) != clusterName {
-							// node with different cluster
-							continue
-						}
-					}
-				}
-			} else {
-				// node without cluster
-				if len(clusterName) != 0 {
-					continue
-				}
-			}
-
-			// name
-			if v, ok := nodeInstance.RuntimeProperties["proxy_name"]; ok == true {
-				switch v.(type) {
-				case string:
-					{
-						if v.(string) != name {
-							// node with different name
-							continue
-						}
-					}
-				}
-			} else {
-				// node without name
-				if len(name) != 0 {
-					continue
-				}
-			}
-
-			// name space
-			if v, ok := nodeInstance.RuntimeProperties["proxy_namespace"]; ok == true {
-				switch v.(type) {
-				case string:
-					{
-						if v.(string) != namespace {
-							// node with different name
-							continue
-						}
-					}
-				}
-			} else {
-				// node without namespace
-				if len(namespace) != 0 {
-					continue
-				}
-			}
-			instances = append(instances, nodeInstance)
-		} else if len(namespace) == 0 && len(name) == 0 && len(clusterName) == 0 {
-			// special case for search first empty
-			instances = append(instances, nodeInstance)
+		// Cluster
+		if nodeInstance.GetStringProperty("proxy_cluster") != clusterName {
+			continue
 		}
+
+		// Name
+		if nodeInstance.GetStringProperty("proxy_name") != name {
+			continue
+		}
+
+		// Namespace
+		if nodeInstance.GetStringProperty("proxy_namespace") != namespace {
+			continue
+		}
+		instances = append(instances, nodeInstance)
 	}
 
 	return cl.listNodeInstanceToNodeInstances(instances), nil

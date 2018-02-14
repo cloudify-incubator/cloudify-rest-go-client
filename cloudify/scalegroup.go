@@ -197,7 +197,8 @@ func (cl *Client) GetStartedNodeInstancesWithType(params map[string]string, node
 	nodesWithCorrectType := nodes.GetNodeNamesWithType(nodeType)
 	instances := []NodeInstance{}
 	for _, nodeInstances := range nodeInstancesGrouped {
-		if nodeInstances.AllAreStarted() {
+		// Check tat everything started!
+		if !nodeInstances.AllAreStarted() {
 			continue
 		}
 

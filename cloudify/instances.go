@@ -40,6 +40,33 @@ type NodeInstance struct {
 	ScalingGroups     []NodeInstanceScalingGroup `json:"scaling_groups,omitempty"`
 }
 
+// GetProperty - return field value or nil if field does not exist
+func (instance *NodeInstance) GetProperty(name string) interface{} {
+	if instance.RuntimeProperties == nil {
+		return nil
+	}
+
+	if v, ok := instance.RuntimeProperties[name]; ok == true {
+		return v
+	}
+	return nil
+}
+
+// GetStringProperty - return field value as string
+// or empty if field does not exist
+func (instance *NodeInstance) GetStringProperty(name string) string {
+	v := instance.GetProperty(name)
+	if v != nil {
+		switch v.(type) {
+		case string:
+			{
+				return v.(string)
+			}
+		}
+	}
+	return ""
+}
+
 // GetJSONRuntimeProperties - instance runtime properties returnd as json string
 func (instance *NodeInstance) GetJSONRuntimeProperties() (string, error) {
 	jsonData, err := json.Marshal(instance.RuntimeProperties)
