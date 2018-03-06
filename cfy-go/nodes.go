@@ -46,7 +46,12 @@ import (
 	"log"
 )
 
-func nodesGroupPrint(nodes *cloudify.NodeWithGroups) int {
+func nodesGroupPrint(nodes *cloudify.NodeWithGroups, err error) int {
+	if err != nil {
+		log.Printf("Cloudify error: %s\n", err.Error())
+		return 1
+	}
+
 	lines := make([][]string, len(nodes.Items))
 	for pos, node := range nodes.Items {
 		lines[pos] = make([]string, 6)
@@ -66,7 +71,12 @@ func nodesGroupPrint(nodes *cloudify.NodeWithGroups) int {
 	return 0
 }
 
-func nodesPrint(nodes *cloudify.Nodes) int {
+func nodesPrint(nodes *cloudify.Nodes, err error) int {
+	if err != nil {
+		log.Printf("Cloudify error: %s\n", err.Error())
+		return 1
+	}
+
 	lines := make([][]string, len(nodes.Items))
 	for pos, node := range nodes.Items {
 		lines[pos] = make([]string, 9)
@@ -122,8 +132,7 @@ func nodesOptions(args, options []string) int {
 			operFlagSet.StringVar(&deployment, "deployment", "",
 				"The unique identifier for the deployment")
 			operFlagSet.StringVar(&nodeType, "node-type",
-				"cloudify.nodes.ApplicationServer.kubernetes.Node",
-				"Filter by node type")
+				cloudify.KubernetesNode, "Filter by node type")
 			operFlagSet.StringVar(&hostID, "host-id", "",
 				"Filter by hostID")
 
@@ -142,12 +151,7 @@ func nodesOptions(args, options []string) int {
 			}
 
 			cl := getClient()
-			nodes, err := cl.GetStartedNodesWithType(params, nodeType)
-			if err != nil {
-				log.Printf("Cloudify error: %s\n", err.Error())
-				return 1
-			}
-			return nodesPrint(nodes)
+			return nodesPrint(cl.GetStartedNodesWithType(params, nodeType))
 		}
 	case "group":
 		{
@@ -176,12 +180,7 @@ func nodesOptions(args, options []string) int {
 			}
 
 			cl := getClient()
-			nodes, err := cl.GetNodesFull(params)
-			if err != nil {
-				log.Printf("Cloudify error: %s\n", err.Error())
-				return 1
-			}
-			return nodesGroupPrint(nodes)
+			return nodesGroupPrint(cl.GetNodesFull(params))
 		}
 	case "list":
 		{
@@ -210,12 +209,7 @@ func nodesOptions(args, options []string) int {
 			}
 
 			cl := getClient()
-			nodes, err := cl.GetNodes(params)
-			if err != nil {
-				log.Printf("Cloudify error: %s\n", err.Error())
-				return 1
-			}
-			return nodesPrint(nodes)
+			return nodesPrint(cl.GetNodes(params))
 		}
 	default:
 		{

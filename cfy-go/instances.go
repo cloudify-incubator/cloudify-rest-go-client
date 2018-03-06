@@ -54,7 +54,12 @@ import (
 	"strings"
 )
 
-func nodeInstancesPrint(nodeInstances *cloudify.NodeInstances) int {
+func nodeInstancesPrint(nodeInstances *cloudify.NodeInstances, err error) int {
+	if err != nil {
+		log.Printf("Cloudify error: %s\n", err.Error())
+		return 1
+	}
+
 	lines := make([][]string, len(nodeInstances.Items))
 	for pos, nodeInstance := range nodeInstances.Items {
 		var scaleGroups = []string{}
@@ -155,7 +160,7 @@ func nodeInstancesOptions(args, options []string) int {
 			}
 			for nodeID, instances := range groupedInstances {
 				fmt.Printf("NodeID: %v\n", nodeID)
-				if nodeInstancesPrint(&instances) != 0 {
+				if nodeInstancesPrint(&instances, nil) != 0 {
 					return 1
 				}
 			}
@@ -175,7 +180,7 @@ func nodeInstancesOptions(args, options []string) int {
 			}
 			for hostID, instances := range groupedInstances {
 				fmt.Printf("HostID: %v\n", hostID)
-				if nodeInstancesPrint(&instances) != 0 {
+				if nodeInstancesPrint(&instances, nil) != 0 {
 					return 1
 				}
 			}
@@ -186,8 +191,7 @@ func nodeInstancesOptions(args, options []string) int {
 			operFlagSet := basicOptions("node-instances loadbalancer")
 			var nodeType string
 			operFlagSet.StringVar(&nodeType, "node-type",
-				"cloudify.nodes.ApplicationServer.kubernetes.LoadBalancer",
-				"Filter by node type")
+				cloudify.KubernetesLoadBalancer, "Filter by node type")
 
 			var loadbalancerName string
 			var loadbalancerNamespace string
@@ -205,68 +209,50 @@ func nodeInstancesOptions(args, options []string) int {
 			params := parseInstancesFlags(operFlagSet, options)
 
 			cl := getClient()
-			nodeInstances, err := cl.GetLoadBalancerInstances(params, loadbalancerCluster,
-				loadbalancerNamespace, loadbalancerName, nodeType)
-			log.Printf("%+v\n", nodeInstances.Items)
-			if err != nil {
-				log.Printf("Cloudify error: %s\n", err.Error())
-				return 1
-			}
-			return nodeInstancesPrint(nodeInstances)
+			return nodeInstancesPrint(
+				cl.GetLoadBalancerInstances(
+					params, loadbalancerCluster, loadbalancerNamespace,
+					loadbalancerName, nodeType))
 		}
 	case "by-type":
 		{
 			operFlagSet := basicOptions("node-instances started")
 			var nodeType string
 			operFlagSet.StringVar(&nodeType, "node-type",
-				"cloudify.nodes.ApplicationServer.kubernetes.Node",
-				"Filter by node type")
+				cloudify.KubernetesNode, "Filter by node type")
 
 			params := parseInstancesFlags(operFlagSet, options)
 
 			cl := getClient()
-			nodeInstances, err := cl.GetNodeInstancesWithType(params, nodeType)
-			if err != nil {
-				log.Printf("Cloudify error: %s\n", err.Error())
-				return 1
-			}
-			return nodeInstancesPrint(nodeInstances)
+			return nodeInstancesPrint(
+				cl.GetNodeInstancesWithType(params, nodeType))
 		}
 	case "started":
 		{
 			operFlagSet := basicOptions("node-instances started")
 			var nodeType string
 			operFlagSet.StringVar(&nodeType, "node-type",
-				"cloudify.nodes.ApplicationServer.kubernetes.Node",
-				"Filter by node type")
+				cloudify.KubernetesNode, "Filter by node type")
 
 			params := parseInstancesFlags(operFlagSet, options)
 
 			cl := getClient()
-			nodeInstances, err := cl.GetStartedNodeInstancesWithType(params, nodeType)
-			if err != nil {
-				log.Printf("Cloudify error: %s\n", err.Error())
-				return 1
-			}
-			return nodeInstancesPrint(nodeInstances)
+			return nodeInstancesPrint(
+				cl.GetStartedNodeInstancesWithType(params, nodeType))
 		}
 	case "alive":
 		{
 			operFlagSet := basicOptions("node-instances alive")
 			var nodeType string
 			operFlagSet.StringVar(&nodeType, "node-type",
-				"cloudify.nodes.ApplicationServer.kubernetes.Node",
+				cloudify.KubernetesNode,
 				"Filter by node type: cloudify.nodes.ApplicationServer.kubernetes.{Node|LoadBalancer}")
 
 			params := parseInstancesFlags(operFlagSet, options)
 
 			cl := getClient()
-			nodeInstances, err := cl.GetAliveNodeInstancesWithType(params, nodeType)
-			if err != nil {
-				log.Printf("Cloudify error: %s\n", err.Error())
-				return 1
-			}
-			return nodeInstancesPrint(nodeInstances)
+			return nodeInstancesPrint(
+				cl.GetAliveNodeInstancesWithType(params, nodeType))
 		}
 	case "list":
 		{
@@ -276,11 +262,7 @@ func nodeInstancesOptions(args, options []string) int {
 
 			cl := getClient()
 			nodeInstances, err := cl.GetNodeInstances(params)
-			if err != nil {
-				log.Printf("Cloudify error: %s\n", err.Error())
-				return 1
-			}
-			if nodeInstancesPrint(nodeInstances) != 0 {
+			if nodeInstancesPrint(nodeInstances, err) != 0 {
 				return 1
 			}
 			fmt.Printf("Showed %d+%d/%d results. Use offset/size for get more.\n",

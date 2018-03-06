@@ -75,6 +75,8 @@ func getClient() *cloudify.Client {
 		log.Printf("Possible issues with config: %s\n", err.Error())
 	}
 	cl := cloudify.NewClient(cloudConfig)
+	fmt.Printf("Manager: %v \n", cl.Host)
+	fmt.Printf("Api Version: %v\n", cl.GetAPIVersion())
 	return cl
 }
 

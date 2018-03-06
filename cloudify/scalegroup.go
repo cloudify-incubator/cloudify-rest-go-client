@@ -21,6 +21,12 @@ import (
 	utils "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify/utils"
 )
 
+// KubernetesLoadBalancer - type used for loadbalancers instances
+const KubernetesLoadBalancer = "cloudify.nodes.ApplicationServer.kubernetes.LoadBalancer"
+
+// KubernetesNode - type used for kubernetes instances
+const KubernetesNode = "cloudify.nodes.ApplicationServer.kubernetes.Node"
+
 // GetDeployment - return deployment by ID
 func (cl *Client) GetDeployment(deploymentID string) (*Deployment, error) {
 	var params = map[string]string{}
