@@ -41,7 +41,12 @@ import (
 	"strings"
 )
 
-func scaleGroupPrint(deploymentScalingGroups map[string]cloudify.ScalingGroup) int {
+func scaleGroupPrint(deploymentScalingGroups map[string]cloudify.ScalingGroup, err error) int {
+	if err != nil {
+		log.Printf("Cloudify error: %s\n", err.Error())
+		return 1
+	}
+
 	lines := make([][]string, len(deploymentScalingGroups))
 	var pos int
 	if deploymentScalingGroups != nil {
@@ -81,8 +86,7 @@ func scalingGroupsOptions(args, options []string) int {
 			operFlagSet.StringVar(&deployment, "deployment", "",
 				"The unique identifier for the deployment")
 			operFlagSet.StringVar(&nodeType, "node-type",
-				"cloudify.nodes.ApplicationServer.kubernetes.Node",
-				"Filter by node type")
+				cloudify.KubernetesNode, "Filter by node type")
 
 			operFlagSet.Parse(options)
 
@@ -99,7 +103,7 @@ func scalingGroupsOptions(args, options []string) int {
 			}
 			for groupName, instances := range groupedInstances {
 				fmt.Printf("Scale group: %v\n", groupName)
-				if nodeInstancesPrint(&instances) != 0 {
+				if nodeInstancesPrint(&instances, nil) != 0 {
 					return 1
 				}
 			}
@@ -116,8 +120,7 @@ func scalingGroupsOptions(args, options []string) int {
 			operFlagSet.StringVar(&scalegroup, "scalegroup", "",
 				"The unique identifier for the scalegroup")
 			operFlagSet.StringVar(&nodeType, "node-type",
-				"cloudify.nodes.ApplicationServer.kubernetes.Node",
-				"Filter by node type")
+				cloudify.KubernetesNode, "Filter by node type")
 
 			operFlagSet.Parse(options)
 
@@ -131,12 +134,8 @@ func scalingGroupsOptions(args, options []string) int {
 			}
 
 			cl := getClient()
-			instances, err := cl.GetDeploymentScaleGroupInstances(deployment, scalegroup, nodeType)
-			if err != nil {
-				log.Printf("Cloudify error: %s\n", err.Error())
-				return 1
-			}
-			return nodeInstancesPrint(instances)
+			return nodeInstancesPrint(
+				cl.GetDeploymentScaleGroupInstances(deployment, scalegroup, nodeType))
 		}
 	case "nodes":
 		{
@@ -149,8 +148,7 @@ func scalingGroupsOptions(args, options []string) int {
 			operFlagSet.StringVar(&scalegroup, "scalegroup", "",
 				"The unique identifier for the scalegroup")
 			operFlagSet.StringVar(&nodeType, "node-type",
-				"cloudify.nodes.ApplicationServer.kubernetes.Node",
-				"Filter by node type")
+				cloudify.KubernetesNode, "Filter by node type")
 
 			operFlagSet.Parse(options)
 
@@ -164,12 +162,8 @@ func scalingGroupsOptions(args, options []string) int {
 			}
 
 			cl := getClient()
-			nodes, err := cl.GetDeploymentScaleGroupNodes(deployment, scalegroup, nodeType)
-			if err != nil {
-				log.Printf("Cloudify error: %s\n", err.Error())
-				return 1
-			}
-			return nodesPrint(nodes)
+			return nodesPrint(
+				cl.GetDeploymentScaleGroupNodes(deployment, scalegroup, nodeType))
 		}
 	case "info":
 		{
@@ -200,7 +194,7 @@ func scalingGroupsOptions(args, options []string) int {
 			}
 			var scaleGroups = map[string]cloudify.ScalingGroup{}
 			scaleGroups[scalegroup] = *scaleGroupObj
-			return scaleGroupPrint(scaleGroups)
+			return scaleGroupPrint(scaleGroups, nil)
 		}
 	default:
 		{

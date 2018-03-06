@@ -108,7 +108,7 @@ for manage blueprints on the manager:
 	package - Create a blueprint archive. Not Implemented.
 
 	upload - Upload a blueprint [manager only].
-		cfy-go blueprints upload new-blueprint -path src/github.com/cloudify-incubator/cloudify-rest-go-client/examples/blueprint/Minimal.yaml
+		cfy-go blueprints upload new-blueprint -path <blueprint directory>/<blueprint name>.yaml
 
 	validate - Validate a blueprint. Not Implemented.
 

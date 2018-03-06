@@ -76,7 +76,12 @@ func deploymentsFilter(operFlagSet *flag.FlagSet, options []string) (*cloudify.D
 	return cl.GetDeployments(params)
 }
 
-func groupPrint(deploymentScalingGroups map[string]cloudify.NodeGroup) int {
+func groupPrint(deploymentScalingGroups map[string]cloudify.NodeGroup, err error) int {
+	if err != nil {
+		log.Printf("Cloudify error: %s\n", err.Error())
+		return 1
+	}
+
 	lines := make([][]string, len(deploymentScalingGroups))
 	var pos int
 	if deploymentScalingGroups != nil {
@@ -112,7 +117,7 @@ func deploymentsOptions(args, options []string) int {
 			}
 			for _, deployment := range deployments.Items {
 				fmt.Printf("Scale group in: %v\n", deployment.ID)
-				scaleGroupPrint(deployment.ScalingGroups)
+				scaleGroupPrint(deployment.ScalingGroups, nil)
 			}
 			fmt.Printf("Showed %d+%d/%d results. Use offset/size for get more.\n",
 				deployments.Metadata.Pagination.Offset, len(deployments.Items),
@@ -128,7 +133,7 @@ func deploymentsOptions(args, options []string) int {
 			}
 			for _, deployment := range deployments.Items {
 				fmt.Printf("Node Group in: %v\n", deployment.ID)
-				groupPrint(deployment.Groups)
+				groupPrint(deployment.Groups, nil)
 			}
 			fmt.Printf("Showed %d+%d/%d results. Use offset/size for get more.\n",
 				deployments.Metadata.Pagination.Offset, len(deployments.Items),
