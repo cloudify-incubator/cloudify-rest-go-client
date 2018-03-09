@@ -69,12 +69,18 @@ func basicOptions(name string) *flag.FlagSet {
 	return commonFlagSet
 }
 
-func getClient() *cloudify.Client {
+/* getQuietClient - return client without any outputs */
+func getQuietClient() *cloudify.Client {
 	err := cloudify.ValidateBaseConnection(cloudConfig)
 	if err != nil {
 		log.Printf("Possible issues with config: %s\n", err.Error())
 	}
-	cl := cloudify.NewClient(cloudConfig)
+	return cloudify.NewClient(cloudConfig)
+}
+
+/* getClient - return client that can show additional information for user */
+func getClient() *cloudify.Client {
+	cl := getQuietClient()
 	fmt.Printf("Manager: %v \n", cl.Host)
 	fmt.Printf("Api Version: %v\n", cl.GetAPIVersion())
 	return cl
@@ -169,7 +175,7 @@ func main() {
 		}
 	case "kubernetes":
 		{
-			os.Exit(kubernetesOptions(args, options))
+			os.Exit(KubernetesOptions(args, options))
 		}
 	case "tenants":
 		{
