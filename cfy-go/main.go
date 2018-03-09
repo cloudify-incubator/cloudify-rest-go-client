@@ -23,6 +23,7 @@ import (
 	utils "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify/utils"
 	"log"
 	"os"
+	"strings"
 )
 
 var cloudConfig cloudify.ClientConfig
@@ -98,6 +99,28 @@ func parsePagination(operFlagSet *flag.FlagSet, options []string) map[string]str
 	params["_offset"] = fmt.Sprintf("%d", pageOffset)
 
 	return params
+}
+
+//CommandInfo - storage for command name and callback
+type CommandInfo struct {
+	CommandName string
+	Callback    func(operFlagSet *flag.FlagSet, args, options []string) int
+}
+
+//ParseCalls - run call from list by value in args
+func ParseCalls(calls []CommandInfo, argsLength int, args, options []string) int {
+	var commands = []string{}
+	for _, call := range calls {
+		if len(args) >= argsLength {
+			if call.CommandName == args[argsLength-1] {
+				operFlagSet := basicOptions(strings.Join(args[1:argsLength], " "))
+				return call.Callback(operFlagSet, args, options)
+			}
+		}
+		commands = append(commands, call.CommandName)
+	}
+	fmt.Println("Subcommand " + strings.Join(commands, ", ") + " is required")
+	return 1
 }
 
 var versionString = "0.3"

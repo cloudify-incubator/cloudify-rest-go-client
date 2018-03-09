@@ -103,7 +103,7 @@ func (cl *Client) UploadBlueprint(blueprintID, path string) (*BlueprintGet, erro
 
 	var blueprint BlueprintGet
 
-	err := cl.PutZip("blueprints/"+blueprintID+"?application_file_name="+nameFile, dirPath, &blueprint)
+	err := cl.PutZip("blueprints/"+blueprintID+"?application_file_name="+nameFile, []string{dirPath}, &blueprint)
 	if err != nil {
 		return nil, err
 	}

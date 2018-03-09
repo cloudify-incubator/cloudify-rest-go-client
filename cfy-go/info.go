@@ -34,6 +34,7 @@ status - Show manager status [manager only].
 package main
 
 import (
+	"flag"
 	"fmt"
 	cloudify "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify"
 	utils "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify/utils"
@@ -195,53 +196,48 @@ func runChecks(params map[string]string) int {
 	return 0
 }
 
-func optionsToClient(command string, options []string) *cloudify.Client {
-	operFlagSet := basicOptions(command)
+func optionsToClient(operFlagSet *flag.FlagSet, options []string) *cloudify.Client {
 	operFlagSet.Parse(options)
 	cl := getClient()
 	return cl
 }
 
+func stateInfoCall(operFlagSet *flag.FlagSet, args, options []string) int {
+	cl := optionsToClient(operFlagSet, options)
+	return servicesPrint(cl.GetStatus())
+}
+
+func versionInfoCall(operFlagSet *flag.FlagSet, args, options []string) int {
+	cl := optionsToClient(operFlagSet, options)
+	return versionPrint(cl.GetVersion())
+}
+
+func diagInfoCall(operFlagSet *flag.FlagSet, args, options []string) int {
+	var deployment string
+	operFlagSet.StringVar(&deployment, "deployment", "",
+		"The unique identifier for the deployment")
+
+	operFlagSet.Parse(options)
+	var params = map[string]string{}
+
+	if deployment != "" {
+		params["deployment_id"] = deployment
+	}
+
+	return runChecks(params)
+}
+
 func infoOptions(args, options []string) int {
-	defaultError := "state/version/diag subcommand is required"
+	var pluginsCalls = []CommandInfo{{
+		CommandName: "state",
+		Callback:    stateInfoCall,
+	}, {
+		CommandName: "version",
+		Callback:    versionInfoCall,
+	}, {
+		CommandName: "diag",
+		Callback:    diagInfoCall,
+	}}
 
-	if len(args) < 3 {
-		fmt.Println(defaultError)
-		return 1
-	}
-
-	switch args[2] {
-	case "state":
-		{
-			cl := optionsToClient("status state", options)
-			return servicesPrint(cl.GetStatus())
-		}
-	case "version":
-		{
-			cl := optionsToClient("status version", options)
-			return versionPrint(cl.GetVersion())
-		}
-	case "diag":
-		{
-			var deployment string
-			operFlagSet := basicOptions("status diag")
-			operFlagSet.StringVar(&deployment, "deployment", "",
-				"The unique identifier for the deployment")
-
-			operFlagSet.Parse(options)
-			var params = map[string]string{}
-
-			if deployment != "" {
-				params["deployment_id"] = deployment
-			}
-
-			return runChecks(params)
-		}
-	default:
-		{
-			fmt.Println(defaultError)
-			return 1
-		}
-	}
-	return 0
+	return ParseCalls(pluginsCalls, 3, args, options)
 }

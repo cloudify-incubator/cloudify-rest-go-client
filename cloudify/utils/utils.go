@@ -95,40 +95,72 @@ func CliArgumentsList(osArgs []string) (arguments []string, options []string) {
 	return osArgs, []string{}
 }
 
+//ZipAttachFile - attach file to zip
+func ZipAttachFile(w *zip.Writer, zipFileName, fullPath string) error {
+	f, errCreate := w.Create(zipFileName)
+	if errCreate != nil {
+		return errCreate
+	}
+
+	content, errRead := ioutil.ReadFile(fullPath)
+	if errRead != nil {
+		return errRead
+	}
+
+	_, errWrite := f.Write(content)
+	if errWrite != nil {
+		return errWrite
+	}
+	log.Printf("Attached: %s", zipFileName)
+	return nil
+}
+
+//ZipAttachDir - attach directory to zip archive
+func ZipAttachDir(w *zip.Writer, currentPath string) error {
+	var cleanedup = currentPath
+	if currentPath[len(currentPath)-1:] == "/" {
+		cleanedup = currentPath[:len(currentPath)-1]
+	}
+	dirName, _ := filepath.Split(cleanedup)
+
+	log.Printf("Looking into %s", currentPath)
+	errWalk := filepath.Walk(currentPath, func(path string, f os.FileInfo, err error) error {
+		if f.Mode().IsRegular() {
+			return ZipAttachFile(w, path[len(dirName):], path)
+		}
+		return nil
+	})
+
+	return errWalk
+}
+
 //DirZipArchive - create archive from directory and return as bytes array
-func DirZipArchive(parentDir string) ([]byte, error) {
+func DirZipArchive(paths []string) ([]byte, error) {
 	// Create a buffer to write our archive to.
 	buf := new(bytes.Buffer)
 
 	// Create a new zip archive.
 	w := zip.NewWriter(buf)
 
-	log.Printf("Looking into %s", parentDir)
-	errWalk := filepath.Walk(parentDir, func(path string, f os.FileInfo, err error) error {
-		if !f.IsDir() {
-			f, errCreate := w.Create("parent/" + path[len(parentDir):])
-			if errCreate != nil {
-				return errCreate
-			}
-
-			content, errRead := ioutil.ReadFile(path)
-			if errRead != nil {
-				return errRead
-			}
-
-			_, errWrite := f.Write(content)
-			if errWrite != nil {
-				return errWrite
-			}
-			log.Printf("Attached: %s", path[len(parentDir):])
+	for _, currentPath := range paths {
+		info, err := os.Lstat(currentPath)
+		if err != nil {
+			return nil, err
 		}
-		return nil
-	})
 
-	if errWalk != nil {
-		return nil, errWalk
+		if info.IsDir() {
+			err := ZipAttachDir(w, currentPath)
+			if err != nil {
+				return nil, err
+			}
+		} else if info.Mode().IsRegular() {
+			_, file := filepath.Split(currentPath)
+			err := ZipAttachFile(w, file, currentPath)
+			if err != nil {
+				return nil, err
+			}
+		}
 	}
-
 	// Make sure to check the error on Close.
 	errZip := w.Close()
 	if errZip != nil {
