@@ -37,58 +37,51 @@ plugins - Handle plugins on the manager
 package main
 
 import (
+	"flag"
 	"fmt"
 	utils "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify/utils"
 	"log"
 )
 
-func pluginsOptions(args, options []string) int {
-	defaultError := "list subcommand is required"
+func listPluginsCall(operFlagSet *flag.FlagSet, args, options []string) int {
+	params := parsePagination(operFlagSet, options)
 
-	if len(args) < 3 {
-		fmt.Println(defaultError)
+	cl := getClient()
+	plugins, err := cl.GetPlugins(params)
+	if err != nil {
+		log.Printf("Cloudify error: %s", err.Error())
 		return 1
 	}
-
-	switch args[2] {
-	case "list":
-		{
-			operFlagSet := basicOptions("plugins list")
-			params := parsePagination(operFlagSet, options)
-
-			cl := getClient()
-			plugins, err := cl.GetPlugins(params)
-			if err != nil {
-				log.Printf("Cloudify error: %s", err.Error())
-				return 1
-			}
-			lines := make([][]string, len(plugins.Items))
-			for pos, plugin := range plugins.Items {
-				lines[pos] = make([]string, 9)
-				lines[pos][0] = plugin.ID
-				lines[pos][1] = plugin.PackageName
-				lines[pos][2] = plugin.PackageVersion
-				lines[pos][3] = plugin.Distribution
-				lines[pos][4] = plugin.SupportedPlatform
-				lines[pos][5] = plugin.DistributionRelease
-				lines[pos][6] = plugin.UploadedAt
-				lines[pos][7] = plugin.Tenant
-				lines[pos][8] = plugin.CreatedBy
-			}
-			utils.PrintTable([]string{
-				"Id", "Package name", "Package version", "Distribution",
-				"Supported platform", "Distribution release", "Uploaded at",
-				"Tenant", "Created by",
-			}, lines)
-			fmt.Printf("Showed %d+%d/%d results. Use offset/size for get more.\n",
-				plugins.Metadata.Pagination.Offset, len(plugins.Items),
-				plugins.Metadata.Pagination.Total)
-		}
-	default:
-		{
-			fmt.Println(defaultError)
-			return 1
-		}
+	lines := make([][]string, len(plugins.Items))
+	for pos, plugin := range plugins.Items {
+		lines[pos] = make([]string, 9)
+		lines[pos][0] = plugin.ID
+		lines[pos][1] = plugin.PackageName
+		lines[pos][2] = plugin.PackageVersion
+		lines[pos][3] = plugin.Distribution
+		lines[pos][4] = plugin.SupportedPlatform
+		lines[pos][5] = plugin.DistributionRelease
+		lines[pos][6] = plugin.UploadedAt
+		lines[pos][7] = plugin.Tenant
+		lines[pos][8] = plugin.CreatedBy
 	}
+	utils.PrintTable([]string{
+		"Id", "Package name", "Package version", "Distribution",
+		"Supported platform", "Distribution release", "Uploaded at",
+		"Tenant", "Created by",
+	}, lines)
+	fmt.Printf("Showed %d+%d/%d results. Use offset/size for get more.\n",
+		plugins.Metadata.Pagination.Offset, len(plugins.Items),
+		plugins.Metadata.Pagination.Total)
+
 	return 0
+}
+
+func pluginsOptions(args, options []string) int {
+	var pluginsCalls = []CommandInfo{{
+		CommandName: "list",
+		Callback:    listPluginsCall,
+	}}
+
+	return ParseCalls(pluginsCalls, 3, args, options)
 }

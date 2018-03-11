@@ -23,6 +23,7 @@ import (
 	utils "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify/utils"
 	"log"
 	"os"
+	"strings"
 )
 
 var cloudConfig cloudify.ClientConfig
@@ -69,12 +70,18 @@ func basicOptions(name string) *flag.FlagSet {
 	return commonFlagSet
 }
 
-func getClient() *cloudify.Client {
+/* getQuietClient - return client without any outputs */
+func getQuietClient() *cloudify.Client {
 	err := cloudify.ValidateBaseConnection(cloudConfig)
 	if err != nil {
 		log.Printf("Possible issues with config: %s\n", err.Error())
 	}
-	cl := cloudify.NewClient(cloudConfig)
+	return cloudify.NewClient(cloudConfig)
+}
+
+/* getClient - return client that can show additional information for user */
+func getClient() *cloudify.Client {
+	cl := getQuietClient()
 	fmt.Printf("Manager: %v \n", cl.Host)
 	fmt.Printf("Api Version: %v\n", cl.GetAPIVersion())
 	return cl
@@ -92,6 +99,28 @@ func parsePagination(operFlagSet *flag.FlagSet, options []string) map[string]str
 	params["_offset"] = fmt.Sprintf("%d", pageOffset)
 
 	return params
+}
+
+//CommandInfo - storage for command name and callback
+type CommandInfo struct {
+	CommandName string
+	Callback    func(operFlagSet *flag.FlagSet, args, options []string) int
+}
+
+//ParseCalls - run call from list by value in args
+func ParseCalls(calls []CommandInfo, argsLength int, args, options []string) int {
+	var commands = []string{}
+	for _, call := range calls {
+		if len(args) >= argsLength {
+			if call.CommandName == args[argsLength-1] {
+				operFlagSet := basicOptions(strings.Join(args[1:argsLength], " "))
+				return call.Callback(operFlagSet, args, options)
+			}
+		}
+		commands = append(commands, call.CommandName)
+	}
+	fmt.Println("Subcommand " + strings.Join(commands, ", ") + " is required")
+	return 1
 }
 
 var versionString = "0.3"
@@ -169,7 +198,7 @@ func main() {
 		}
 	case "kubernetes":
 		{
-			os.Exit(kubernetesOptions(args, options))
+			os.Exit(KubernetesOptions(args, options))
 		}
 	case "tenants":
 		{

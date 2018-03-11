@@ -38,7 +38,8 @@ import (
 	kubernetes "github.com/cloudify-incubator/cloudify-rest-go-client/kubernetes"
 )
 
-func kubernetesOptions(args, options []string) int {
+//KubernetesOptions implementation of kubernetes subcommand
+func KubernetesOptions(args, options []string) int {
 	defaultError := "init/mount/unmount subcommand is required"
 
 	if len(args) < 3 {
@@ -58,7 +59,7 @@ func kubernetesOptions(args, options []string) int {
 
 	operFlagSet.Parse(options)
 
-	cl := getClient()
+	cl := getQuietClient()
 
 	if kubernetes.Run(cl, args[2:], deployment, instance) != 0 {
 		fmt.Println(defaultError)

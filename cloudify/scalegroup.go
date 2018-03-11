@@ -145,12 +145,10 @@ func (cl *Client) GetNodeInstancesWithType(params map[string]string, nodeType st
 
 	instances := []NodeInstance{}
 	for _, nodeInstance := range nodeInstances.Items {
-		if !utils.InList(nodesWithCorrectType, nodeInstance.NodeID) {
-			continue
+		if utils.InList(nodesWithCorrectType, nodeInstance.NodeID) {
+			// add instance to list
+			instances = append(instances, nodeInstance)
 		}
-
-		// add instance to list
-		instances = append(instances, nodeInstance)
 	}
 
 	return cl.listNodeInstanceToNodeInstances(instances), nil
@@ -210,12 +208,10 @@ func (cl *Client) GetStartedNodeInstancesWithType(params map[string]string, node
 
 		// check type
 		for _, nodeInstance := range nodeInstances.Items {
-			if !utils.InList(nodesWithCorrectType, nodeInstance.NodeID) {
-				continue
+			if utils.InList(nodesWithCorrectType, nodeInstance.NodeID) {
+				// add instance to list
+				instances = append(instances, nodeInstance)
 			}
-
-			// add instance to list
-			instances = append(instances, nodeInstance)
 		}
 	}
 

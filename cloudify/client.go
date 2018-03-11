@@ -150,8 +150,8 @@ func (cl *Client) PutBinary(url string, data []byte, output rest.MessageInterfac
 }
 
 //PutZip - store/send path as archive to manger without marshaling, response will be unmarshaled
-func (cl *Client) PutZip(url, path string, output rest.MessageInterface) error {
-	data, err := utils.DirZipArchive(path)
+func (cl *Client) PutZip(url string, paths []string, output rest.MessageInterface) error {
+	data, err := utils.DirZipArchive(paths)
 	if err != nil {
 		return err
 	}
