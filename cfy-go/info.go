@@ -181,7 +181,7 @@ func runChecks(params map[string]string) int {
 	fmt.Println("* Check properties in kubernetes loadbalancers.")
 	fmt.Println("  Recheck by 'cfy-go node-instances loadbalancer'")
 	res = instancesChecks(cl, params, cloudify.KubernetesLoadBalancer,
-		[]string{"ip", "public_ip", "Cluster", "Namespace", "Service"})
+		[]string{"ip", "public_ip", "proxy_cluster", "proxy_namespace", "proxy_name"})
 	if res != 0 {
 		return res
 	}
