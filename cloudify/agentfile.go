@@ -83,5 +83,9 @@ func ValidateConnectionTenant(cloudConfig ClientConfig) error {
 		return fmt.Errorf("You have empty tenant")
 	}
 
+	if len(cloudConfig.DeploymentsFile) == 0 {
+		return fmt.Errorf("You have empty deployments")
+	}
+
 	return nil
 }

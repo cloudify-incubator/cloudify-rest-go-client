@@ -38,7 +38,7 @@ deployments - Handle deployments on the Manager
 
 	outputs - Show deployment outputs [manager only]
 
-		cfy-go deployments inputs -deployment deployment
+		cfy-go deployments outputs -deployment deployment
 
 	update - Update a deployment [manager only]. Not Implemented.
 

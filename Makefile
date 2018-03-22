@@ -86,7 +86,8 @@ CLOUDIFYCOMMON := \
 	src/${PACKAGEPATH}/cloudify/executions.go \
 	src/${PACKAGEPATH}/cloudify/deployments.go \
 	src/${PACKAGEPATH}/cloudify/service.go \
-	src/${PACKAGEPATH}/cloudify/tenants.go
+	src/${PACKAGEPATH}/cloudify/tenants.go \
+	src/${PACKAGEPATH}/cloudify/providerdeployment.go
 
 pkg/linux_amd64/${PACKAGEPATH}/cloudify.a: ${CLOUDIFYCOMMON} pkg/linux_amd64/${PACKAGEPATH}/cloudify/rest.a
 	$(call colorecho,"Build: ",$@)

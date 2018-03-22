@@ -48,7 +48,7 @@ func basicOptions(name string) *flag.FlagSet {
 
 	var defaultPassword = os.Getenv("CFY_PASSWORD")
 	if defaultPassword == "" {
-		defaultPassword = "secret"
+		defaultPassword = "admin"
 	}
 	commonFlagSet.StringVar(&cloudConfig.Password, "password", defaultPassword,
 		"Manager user password or CFY_PASSWORD in env")

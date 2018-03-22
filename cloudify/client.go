@@ -31,6 +31,7 @@ type ClientConfig struct {
 	Password  string `json:"password,omitempty"`
 	Tenant    string `json:"tenant,omitempty"`
 	AgentFile string `json:"agent,omitempty"`
+	DeploymentsFile string `json:"deployment,omitempty"`
 	Debug     bool   `json:"debug,omitempty"`
 }
 

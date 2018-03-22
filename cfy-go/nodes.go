@@ -44,6 +44,7 @@ import (
 	cloudify "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify"
 	utils "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify/utils"
 	"log"
+	"os"
 )
 
 func nodesGroupPrint(nodes *cloudify.NodeWithGroups, err error) int {
@@ -127,18 +128,21 @@ func nodesOptions(args, options []string) int {
 			var deployment string
 			var nodeType string
 			var hostID string
+
 			operFlagSet.StringVar(&node, "node", "",
 				"The unique identifier for the node")
 			operFlagSet.StringVar(&deployment, "deployment", "",
 				"The unique identifier for the deployment")
-			operFlagSet.StringVar(&nodeType, "node-type",
-				cloudify.KubernetesNode, "Filter by node type")
 			operFlagSet.StringVar(&hostID, "host-id", "",
 				"Filter by hostID")
 
 			operFlagSet.Parse(options)
 
 			var params = map[string]string{}
+			nodeType = os.Getenv("CFY_K8S_NODE_TYPE")
+			if nodeType == "" {
+				nodeType = cloudify.KubernetesNode
+			}
 
 			if node != "" {
 				params["id"] = node

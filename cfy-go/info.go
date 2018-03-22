@@ -27,18 +27,28 @@ status - Show manager status [manager only].
 
 		cfy-go status version
 
-	Kubernetes: Show diagnostic for current installation
+	Kubernetes: Show diagnostic for current installation [deployment-id is optional]
+		Show diagnostic for all current installation
+			cfy-go status diag [-deployment deployment-id]
+			cfy-go status diag -all [-deployment deployment-id]
 
-		cfy-go status diag
+		Show diagnostic only for Kubernetes nodes
+			cfy-go status diag -node [-deployment deployment-id]
+
+		Show diagnostic only for Kubernetes load balancer
+			cfy-go status diag -load [-deployment deployment-id]
+
+
 */
 package main
 
 import (
 	"flag"
 	"fmt"
-	cloudify "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify"
-	utils "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify/utils"
+	"github.com/cloudify-incubator/cloudify-rest-go-client/cloudify"
+	"github.com/cloudify-incubator/cloudify-rest-go-client/cloudify/utils"
 	"log"
+	"os"
 )
 
 func servicesPrint(stat *cloudify.Status, err error) int {
@@ -157,6 +167,50 @@ func groupInstancesChecks(cl *cloudify.Client, params map[string]string) int {
 }
 
 func runChecks(params map[string]string) int {
+	res := runChecksStatus() != 1 && runChecksNode(params) != 1 && runChecksLoad(params) != 1 && runChecksScaleGroup(params) != 1
+	if res {
+		return 0
+	}
+	return 1
+}
+
+func runChecksNode(params map[string]string) int {
+	cl := getClient()
+	var res int
+	var nodeType = os.Getenv("CFY_K8S_NODE_TYPE")
+	if nodeType == "" {
+		nodeType = cloudify.KubernetesNode
+	}
+
+	fmt.Println("* Check properties in kubernetes instances.")
+	fmt.Println("  Recheck by 'cfy-go node-instances started'")
+	res = instancesChecks(cl, params, nodeType,
+		[]string{"ip", "public_ip"})
+	if res != 0 {
+		return res
+	}
+	return 0
+}
+
+func runChecksLoad(params map[string]string) int {
+	cl := getClient()
+	var res int
+	var loadType = os.Getenv("CFY_K8S_LOAD_TYPE")
+	if loadType == "" {
+		loadType = cloudify.KubernetesLoadBalancer
+	}
+
+	fmt.Println("* Check properties in kubernetes loadbalancers.")
+	fmt.Println("  Recheck by 'cfy-go node-instances loadbalancer'")
+	res = instancesChecks(cl, params, loadType,
+		[]string{"ip", "public_ip", "proxy_cluster", "proxy_namespace", "proxy_name"})
+	if res != 0 {
+		return res
+	}
+	return 0
+}
+
+func runChecksStatus() int {
 	cl := getClient()
 	var res int
 
@@ -166,22 +220,12 @@ func runChecks(params map[string]string) int {
 	if res != 0 {
 		return res
 	}
+	return 0
+}
 
-	fmt.Println("* Check properties in kubernetes instances.")
-	fmt.Println("  Recheck by 'cfy-go node-instances started'")
-	res = instancesChecks(cl, params, cloudify.KubernetesNode,
-		[]string{"ip", "public_ip"})
-	if res != 0 {
-		return res
-	}
-
-	fmt.Println("* Check properties in kubernetes loadbalancers.")
-	fmt.Println("  Recheck by 'cfy-go node-instances loadbalancer'")
-	res = instancesChecks(cl, params, cloudify.KubernetesLoadBalancer,
-		[]string{"ip", "public_ip", "proxy_cluster", "proxy_namespace", "proxy_name"})
-	if res != 0 {
-		return res
-	}
+func runChecksScaleGroup(params map[string]string) int {
+	cl := getClient()
+	var res int
 
 	fmt.Println("* Check scale group.")
 	fmt.Println("  Recheck by 'cfy-go nodes group'")
@@ -189,7 +233,6 @@ func runChecks(params map[string]string) int {
 	if res != 0 {
 		return res
 	}
-
 	return 0
 }
 
@@ -211,8 +254,14 @@ func versionInfoCall(operFlagSet *flag.FlagSet, args, options []string) int {
 
 func diagInfoCall(operFlagSet *flag.FlagSet, args, options []string) int {
 	var deployment string
-	operFlagSet.StringVar(&deployment, "deployment", "",
-		"The unique identifier for the deployment")
+	var diagAll bool
+	var diagNode bool
+	var diagLoad bool
+
+	operFlagSet.StringVar(&deployment, "deployment", "", "The unique identifier for the deployment")
+	operFlagSet.BoolVar(&diagAll, "all", false, "Flag to check if need to diagnose all nodes (node + load) types")
+	operFlagSet.BoolVar(&diagNode, "node", false, "Flag to check if need to diagnose only nodes types")
+	operFlagSet.BoolVar(&diagLoad, "load", false, "Flag to check if need to diagnose only load node types")
 
 	operFlagSet.Parse(options)
 	var params = map[string]string{}
@@ -221,7 +270,15 @@ func diagInfoCall(operFlagSet *flag.FlagSet, args, options []string) int {
 		params["deployment_id"] = deployment
 	}
 
-	return runChecks(params)
+	if diagAll {
+		return runChecks(params)
+	} else if diagNode {
+		return runChecksNode(params)
+	} else if diagLoad {
+		return runChecksLoad(params)
+	} else {
+		return runChecks(params)
+	}
 }
 
 func infoOptions(args, options []string) int {

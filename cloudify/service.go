@@ -18,7 +18,6 @@ package cloudify
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"log"
 	"os"
@@ -27,7 +26,8 @@ import (
 // ServiceConfig - settings for connect to cloudify
 type ServiceConfig struct {
 	ClientConfig
-	Deployment string `json:"deployment,omitempty"`
+	// TODO Add support for dynamic type from proxy deployment (load + node)
+	//NodeType string `json:"nodeType,omitempty"`
 }
 
 // ServiceClientInit - common functionality for load config for service
@@ -38,6 +38,11 @@ func ServiceClientInit(config io.Reader) (*ServiceConfig, error) {
 	cloudConfig.Password = os.Getenv("CFY_PASSWORD")
 	cloudConfig.Tenant = os.Getenv("CFY_TENANT")
 	cloudConfig.AgentFile = os.Getenv("CFY_AGENT")
+	cloudConfig.DeploymentsFile = os.Getenv("CFY_DEPLOYMENTS")
+
+	// TODO Add support
+	//cloudConfig.NodeType = os.Getenv("CFY_NODE_TYPE")
+
 	if config != nil {
 		err := json.NewDecoder(config).Decode(&cloudConfig)
 		if err != nil {
@@ -48,10 +53,6 @@ func ServiceClientInit(config io.Reader) (*ServiceConfig, error) {
 	configErr := ValidateConnectionTenant(cloudConfig.ClientConfig)
 	if configErr != nil {
 		return nil, configErr
-	}
-
-	if len(cloudConfig.Deployment) == 0 {
-		return nil, fmt.Errorf("You have empty deployment")
 	}
 
 	log.Printf("Config %+v", cloudConfig)
