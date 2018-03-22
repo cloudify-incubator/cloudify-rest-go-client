@@ -19,7 +19,7 @@ package cloudify
 import (
 	"encoding/json"
 	rest "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify/rest"
-)
+	)
 
 // Workflow - information about workflow
 type Workflow struct {
