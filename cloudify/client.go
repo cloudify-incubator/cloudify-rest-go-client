@@ -126,9 +126,15 @@ func (cl *Client) GetBinary(url, outputPath string) error {
 	return nil
 }
 
-//binaryPut - store/send object to manger without marshaling, response will be unmarshaled
-func binaryPut(cl *Client, url string, input []byte, inputType string, output rest.MessageInterface) error {
-	body, err := cl.restCl().Put(url, inputType, input)
+//binarySend - store/send object to manger without marshaling, response will be unmarshaled
+func binarySend(cl *Client, usePut bool, url string, input []byte, inputType string, output rest.MessageInterface) error {
+	var body []byte
+	var err error
+	if usePut {
+		body, err = cl.restCl().Put(url, inputType, input)
+	} else {
+		body, err = cl.restCl().Post(url, inputType, input)
+	}
 	if err != nil {
 		return err
 	}
@@ -146,7 +152,7 @@ func binaryPut(cl *Client, url string, input []byte, inputType string, output re
 
 //PutBinary - store/send binary object to manger without marshaling, response will be unmarshaled
 func (cl *Client) PutBinary(url string, data []byte, output rest.MessageInterface) error {
-	return binaryPut(cl, url, data, rest.DataContentType, output)
+	return binarySend(cl, true, url, data, rest.DataContentType, output)
 }
 
 //PutZip - store/send path as archive to manger without marshaling, response will be unmarshaled
@@ -156,7 +162,17 @@ func (cl *Client) PutZip(url string, paths []string, output rest.MessageInterfac
 		return err
 	}
 
-	return binaryPut(cl, url, data, rest.DataContentType, output)
+	return binarySend(cl, true, url, data, rest.DataContentType, output)
+}
+
+//PostZip - store/send path as archive to manger without marshaling, response will be unmarshaled
+func (cl *Client) PostZip(url string, paths []string, output rest.MessageInterface) error {
+	data, err := utils.DirZipArchive(paths)
+	if err != nil {
+		return err
+	}
+
+	return binarySend(cl, false, url, data, rest.DataContentType, output)
 }
 
 //Put - send object to manager(mainly replece old one)
@@ -166,7 +182,7 @@ func (cl *Client) Put(url string, input interface{}, output rest.MessageInterfac
 		return err
 	}
 
-	return binaryPut(cl, url, jsonData, rest.JSONContentType, output)
+	return binarySend(cl, true, url, jsonData, rest.JSONContentType, output)
 }
 
 //Post - send cloudify object to manager
@@ -176,7 +192,7 @@ func (cl *Client) Post(url string, input interface{}, output rest.MessageInterfa
 		return err
 	}
 
-	body, err := cl.restCl().Post(url, jsonData)
+	body, err := cl.restCl().Post(url, rest.JSONContentType, jsonData)
 	if err != nil {
 		return err
 	}

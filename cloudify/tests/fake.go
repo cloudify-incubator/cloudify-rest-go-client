@@ -34,6 +34,7 @@ type FakeClient struct {
 
 	// post call
 	PostURL      string
+	PostType     string
 	PostData     []byte
 	PostResponse []byte
 	PostError    error
@@ -63,8 +64,9 @@ func (cl *FakeClient) Delete(url string) ([]byte, error) {
 }
 
 // Post - mimic to real post
-func (cl *FakeClient) Post(url string, data []byte) ([]byte, error) {
+func (cl *FakeClient) Post(url, providedContentType string, data []byte) ([]byte, error) {
 	cl.PostURL = url
+	cl.PostType = providedContentType
 	cl.PostData = data
 	return cl.PostResponse, cl.PostError
 }

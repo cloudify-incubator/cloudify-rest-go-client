@@ -136,12 +136,12 @@ func (r *HTTPClient) Delete(url string) ([]byte, error) {
 }
 
 // Post - http(s) post request
-func (r *HTTPClient) Post(url string, data []byte) ([]byte, error) {
+func (r *HTTPClient) Post(url, providedContentType string, data []byte) ([]byte, error) {
 	req, err := r.getRequest(url, "POST", bytes.NewBuffer(data))
 	if err != nil {
 		return []byte{}, err
 	}
-	req.Header.Set("Content-Type", JSONContentType)
+	req.Header.Set("Content-Type", providedContentType)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)

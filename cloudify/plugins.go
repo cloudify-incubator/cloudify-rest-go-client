@@ -42,6 +42,13 @@ type Plugin struct {
 	Wheels              []string `json:"wheels,omitempty"`
 }
 
+//PluginGet - Struct returned to get call with Plugin id
+type PluginGet struct {
+	// can be response from api
+	rest.BaseMessage
+	Plugin
+}
+
 // Plugins - response with list plugins
 type Plugins struct {
 	rest.BaseMessage
@@ -61,4 +68,18 @@ func (cl *Client) GetPlugins(params map[string]string) (*Plugins, error) {
 	}
 
 	return &plugins, nil
+}
+
+//UploadPlugin - upload plugin with path to plugin in filesystem
+func (cl *Client) UploadPlugin(params map[string]string, pluginPath, yamlPath string) (*PluginGet, error) {
+	var plugin PluginGet
+
+	values := cl.stringMapToURLValue(params)
+
+	err := cl.PostZip("plugins?"+values.Encode(), []string{pluginPath, yamlPath}, &plugin)
+	if err != nil {
+		return nil, err
+	}
+
+	return &plugin, nil
 }
