@@ -29,7 +29,7 @@ plugins - Handle plugins on the manager
 
 		cfy-go plugins list
 
-	upload: Upload a plugin [manager only]. Not Implemented.
+	upload: Upload a plugin [manager only].
 
 	validate: Validate a plugin. Not Implemented.
 
@@ -39,21 +39,14 @@ package main
 import (
 	"flag"
 	"fmt"
+	cloudify "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify"
 	utils "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify/utils"
 	"log"
 )
 
-func listPluginsCall(operFlagSet *flag.FlagSet, args, options []string) int {
-	params := parsePagination(operFlagSet, options)
-
-	cl := getClient()
-	plugins, err := cl.GetPlugins(params)
-	if err != nil {
-		log.Printf("Cloudify error: %s", err.Error())
-		return 1
-	}
-	lines := make([][]string, len(plugins.Items))
-	for pos, plugin := range plugins.Items {
+func printPlugins(plugins []cloudify.Plugin) {
+	lines := make([][]string, len(plugins))
+	for pos, plugin := range plugins {
 		lines[pos] = make([]string, 9)
 		lines[pos][0] = plugin.ID
 		lines[pos][1] = plugin.PackageName
@@ -70,6 +63,51 @@ func listPluginsCall(operFlagSet *flag.FlagSet, args, options []string) int {
 		"Supported platform", "Distribution release", "Uploaded at",
 		"Tenant", "Created by",
 	}, lines)
+
+}
+
+func uploadPluginsCall(operFlagSet *flag.FlagSet, args, options []string) int {
+	var pluginPath string
+	operFlagSet.StringVar(&pluginPath, "plugin-path", "",
+		"The plugin path")
+	var yamlPath string
+	operFlagSet.StringVar(&yamlPath, "yaml-path", "",
+		"The plugin yaml path")
+	var visibility string
+	operFlagSet.StringVar(&visibility, "visibility", "tenant",
+		"The plugin visibility")
+	operFlagSet.Parse(options)
+	if len(pluginPath) < 4 {
+		fmt.Println("Plugin path required")
+		return 1
+	}
+	if len(yamlPath) < 4 {
+		fmt.Println("Plugin yaml file required")
+		return 1
+	}
+
+	var params = map[string]string{}
+	params["visibility"] = visibility
+	cl := getClient()
+	plugin, err := cl.UploadPlugin(params, pluginPath, yamlPath)
+	if err != nil {
+		log.Printf("Cloudify error: %s\n", err.Error())
+		return 1
+	}
+	printPlugins([]cloudify.Plugin{plugin.Plugin})
+	return 0
+}
+
+func listPluginsCall(operFlagSet *flag.FlagSet, args, options []string) int {
+	params := parsePagination(operFlagSet, options)
+
+	cl := getClient()
+	plugins, err := cl.GetPlugins(params)
+	if err != nil {
+		log.Printf("Cloudify error: %s", err.Error())
+		return 1
+	}
+	printPlugins(plugins.Items)
 	fmt.Printf("Showed %d+%d/%d results. Use offset/size for get more.\n",
 		plugins.Metadata.Pagination.Offset, len(plugins.Items),
 		plugins.Metadata.Pagination.Total)
@@ -81,6 +119,9 @@ func pluginsOptions(args, options []string) int {
 	var pluginsCalls = []CommandInfo{{
 		CommandName: "list",
 		Callback:    listPluginsCall,
+	}, {
+		CommandName: "upload",
+		Callback:    uploadPluginsCall,
 	}}
 
 	return ParseCalls(pluginsCalls, 3, args, options)

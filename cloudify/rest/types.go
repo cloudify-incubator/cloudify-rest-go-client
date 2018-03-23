@@ -84,7 +84,7 @@ type Resource struct {
 type ConnectionOperationsInterface interface {
 	Get(url, acceptedContentType string) ([]byte, error)
 	Delete(url string) ([]byte, error)
-	Post(url string, data []byte) ([]byte, error)
+	Post(url, providedContentType string, data []byte) ([]byte, error)
 	Put(url, providedContentType string, data []byte) ([]byte, error)
 	SetDebug(bool)
 	GetDebug() bool
