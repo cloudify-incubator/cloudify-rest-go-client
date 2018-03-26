@@ -19,7 +19,9 @@ Plugins
 
 plugins - Handle plugins on the manager
 
-	delete: Delete a plugin [manager only]. Not Implemented.
+	delete: Delete a plugin [manager only].
+
+		cfy-go plugins delete -plugin-id <plugin-id>
 
 	download: Download a plugin [manager only]. Not Implemented.
 
@@ -30,6 +32,8 @@ plugins - Handle plugins on the manager
 		cfy-go plugins list
 
 	upload: Upload a plugin [manager only].
+
+		cfy-go plugins upload -host 172.16.168.176 -plugin-path <plugin-path>.wgn -yaml-path <yaml-path>.yaml
 
 	validate: Validate a plugin. Not Implemented.
 
