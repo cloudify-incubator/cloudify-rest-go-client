@@ -98,8 +98,41 @@ func uploadPluginsCall(operFlagSet *flag.FlagSet, args, options []string) int {
 	return 0
 }
 
+func deletePluginsCall(operFlagSet *flag.FlagSet, args, options []string) int {
+	var pluginID string
+	var forceParams cloudify.CallWithForce
+	operFlagSet.StringVar(&pluginID, "plugin-id", "",
+		"The unique identifier for the plugin")
+	operFlagSet.BoolVar(&forceParams.Force, "force", false,
+		"Specifies whether to force plugin deletion even if there are deployments that currently use it.")
+
+	operFlagSet.Parse(options)
+
+	if pluginID == "" {
+		fmt.Println("Plugin Id required")
+		return 1
+	}
+
+	cl := getClient()
+	plugin, err := cl.DeletePlugins(pluginID, forceParams)
+	if err != nil {
+		log.Printf("Cloudify error: %s\n", err.Error())
+		return 1
+	}
+	printPlugins([]cloudify.Plugin{plugin.Plugin})
+	return 0
+}
+
 func listPluginsCall(operFlagSet *flag.FlagSet, args, options []string) int {
+	var pluginID string
+	operFlagSet.StringVar(&pluginID, "plugin-id", "",
+		"The unique identifier for the plugin")
+
 	params := parsePagination(operFlagSet, options)
+
+	if pluginID != "" {
+		params["id"] = pluginID
+	}
 
 	cl := getClient()
 	plugins, err := cl.GetPlugins(params)
@@ -122,6 +155,9 @@ func pluginsOptions(args, options []string) int {
 	}, {
 		CommandName: "upload",
 		Callback:    uploadPluginsCall,
+	}, {
+		CommandName: "delete",
+		Callback:    deletePluginsCall,
 	}}
 
 	return ParseCalls(pluginsCalls, 3, args, options)

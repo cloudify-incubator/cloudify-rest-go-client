@@ -209,8 +209,16 @@ func (cl *Client) Post(url string, input interface{}, output rest.MessageInterfa
 }
 
 //Delete - delete cloudify object on manager
-func (cl *Client) Delete(url string, output rest.MessageInterface) error {
-	body, err := cl.restCl().Delete(url)
+func (cl *Client) Delete(url string, input interface{}, output rest.MessageInterface) error {
+	var jsonData = []byte{}
+	var err error
+	if input != nil {
+		jsonData, err = json.Marshal(input)
+		if err != nil {
+			return err
+		}
+	}
+	body, err := cl.restCl().Delete(url, rest.JSONContentType, jsonData)
 	if err != nil {
 		return err
 	}

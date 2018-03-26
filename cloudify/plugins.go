@@ -70,6 +70,18 @@ func (cl *Client) GetPlugins(params map[string]string) (*Plugins, error) {
 	return &plugins, nil
 }
 
+//DeletePlugins - delete blueprint by id
+func (cl *Client) DeletePlugins(pluginID string, params CallWithForce) (*PluginGet, error) {
+	var plugin PluginGet
+
+	err := cl.Delete("plugins/"+pluginID, params, &plugin)
+	if err != nil {
+		return nil, err
+	}
+
+	return &plugin, nil
+}
+
 //UploadPlugin - upload plugin with path to plugin in filesystem
 func (cl *Client) UploadPlugin(params map[string]string, pluginPath, yamlPath string) (*PluginGet, error) {
 	var plugin PluginGet

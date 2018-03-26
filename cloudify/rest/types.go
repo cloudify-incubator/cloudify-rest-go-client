@@ -31,6 +31,7 @@ type MessageInterface interface {
 // Check https://blog.golang.org/json-and-go for more info about json marshaling.
 type BaseMessage struct {
 	MessageInterface
+	ClStatus          int    `json:"status,omitempty"`
 	ClMessage         string `json:"message,omitempty"`
 	ClErrorCode       string `json:"error_code,omitempty"`
 	ClServerTraceback string `json:"server_traceback,omitempty"`
@@ -38,6 +39,10 @@ type BaseMessage struct {
 
 // ErrorCode - current error code if any
 func (cm *BaseMessage) ErrorCode() string {
+	if cm.ClStatus >= 400 {
+		// case when we have issues inside http calls
+		return cm.ClMessage
+	}
 	return cm.ClErrorCode
 }
 
@@ -83,7 +88,7 @@ type Resource struct {
 // For now implemented only http/https version
 type ConnectionOperationsInterface interface {
 	Get(url, acceptedContentType string) ([]byte, error)
-	Delete(url string) ([]byte, error)
+	Delete(url, providedContentType string, data []byte) ([]byte, error)
 	Post(url, providedContentType string, data []byte) ([]byte, error)
 	Put(url, providedContentType string, data []byte) ([]byte, error)
 	SetDebug(bool)

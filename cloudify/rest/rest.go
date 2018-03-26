@@ -52,7 +52,7 @@ func (r *HTTPClient) debugLogf(format string, v ...interface{}) {
 
 // getRequest - create new request by params
 func (r *HTTPClient) getRequest(url, method string, body io.Reader) (*http.Request, error) {
-	r.debugLogf("Use: %v:%v@%v#%s\n", r.user, r.password, r.restURL+url, r.tenant)
+	r.debugLogf("Use: %v %v:%v@%v#%s\n", method, r.user, r.password, r.restURL+url, r.tenant)
 
 	var authString string
 	authString = r.user + ":" + r.password
@@ -105,11 +105,16 @@ func (r *HTTPClient) Get(url, acceptedContentType string) ([]byte, error) {
 }
 
 // Delete - http(s) delete request
-func (r *HTTPClient) Delete(url string) ([]byte, error) {
-	req, err := r.getRequest(url, "DELETE", nil)
+func (r *HTTPClient) Delete(url, providedContentType string, data []byte) ([]byte, error) {
+	var input io.Reader
+	if len(data) > 0 {
+		input = bytes.NewBuffer(data)
+	}
+	req, err := r.getRequest(url, "DELETE", input)
 	if err != nil {
 		return []byte{}, err
 	}
+	req.Header.Set("Content-Type", providedContentType)
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -119,15 +124,15 @@ func (r *HTTPClient) Delete(url string) ([]byte, error) {
 
 	defer resp.Body.Close()
 
-	contentType := resp.Header.Get("Content-Type")
-
-	if contentType[:len(JSONContentType)] != JSONContentType {
-		return []byte{}, fmt.Errorf("Wrong content type: %+v", contentType)
-	}
-
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return []byte{}, err
+	}
+
+	contentType := resp.Header.Get("Content-Type")
+
+	if len(contentType) < len(JSONContentType) || contentType[:len(JSONContentType)] != JSONContentType {
+		return []byte{}, fmt.Errorf("Wrong content type: %+v", contentType)
 	}
 
 	r.debugLogf("Response %s\n", string(body))
@@ -153,7 +158,7 @@ func (r *HTTPClient) Post(url, providedContentType string, data []byte) ([]byte,
 
 	contentType := resp.Header.Get("Content-Type")
 
-	if contentType[:len(JSONContentType)] != JSONContentType {
+	if len(contentType) < len(JSONContentType) || contentType[:len(JSONContentType)] != JSONContentType {
 		return []byte{}, fmt.Errorf("Wrong content type: %+v", contentType)
 	}
 
@@ -185,7 +190,7 @@ func (r *HTTPClient) Put(url, providedContentType string, data []byte) ([]byte, 
 
 	contentType := resp.Header.Get("Content-Type")
 
-	if contentType[:len(JSONContentType)] != JSONContentType {
+	if len(contentType) < len(JSONContentType) || contentType[:len(JSONContentType)] != JSONContentType {
 		return []byte{}, fmt.Errorf("Wrong content type: %+v", contentType)
 	}
 
