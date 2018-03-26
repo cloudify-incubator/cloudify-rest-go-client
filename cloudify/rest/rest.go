@@ -114,7 +114,9 @@ func (r *HTTPClient) Delete(url, providedContentType string, data []byte) ([]byt
 	if err != nil {
 		return []byte{}, err
 	}
-	req.Header.Set("Content-Type", providedContentType)
+	if input != nil {
+		req.Header.Set("Content-Type", providedContentType)
+	}
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
