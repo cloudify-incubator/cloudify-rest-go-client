@@ -110,6 +110,30 @@ func getDeployment(commandName string, options []string) (*cloudify.Deployment, 
 	return &deployments.Items[0], nil
 }
 
+func printDeployments(deployments []cloudify.Deployment) {
+	lines := make([][]string, len(deployments))
+	for pos, deployment := range deployments {
+		var scaleGroups = []string{}
+		if deployment.ScalingGroups != nil {
+			for groupName := range deployment.ScalingGroups {
+				scaleGroups = append(scaleGroups, groupName)
+			}
+		}
+		lines[pos] = make([]string, 7)
+		lines[pos][0] = deployment.ID
+		lines[pos][1] = deployment.BlueprintID
+		lines[pos][2] = deployment.CreatedAt
+		lines[pos][3] = deployment.UpdatedAt
+		lines[pos][4] = deployment.Tenant
+		lines[pos][5] = deployment.CreatedBy
+		lines[pos][6] = strings.Join(scaleGroups, ", ")
+	}
+	utils.PrintTable([]string{
+		"id", "blueprint_id", "created_at", "updated_at",
+		"tenant_name", "created_by", "scale_groups",
+	}, lines)
+}
+
 func deploymentsOptions(args, options []string) int {
 	defaultError := "list/create/delete/inputs/outputs/groups/scaling-groups subcommand is required"
 
@@ -156,27 +180,7 @@ func deploymentsOptions(args, options []string) int {
 				log.Printf("Cloudify error: %s\n", err.Error())
 				return 1
 			}
-			lines := make([][]string, len(deployments.Items))
-			for pos, deployment := range deployments.Items {
-				var scaleGroups = []string{}
-				if deployment.ScalingGroups != nil {
-					for groupName := range deployment.ScalingGroups {
-						scaleGroups = append(scaleGroups, groupName)
-					}
-				}
-				lines[pos] = make([]string, 7)
-				lines[pos][0] = deployment.ID
-				lines[pos][1] = deployment.BlueprintID
-				lines[pos][2] = deployment.CreatedAt
-				lines[pos][3] = deployment.UpdatedAt
-				lines[pos][4] = deployment.Tenant
-				lines[pos][5] = deployment.CreatedBy
-				lines[pos][6] = strings.Join(scaleGroups, ", ")
-			}
-			utils.PrintTable([]string{
-				"id", "blueprint_id", "created_at", "updated_at",
-				"tenant_name", "created_by", "scale_groups",
-			}, lines)
+			printDeployments(deployments.Items)
 			fmt.Printf("Showed %d+%d/%d results. Use offset/size for get more.\n",
 				deployments.Metadata.Pagination.Offset, len(deployments.Items),
 				deployments.Metadata.Pagination.Total)
@@ -207,19 +211,7 @@ func deploymentsOptions(args, options []string) int {
 				log.Printf("Cloudify error: %s\n", err.Error())
 				return 1
 			}
-
-			lines := make([][]string, 1)
-			lines[0] = make([]string, 6)
-			lines[0][0] = deployment.ID
-			lines[0][1] = deployment.BlueprintID
-			lines[0][2] = deployment.CreatedAt
-			lines[0][3] = deployment.UpdatedAt
-			lines[0][4] = deployment.Tenant
-			lines[0][5] = deployment.CreatedBy
-			utils.PrintTable([]string{
-				"id", "blueprint_id", "created_at", "updated_at",
-				"tenant_name", "created_by",
-			}, lines)
+			printDeployments([]cloudify.Deployment{deployment.Deployment})
 		}
 	case "outputs":
 		{
@@ -265,18 +257,7 @@ func deploymentsOptions(args, options []string) int {
 				log.Printf("Cloudify error: %s\n", err.Error())
 				return 1
 			}
-			lines := make([][]string, 1)
-			lines[0] = make([]string, 6)
-			lines[0][0] = deployment.ID
-			lines[0][1] = deployment.BlueprintID
-			lines[0][2] = deployment.CreatedAt
-			lines[0][3] = deployment.UpdatedAt
-			lines[0][4] = deployment.Tenant
-			lines[0][5] = deployment.CreatedBy
-			utils.PrintTable([]string{
-				"id", "blueprint_id", "created_at", "updated_at",
-				"tenant_name", "created_by",
-			}, lines)
+			printDeployments([]cloudify.Deployment{deployment.Deployment})
 		}
 	default:
 		{
