@@ -23,9 +23,13 @@ plugins - Handle plugins on the manager
 
 		cfy-go plugins delete -plugin-id <plugin-id>
 
-	download: Download a plugin [manager only]. Not Implemented.
+	download: Download a plugin [manager only].
 
-	get: Retrieve plugin information [manager only]. Not Implemented.
+		cfy-go plugins download -plugin-id <plugin-id>
+
+	get: Retrieve plugin information [manager only].
+
+		cfy-go plugins list -plugin-id <plugin-id>
 
 	list: List plugins [manager only]
 
@@ -34,8 +38,6 @@ plugins - Handle plugins on the manager
 	upload: Upload a plugin [manager only].
 
 		cfy-go plugins upload -host 172.16.168.176 -plugin-path <plugin-path>.wgn -yaml-path <yaml-path>.yaml
-
-	validate: Validate a plugin. Not Implemented.
 
 */
 package main
@@ -127,6 +129,28 @@ func deletePluginsCall(operFlagSet *flag.FlagSet, args, options []string) int {
 	return 0
 }
 
+func downloadPluginsCall(operFlagSet *flag.FlagSet, args, options []string) int {
+	var pluginID string
+	operFlagSet.StringVar(&pluginID, "plugin-id", "",
+		"The unique identifier for the plugin")
+
+	operFlagSet.Parse(options)
+
+	if pluginID == "" {
+		fmt.Println("Plugin Id required")
+		return 1
+	}
+
+	cl := getClient()
+	pluginPath, err := cl.DownloadPlugins(pluginID)
+	if err != nil {
+		log.Printf("Cloudify error: %s\n", err.Error())
+		return 1
+	}
+	fmt.Printf("Plugin saved to %s\n", pluginPath)
+	return 0
+}
+
 func listPluginsCall(operFlagSet *flag.FlagSet, args, options []string) int {
 	var pluginID string
 	operFlagSet.StringVar(&pluginID, "plugin-id", "",
@@ -159,6 +183,9 @@ func pluginsOptions(args, options []string) int {
 	}, {
 		CommandName: "upload",
 		Callback:    uploadPluginsCall,
+	}, {
+		CommandName: "download",
+		Callback:    downloadPluginsCall,
 	}, {
 		CommandName: "delete",
 		Callback:    deletePluginsCall,
