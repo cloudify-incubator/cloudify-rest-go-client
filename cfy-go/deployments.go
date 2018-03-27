@@ -53,6 +53,7 @@ deployments - Handle deployments on the Manager
 package main
 
 import (
+	"flag"
 	"fmt"
 	cloudify "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify"
 	utils "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify/utils"
@@ -60,9 +61,7 @@ import (
 	"strings"
 )
 
-func deploymentsFilter(commandName string, options []string) (*cloudify.Deployments, error) {
-	operFlagSet := basicOptions(commandName)
-
+func deploymentsFilter(operFlagSet *flag.FlagSet, options []string) (*cloudify.Deployments, error) {
 	var deployment string
 	operFlagSet.StringVar(&deployment, "deployment", "",
 		"The unique identifier for the deployment")
@@ -99,8 +98,8 @@ func groupPrint(deploymentScalingGroups map[string]cloudify.NodeGroup, err error
 	return 0
 }
 
-func getDeployment(commandName string, options []string) (*cloudify.Deployment, error) {
-	deployments, err := deploymentsFilter(commandName, options)
+func getDeployment(operFlagSet *flag.FlagSet, options []string) (*cloudify.Deployment, error) {
+	deployments, err := deploymentsFilter(operFlagSet, options)
 	if err != nil {
 		return nil, err
 	}
@@ -134,136 +133,150 @@ func printDeployments(deployments []cloudify.Deployment) {
 	}, lines)
 }
 
-func deploymentsOptions(args, options []string) int {
-	defaultError := "list/create/delete/inputs/outputs/groups/scaling-groups subcommand is required"
+func scalingGroupsDeploymentCall(operFlagSet *flag.FlagSet, args, options []string) int {
+	deployments, err := deploymentsFilter(operFlagSet, options)
+	if err != nil {
+		log.Printf("Cloudify error: %s\n", err.Error())
+		return 1
+	}
+	for _, deployment := range deployments.Items {
+		fmt.Printf("Scale group in: %v\n", deployment.ID)
+		scaleGroupPrint(deployment.ScalingGroups, nil)
+	}
+	fmt.Printf("Showed %d+%d/%d results. Use offset/size for get more.\n",
+		deployments.Metadata.Pagination.Offset, len(deployments.Items),
+		deployments.Metadata.Pagination.Total)
+	return 0
+}
 
-	if len(args) < 3 {
-		fmt.Println(defaultError)
+func groupsDeploymentCall(operFlagSet *flag.FlagSet, args, options []string) int {
+	deployments, err := deploymentsFilter(operFlagSet, options)
+	if err != nil {
+		log.Printf("Cloudify error: %s\n", err.Error())
+		return 1
+	}
+	for _, deployment := range deployments.Items {
+		fmt.Printf("Node Group in: %v\n", deployment.ID)
+		groupPrint(deployment.Groups, nil)
+	}
+	fmt.Printf("Showed %d+%d/%d results. Use offset/size for get more.\n",
+		deployments.Metadata.Pagination.Offset, len(deployments.Items),
+		deployments.Metadata.Pagination.Total)
+	return 0
+}
+
+func listDeploymentCall(operFlagSet *flag.FlagSet, args, options []string) int {
+	deployments, err := deploymentsFilter(operFlagSet, options)
+	if err != nil {
+		log.Printf("Cloudify error: %s\n", err.Error())
+		return 1
+	}
+	printDeployments(deployments.Items)
+	fmt.Printf("Showed %d+%d/%d results. Use offset/size for get more.\n",
+		deployments.Metadata.Pagination.Offset, len(deployments.Items),
+		deployments.Metadata.Pagination.Total)
+	return 0
+}
+
+func createDeploymentCall(operFlagSet *flag.FlagSet, args, options []string) int {
+	if len(args) < 4 {
+		fmt.Println("Deployment Id required")
 		return 1
 	}
 
-	switch args[2] {
-	case "scaling-groups":
-		{
-			deployments, err := deploymentsFilter("deployments scale-groups", options)
-			if err != nil {
-				log.Printf("Cloudify error: %s\n", err.Error())
-				return 1
-			}
-			for _, deployment := range deployments.Items {
-				fmt.Printf("Scale group in: %v\n", deployment.ID)
-				scaleGroupPrint(deployment.ScalingGroups, nil)
-			}
-			fmt.Printf("Showed %d+%d/%d results. Use offset/size for get more.\n",
-				deployments.Metadata.Pagination.Offset, len(deployments.Items),
-				deployments.Metadata.Pagination.Total)
-		}
-	case "groups":
-		{
-			deployments, err := deploymentsFilter("deployments groups", options)
-			if err != nil {
-				log.Printf("Cloudify error: %s\n", err.Error())
-				return 1
-			}
-			for _, deployment := range deployments.Items {
-				fmt.Printf("Node Group in: %v\n", deployment.ID)
-				groupPrint(deployment.Groups, nil)
-			}
-			fmt.Printf("Showed %d+%d/%d results. Use offset/size for get more.\n",
-				deployments.Metadata.Pagination.Offset, len(deployments.Items),
-				deployments.Metadata.Pagination.Total)
-		}
-	case "list":
-		{
-			deployments, err := deploymentsFilter("deployments list", options)
-			if err != nil {
-				log.Printf("Cloudify error: %s\n", err.Error())
-				return 1
-			}
-			printDeployments(deployments.Items)
-			fmt.Printf("Showed %d+%d/%d results. Use offset/size for get more.\n",
-				deployments.Metadata.Pagination.Offset, len(deployments.Items),
-				deployments.Metadata.Pagination.Total)
-		}
-	case "create":
-		{
-			operFlagSet := basicOptions("deployments list <deployment id>")
-			if len(args) < 4 {
-				fmt.Println("Deployment Id required")
-				return 1
-			}
+	var blueprint string
+	var jsonInputs string
+	operFlagSet.StringVar(&blueprint, "blueprint", "",
+		"The unique identifier for the blueprint")
+	operFlagSet.StringVar(&jsonInputs, "inputs", "{}",
+		"The json input string")
+	operFlagSet.Parse(options)
 
-			var blueprint string
-			var jsonInputs string
-			operFlagSet.StringVar(&blueprint, "blueprint", "",
-				"The unique identifier for the blueprint")
-			operFlagSet.StringVar(&jsonInputs, "inputs", "{}",
-				"The json input string")
-			operFlagSet.Parse(options)
+	var depl cloudify.DeploymentPost
+	depl.BlueprintID = blueprint
+	depl.SetJSONInputs(jsonInputs)
 
-			var depl cloudify.DeploymentPost
-			depl.BlueprintID = blueprint
-			depl.SetJSONInputs(jsonInputs)
-
-			cl := getClient()
-			deployment, err := cl.CreateDeployments(args[3], depl)
-			if err != nil {
-				log.Printf("Cloudify error: %s\n", err.Error())
-				return 1
-			}
-			printDeployments([]cloudify.Deployment{deployment.Deployment})
-		}
-	case "outputs":
-		{
-			deployment, err := getDeployment("deployments outputs", options)
-			if err != nil {
-				log.Printf("Cloudify error: %s\n", err.Error())
-				return 1
-			}
-			jsonOutputs, err := deployment.GetJSONOutputs()
-			if err != nil {
-				log.Printf("Cloudify error: %s\n", err.Error())
-				return 1
-			}
-			fmt.Printf("Deployment outputs: %+v\n", jsonOutputs)
-		}
-	case "inputs":
-		{
-			deployment, err := getDeployment("deployments inputs", options)
-			if err != nil {
-				log.Printf("Cloudify error: %s\n", err.Error())
-				return 1
-			}
-			jsonInputs, err := deployment.GetJSONInputs()
-			if err != nil {
-				log.Printf("Cloudify error: %s\n", err.Error())
-				return 1
-			}
-			fmt.Printf("Deployment inputs: %+v\n", jsonInputs)
-		}
-	case "delete":
-		{
-			operFlagSet := basicOptions("deployments delete <deployment id>")
-			if len(args) < 4 {
-				fmt.Println("Deployment Id required")
-				return 1
-			}
-
-			operFlagSet.Parse(options)
-
-			cl := getClient()
-			deployment, err := cl.DeleteDeployments(args[3])
-			if err != nil {
-				log.Printf("Cloudify error: %s\n", err.Error())
-				return 1
-			}
-			printDeployments([]cloudify.Deployment{deployment.Deployment})
-		}
-	default:
-		{
-			fmt.Println(defaultError)
-			return 1
-		}
+	cl := getClient()
+	deployment, err := cl.CreateDeployments(args[3], depl)
+	if err != nil {
+		log.Printf("Cloudify error: %s\n", err.Error())
+		return 1
 	}
+	printDeployments([]cloudify.Deployment{deployment.Deployment})
 	return 0
+}
+
+func outputsDeploymentCall(operFlagSet *flag.FlagSet, args, options []string) int {
+	deployment, err := getDeployment(operFlagSet, options)
+	if err != nil {
+		log.Printf("Cloudify error: %s\n", err.Error())
+		return 1
+	}
+	jsonOutputs, err := deployment.GetJSONOutputs()
+	if err != nil {
+		log.Printf("Cloudify error: %s\n", err.Error())
+		return 1
+	}
+	fmt.Printf("Deployment outputs: %+v\n", jsonOutputs)
+	return 0
+}
+
+func inputsDeploymentCall(operFlagSet *flag.FlagSet, args, options []string) int {
+	deployment, err := getDeployment(operFlagSet, options)
+	if err != nil {
+		log.Printf("Cloudify error: %s\n", err.Error())
+		return 1
+	}
+	jsonInputs, err := deployment.GetJSONInputs()
+	if err != nil {
+		log.Printf("Cloudify error: %s\n", err.Error())
+		return 1
+	}
+	fmt.Printf("Deployment inputs: %+v\n", jsonInputs)
+	return 0
+}
+
+func deleteDeploymentCall(operFlagSet *flag.FlagSet, args, options []string) int {
+	if len(args) < 4 {
+		fmt.Println("Deployment Id required")
+		return 1
+	}
+
+	operFlagSet.Parse(options)
+
+	cl := getClient()
+	deployment, err := cl.DeleteDeployments(args[3])
+	if err != nil {
+		log.Printf("Cloudify error: %s\n", err.Error())
+		return 1
+	}
+	printDeployments([]cloudify.Deployment{deployment.Deployment})
+	return 0
+}
+
+func deploymentsOptions(args, options []string) int {
+	var pluginsCalls = []CommandInfo{{
+		CommandName: "scaling-groups",
+		Callback:    scalingGroupsDeploymentCall,
+	}, {
+		CommandName: "groups",
+		Callback:    groupsDeploymentCall,
+	}, {
+		CommandName: "outputs",
+		Callback:    outputsDeploymentCall,
+	}, {
+		CommandName: "inputs",
+		Callback:    inputsDeploymentCall,
+	}, {
+		CommandName: "delete",
+		Callback:    deleteDeploymentCall,
+	}, {
+		CommandName: "create",
+		Callback:    createDeploymentCall,
+	}, {
+		CommandName: "list",
+		Callback:    listDeploymentCall,
+	}}
+
+	return ParseCalls(pluginsCalls, 3, args, options)
 }
