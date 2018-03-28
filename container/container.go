@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"path"
@@ -26,8 +27,8 @@ func mountEverythingAndRun(combinedDir string) {
 	// create and mount all dirs
 	if err := os.Mkdir("/sys",
 		syscall.S_IRUSR|syscall.S_IXUSR|
-		syscall.S_IRGRP|syscall.S_IXGRP|
-		syscall.S_IROTH|syscall.S_IXOTH); err != nil {
+			syscall.S_IRGRP|syscall.S_IXGRP|
+			syscall.S_IROTH|syscall.S_IXOTH); err != nil {
 		log.Printf("Not critical: %s\n", err.Error())
 	}
 	defer os.RemoveAll("/sys")
@@ -39,8 +40,8 @@ func mountEverythingAndRun(combinedDir string) {
 
 	if err := os.Mkdir("/proc",
 		syscall.S_IRUSR|syscall.S_IXUSR|
-		syscall.S_IRGRP|syscall.S_IXGRP|
-		syscall.S_IROTH|syscall.S_IXOTH); err != nil {
+			syscall.S_IRGRP|syscall.S_IXGRP|
+			syscall.S_IROTH|syscall.S_IXOTH); err != nil {
 		log.Printf("Not critical: %s\n", err.Error())
 	}
 	defer os.RemoveAll("/proc")
@@ -52,8 +53,8 @@ func mountEverythingAndRun(combinedDir string) {
 
 	if err := os.Mkdir("/tmp",
 		syscall.S_IRUSR|syscall.S_IWUSR|syscall.S_IXUSR|
-		syscall.S_IRGRP|syscall.S_IWGRP|syscall.S_IXGRP|
-		syscall.S_IROTH|syscall.S_IWOTH|syscall.S_IXOTH); err != nil {
+			syscall.S_IRGRP|syscall.S_IWGRP|syscall.S_IXGRP|
+			syscall.S_IROTH|syscall.S_IWOTH|syscall.S_IXOTH); err != nil {
 		log.Printf("Not critical: %s\n", err.Error())
 	}
 	defer os.RemoveAll("/tmp")
@@ -65,8 +66,8 @@ func mountEverythingAndRun(combinedDir string) {
 
 	if err := os.Mkdir("/dev",
 		syscall.S_IRUSR|syscall.S_IWUSR|syscall.S_IXUSR|
-		syscall.S_IRGRP|syscall.S_IXGRP|
-		syscall.S_IROTH|syscall.S_IXOTH); err != nil {
+			syscall.S_IRGRP|syscall.S_IXGRP|
+			syscall.S_IROTH|syscall.S_IXOTH); err != nil {
 		log.Printf("Not critical: %s\n", err.Error())
 	}
 	defer os.RemoveAll("/dev")
@@ -78,49 +79,50 @@ func mountEverythingAndRun(combinedDir string) {
 
 	if err := syscall.Mknod("/dev/full",
 		syscall.S_IRUSR|syscall.S_IWUSR|
-		syscall.S_IRGRP|syscall.S_IWGRP|
-		syscall.S_IROTH|syscall.S_IWOTH|
-		syscall.S_IFCHR, makedev(1, 7)); err != nil {
+			syscall.S_IRGRP|syscall.S_IWGRP|
+			syscall.S_IROTH|syscall.S_IWOTH|
+			syscall.S_IFCHR, makedev(1, 7)); err != nil {
 		log.Fatalf("mknod /dev/full: %s", err)
 	}
 
 	if err := syscall.Mknod("/dev/ptmx",
 		syscall.S_IRUSR|syscall.S_IWUSR|
-		syscall.S_IRGRP|syscall.S_IWGRP|
-		syscall.S_IROTH|syscall.S_IWOTH|
-		syscall.S_IFCHR, makedev(5, 2)); err != nil {
+			syscall.S_IRGRP|syscall.S_IWGRP|
+			syscall.S_IROTH|syscall.S_IWOTH|
+			syscall.S_IFCHR, makedev(5, 2)); err != nil {
 		log.Fatalf("mknod /dev/ptmx: %s", err)
 	}
 
 	if err := syscall.Mknod("/dev/random",
 		syscall.S_IRUSR|syscall.S_IWUSR|
-		syscall.S_IRGRP|syscall.S_IROTH|
-		syscall.S_IFCHR, makedev(1, 8)); err != nil {
+			syscall.S_IRGRP|syscall.S_IROTH|
+			syscall.S_IFCHR, makedev(1, 8)); err != nil {
 		log.Fatalf("mknod /dev/random: %s", err)
 	}
 
 	if err := syscall.Mknod("/dev/urandom",
 		syscall.S_IRUSR|syscall.S_IWUSR|
-		syscall.S_IRGRP|syscall.S_IROTH|
-		syscall.S_IFCHR, makedev(1, 9)); err != nil {
+			syscall.S_IRGRP|syscall.S_IROTH|
+			syscall.S_IFCHR, makedev(1, 9)); err != nil {
 		log.Fatalf("mknod /dev/urandom: %s", err)
 	}
 
 	if err := syscall.Mknod("/dev/zero",
 		syscall.S_IRUSR|syscall.S_IWUSR|
-		syscall.S_IRGRP|syscall.S_IWGRP|
-		syscall.S_IROTH|syscall.S_IWOTH|
-		syscall.S_IFCHR, makedev(1, 5)); err != nil {
+			syscall.S_IRGRP|syscall.S_IWGRP|
+			syscall.S_IROTH|syscall.S_IWOTH|
+			syscall.S_IFCHR, makedev(1, 5)); err != nil {
 		log.Fatalf("mknod /dev/zero: %s", err)
 	}
 
 	if err := syscall.Mknod("/dev/tty",
 		syscall.S_IRUSR|syscall.S_IWUSR|
-		syscall.S_IRGRP|syscall.S_IWGRP|
-		syscall.S_IROTH|syscall.S_IWOTH|
-		syscall.S_IFCHR, makedev(5, 0)); err != nil {
+			syscall.S_IRGRP|syscall.S_IWGRP|
+			syscall.S_IROTH|syscall.S_IWOTH|
+			syscall.S_IFCHR, makedev(5, 0)); err != nil {
 		log.Fatalf("mknod /dev/tty: %s", err)
 	}
+
 	// go back with rights
 	syscall.Umask(oldUmask)
 	log.Printf("Wait 30 seconds before revert everything.")
@@ -137,8 +139,8 @@ func main() {
 	baseDir := path.Join(dir, "base")
 	if err := os.Mkdir(baseDir,
 		syscall.S_IRUSR|syscall.S_IWUSR|syscall.S_IXUSR|
-		syscall.S_IRGRP|syscall.S_IXGRP|
-		syscall.S_IROTH|syscall.S_IXOTH); err != nil {
+			syscall.S_IRGRP|syscall.S_IXGRP|
+			syscall.S_IROTH|syscall.S_IXOTH); err != nil {
 		log.Printf("Not critical: %s\n", err.Error())
 	}
 	log.Printf("As Operation System filesystem will be used: %s\n", baseDir)
@@ -146,8 +148,8 @@ func main() {
 	dataDir := path.Join(dir, "data")
 	if err := os.Mkdir(dataDir,
 		syscall.S_IRUSR|syscall.S_IWUSR|syscall.S_IXUSR|
-		syscall.S_IRGRP|syscall.S_IXGRP|
-		syscall.S_IROTH|syscall.S_IXOTH); err != nil {
+			syscall.S_IRGRP|syscall.S_IXGRP|
+			syscall.S_IROTH|syscall.S_IXOTH); err != nil {
 		log.Printf("Not critical: %s\n", err.Error())
 	}
 	log.Printf("Data changes will be stored in: %s\n", dataDir)
@@ -155,8 +157,8 @@ func main() {
 	workDir := path.Join(dir, "work")
 	if err := os.Mkdir(workDir,
 		syscall.S_IRUSR|syscall.S_IWUSR|syscall.S_IXUSR|
-		syscall.S_IRGRP|syscall.S_IXGRP|
-		syscall.S_IROTH|syscall.S_IXOTH); err != nil {
+			syscall.S_IRGRP|syscall.S_IXGRP|
+			syscall.S_IROTH|syscall.S_IXOTH); err != nil {
 		log.Printf("Not critical: %s\n", err.Error())
 	}
 	// try to delete, on error
@@ -165,18 +167,21 @@ func main() {
 	combinedDir := path.Join(dir, "overlay")
 	if err := os.Mkdir(combinedDir,
 		syscall.S_IRUSR|syscall.S_IWUSR|syscall.S_IXUSR|
-		syscall.S_IRGRP|syscall.S_IXGRP|
-		syscall.S_IROTH|syscall.S_IXOTH); err != nil {
+			syscall.S_IRGRP|syscall.S_IXGRP|
+			syscall.S_IROTH|syscall.S_IXOTH); err != nil {
 		log.Printf("Not critical: %s\n", err.Error())
 	}
 	// try to delete, on error
 	defer os.RemoveAll(combinedDir)
 
+	mountOptions := fmt.Sprintf("lowerdir=%s,upperdir=%s,workdir=%s", baseDir, dataDir, workDir)
 	// mount overlayfs
-	/*if err := syscall.Mount("sysfs", "/sys", "sysfs",
-			syscall.MS_NODEV | syscall.MS_NOEXEC | syscall.MS_NOSUID, ""); err != nil {
-		log.Fatalf("mount overlayfs: %s", err)
-	}*/
-	//defer syscall.Unmount("/sys", syscall.MNT_DETACH)
+	if err := syscall.Mount("overlay", combinedDir, "overlay", 0, mountOptions); err != nil {
+		log.Printf("Not critical, already merged: %s", err)
+	}
+	// try to delete, on error
+	defer syscall.Unmount(combinedDir, syscall.MNT_DETACH)
+
+	// real work
 	mountEverythingAndRun(combinedDir)
 }
