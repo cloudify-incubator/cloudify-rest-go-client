@@ -19,11 +19,17 @@ Plugins
 
 plugins - Handle plugins on the manager
 
-	delete: Delete a plugin [manager only]. Not Implemented.
+	delete: Delete a plugin [manager only].
 
-	download: Download a plugin [manager only]. Not Implemented.
+		cfy-go plugins delete -plugin-id <plugin-id>
 
-	get: Retrieve plugin information [manager only]. Not Implemented.
+	download: Download a plugin [manager only].
+
+		cfy-go plugins download -plugin-id <plugin-id>
+
+	get: Retrieve plugin information [manager only].
+
+		cfy-go plugins list -plugin-id <plugin-id>
 
 	list: List plugins [manager only]
 
@@ -31,7 +37,7 @@ plugins - Handle plugins on the manager
 
 	upload: Upload a plugin [manager only].
 
-	validate: Validate a plugin. Not Implemented.
+		cfy-go plugins upload -host 172.16.168.176 -plugin-path <plugin-path>.wgn -yaml-path <yaml-path>.yaml
 
 */
 package main
@@ -98,8 +104,63 @@ func uploadPluginsCall(operFlagSet *flag.FlagSet, args, options []string) int {
 	return 0
 }
 
+func deletePluginsCall(operFlagSet *flag.FlagSet, args, options []string) int {
+	var pluginID string
+	var forceParams cloudify.CallWithForce
+	operFlagSet.StringVar(&pluginID, "plugin-id", "",
+		"The unique identifier for the plugin")
+	operFlagSet.BoolVar(&forceParams.Force, "force", false,
+		"Specifies whether to force plugin deletion even if there are deployments that currently use it.")
+
+	operFlagSet.Parse(options)
+
+	if pluginID == "" {
+		fmt.Println("Plugin Id required")
+		return 1
+	}
+
+	cl := getClient()
+	plugin, err := cl.DeletePlugins(pluginID, forceParams)
+	if err != nil {
+		log.Printf("Cloudify error: %s\n", err.Error())
+		return 1
+	}
+	printPlugins([]cloudify.Plugin{plugin.Plugin})
+	return 0
+}
+
+func downloadPluginsCall(operFlagSet *flag.FlagSet, args, options []string) int {
+	var pluginID string
+	operFlagSet.StringVar(&pluginID, "plugin-id", "",
+		"The unique identifier for the plugin")
+
+	operFlagSet.Parse(options)
+
+	if pluginID == "" {
+		fmt.Println("Plugin Id required")
+		return 1
+	}
+
+	cl := getClient()
+	pluginPath, err := cl.DownloadPlugins(pluginID)
+	if err != nil {
+		log.Printf("Cloudify error: %s\n", err.Error())
+		return 1
+	}
+	fmt.Printf("Plugin saved to %s\n", pluginPath)
+	return 0
+}
+
 func listPluginsCall(operFlagSet *flag.FlagSet, args, options []string) int {
+	var pluginID string
+	operFlagSet.StringVar(&pluginID, "plugin-id", "",
+		"The unique identifier for the plugin")
+
 	params := parsePagination(operFlagSet, options)
+
+	if pluginID != "" {
+		params["id"] = pluginID
+	}
 
 	cl := getClient()
 	plugins, err := cl.GetPlugins(params)
@@ -122,6 +183,12 @@ func pluginsOptions(args, options []string) int {
 	}, {
 		CommandName: "upload",
 		Callback:    uploadPluginsCall,
+	}, {
+		CommandName: "download",
+		Callback:    downloadPluginsCall,
+	}, {
+		CommandName: "delete",
+		Callback:    deletePluginsCall,
 	}}
 
 	return ParseCalls(pluginsCalls, 3, args, options)

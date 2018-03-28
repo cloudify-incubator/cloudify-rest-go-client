@@ -142,7 +142,7 @@ func (cl *Client) GetDeployments(params map[string]string) (*Deployments, error)
 func (cl *Client) DeleteDeployments(deploymentID string) (*DeploymentGet, error) {
 	var deployment DeploymentGet
 
-	err := cl.Delete("deployments/"+deploymentID, &deployment)
+	err := cl.Delete("deployments/"+deploymentID, nil, &deployment)
 	if err != nil {
 		return nil, err
 	}

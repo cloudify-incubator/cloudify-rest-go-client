@@ -24,8 +24,14 @@ import (
 	"time"
 )
 
+// CallWithForce - params for delete/run execution
+type CallWithForce struct {
+	Force bool `json:"force"`
+}
+
 // ExecutionPost - information for create new execution
 type ExecutionPost struct {
+	CallWithForce
 	WorkflowID   string                 `json:"workflow_id"`
 	DeploymentID string                 `json:"deployment_id"`
 	Parameters   map[string]interface{} `json:"parameters"`

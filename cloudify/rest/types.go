@@ -26,10 +26,10 @@ type MessageInterface interface {
 	TraceBack() string
 }
 
-// BaseMessage - common part of any result from cloudify
+// CommonMessage - common part of any result from cloudify
 // Note: We need Cl prefix for make fields public and use in Marshal func
 // Check https://blog.golang.org/json-and-go for more info about json marshaling.
-type BaseMessage struct {
+type CommonMessage struct {
 	MessageInterface
 	ClMessage         string `json:"message,omitempty"`
 	ClErrorCode       string `json:"error_code,omitempty"`
@@ -37,18 +37,39 @@ type BaseMessage struct {
 }
 
 // ErrorCode - current error code if any
-func (cm *BaseMessage) ErrorCode() string {
+func (cm *CommonMessage) ErrorCode() string {
 	return cm.ClErrorCode
 }
 
-// Error - Support reuse BaseMessage as error type
-func (cm *BaseMessage) Error() string {
+// Error - Support reuse CommonMessage as error type
+func (cm *CommonMessage) Error() string {
 	return cm.ClMessage
 }
 
 // TraceBack - traceback from response
-func (cm *BaseMessage) TraceBack() string {
+func (cm *CommonMessage) TraceBack() string {
 	return cm.ClServerTraceback
+}
+
+// BaseMessage - Status value is int, have used everywhere except status call
+type BaseMessage struct {
+	CommonMessage
+	ClStatus int `json:"status,omitempty"`
+}
+
+// ErrorCode - current error code if any
+func (bm *BaseMessage) ErrorCode() string {
+	if bm.ClStatus >= 400 {
+		// case when we have issues inside http calls
+		return bm.ClMessage
+	}
+	return bm.ClErrorCode
+}
+
+// StrStatusMessage - Message with string status
+type StrStatusMessage struct {
+	CommonMessage
+	Status string `json:"status"`
 }
 
 // Pagination - common struct of any result with pagination
@@ -83,7 +104,7 @@ type Resource struct {
 // For now implemented only http/https version
 type ConnectionOperationsInterface interface {
 	Get(url, acceptedContentType string) ([]byte, error)
-	Delete(url string) ([]byte, error)
+	Delete(url, providedContentType string, data []byte) ([]byte, error)
 	Post(url, providedContentType string, data []byte) ([]byte, error)
 	Put(url, providedContentType string, data []byte) ([]byte, error)
 	SetDebug(bool)
