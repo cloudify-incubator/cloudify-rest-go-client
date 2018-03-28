@@ -12,73 +12,9 @@ func makedev(major int, minor int) int {
 	return (minor & 0xff) | (major&0xfff)<<8
 }
 
-func main() {
-	dir, err := os.Getwd()
-	if err != nil {
-		log.Fatalf("Cloudify error: %s\n", err.Error())
-	}
-
+func mountEverythingAndRun(combinedDir string) {
 	// reset umask befor do anything
 	oldUmask := syscall.Umask(0)
-
-	// create dirs for overlayfs
-	baseDir := path.Join(dir, "base")
-	if err := os.Mkdir(baseDir,
-		syscall.S_IRUSR|syscall.S_IXUSR|
-		syscall.S_IRGRP|syscall.S_IXGRP|
-		syscall.S_IROTH|syscall.S_IXOTH); err != nil {
-		log.Printf("Not critical: %s\n", err.Error())
-	}
-	if err := os.Mkdir(path.Join(dir, "data"),
-		syscall.S_IRUSR|syscall.S_IXUSR|
-		syscall.S_IRGRP|syscall.S_IXGRP|
-		syscall.S_IROTH|syscall.S_IXOTH); err != nil {
-		log.Printf("Not critical: %s\n", err.Error())
-	}
-
-	combinedDir := path.Join(dir, "overlay")
-	if err := os.Mkdir(combinedDir,
-		syscall.S_IRUSR|syscall.S_IXUSR|
-		syscall.S_IRGRP|syscall.S_IXGRP|
-		syscall.S_IROTH|syscall.S_IXOTH); err != nil {
-		log.Printf("Not critical: %s\n", err.Error())
-	}
-
-	// mount overlayfs
-	/*if err := syscall.Mount("sysfs", "/sys", "sysfs",
-			syscall.MS_NODEV | syscall.MS_NOEXEC | syscall.MS_NOSUID, ""); err != nil {
-		log.Fatalf("mount overlayfs: %s", err)
-	}*/
-	//defer syscall.Unmount("/sys", syscall.MNT_DETACH)
-
-	// create and mount all dirs
-	if err := os.Mkdir(path.Join(combinedDir, "sys"),
-		syscall.S_IRUSR|syscall.S_IXUSR|
-		syscall.S_IRGRP|syscall.S_IXGRP|
-		syscall.S_IROTH|syscall.S_IXOTH); err != nil {
-		log.Printf("Not critical: %s\n", err.Error())
-	}
-
-	if err := os.Mkdir(path.Join(combinedDir, "proc"),
-		syscall.S_IRUSR|syscall.S_IXUSR|
-		syscall.S_IRGRP|syscall.S_IXGRP|
-		syscall.S_IROTH|syscall.S_IXOTH); err != nil {
-		log.Printf("Not critical: %s\n", err.Error())
-	}
-
-	if err := os.Mkdir(path.Join(combinedDir, "tmp"),
-		syscall.S_IRUSR|syscall.S_IWUSR|syscall.S_IXUSR|
-		syscall.S_IRGRP|syscall.S_IWGRP|syscall.S_IXGRP|
-		syscall.S_IROTH|syscall.S_IWOTH|syscall.S_IXOTH); err != nil {
-		log.Printf("Not critical: %s\n", err.Error())
-	}
-
-	if err := os.Mkdir(path.Join(combinedDir, "dev"),
-		syscall.S_IRUSR|syscall.S_IWUSR|syscall.S_IXUSR|
-		syscall.S_IRGRP|syscall.S_IXGRP|
-		syscall.S_IROTH|syscall.S_IXOTH); err != nil {
-		log.Printf("Not critical: %s\n", err.Error())
-	}
 
 	if err := syscall.Unshare(syscall.CLONE_FILES | syscall.CLONE_FS | syscall.CLONE_NEWPID | syscall.CLONE_SYSVSEM); err != nil {
 		log.Fatalf("Could not clone new fs and proc: %s", err)
@@ -88,24 +24,52 @@ func main() {
 	}
 
 	// create and mount all dirs
+	if err := os.Mkdir("/sys",
+		syscall.S_IRUSR|syscall.S_IXUSR|
+		syscall.S_IRGRP|syscall.S_IXGRP|
+		syscall.S_IROTH|syscall.S_IXOTH); err != nil {
+		log.Printf("Not critical: %s\n", err.Error())
+	}
+	defer os.RemoveAll("/sys")
 	if err := syscall.Mount("sysfs", "/sys", "sysfs",
 		syscall.MS_NODEV|syscall.MS_NOEXEC|syscall.MS_NOSUID, ""); err != nil {
 		log.Fatalf("mount sys: %s", err)
 	}
 	defer syscall.Unmount("/sys", syscall.MNT_DETACH)
 
+	if err := os.Mkdir("/proc",
+		syscall.S_IRUSR|syscall.S_IXUSR|
+		syscall.S_IRGRP|syscall.S_IXGRP|
+		syscall.S_IROTH|syscall.S_IXOTH); err != nil {
+		log.Printf("Not critical: %s\n", err.Error())
+	}
+	defer os.RemoveAll("/proc")
 	if err := syscall.Mount("proc", "/proc", "proc",
 		syscall.MS_NODEV|syscall.MS_NOEXEC|syscall.MS_NOSUID, ""); err != nil {
 		log.Fatalf("mount proc: %s", err)
 	}
 	defer syscall.Unmount("/proc", syscall.MNT_DETACH)
 
+	if err := os.Mkdir("/tmp",
+		syscall.S_IRUSR|syscall.S_IWUSR|syscall.S_IXUSR|
+		syscall.S_IRGRP|syscall.S_IWGRP|syscall.S_IXGRP|
+		syscall.S_IROTH|syscall.S_IWOTH|syscall.S_IXOTH); err != nil {
+		log.Printf("Not critical: %s\n", err.Error())
+	}
+	defer os.RemoveAll("/tmp")
 	if err := syscall.Mount("tmpfs", "/tmp", "tmpfs",
 		0, "size=65536k,mode=0755"); err != nil {
 		log.Fatalf("mount tmp: %s", err)
 	}
 	defer syscall.Unmount("/tmp", syscall.MNT_DETACH)
 
+	if err := os.Mkdir("/dev",
+		syscall.S_IRUSR|syscall.S_IWUSR|syscall.S_IXUSR|
+		syscall.S_IRGRP|syscall.S_IXGRP|
+		syscall.S_IROTH|syscall.S_IXOTH); err != nil {
+		log.Printf("Not critical: %s\n", err.Error())
+	}
+	defer os.RemoveAll("/dev")
 	if err := syscall.Mount("tmpfs", "/dev", "tmpfs",
 		0, "size=65536k,mode=0755"); err != nil {
 		log.Fatalf("mount dev: %s", err)
@@ -161,4 +125,58 @@ func main() {
 	syscall.Umask(oldUmask)
 	log.Printf("Wait 30 seconds before revert everything.")
 	time.Sleep(30 * time.Second)
+}
+
+func main() {
+	dir, err := os.Getwd()
+	if err != nil {
+		log.Fatalf("Cloudify error: %s\n", err.Error())
+	}
+
+	// create dirs for overlayfs
+	baseDir := path.Join(dir, "base")
+	if err := os.Mkdir(baseDir,
+		syscall.S_IRUSR|syscall.S_IWUSR|syscall.S_IXUSR|
+		syscall.S_IRGRP|syscall.S_IXGRP|
+		syscall.S_IROTH|syscall.S_IXOTH); err != nil {
+		log.Printf("Not critical: %s\n", err.Error())
+	}
+	log.Printf("As Operation System filesystem will be used: %s\n", baseDir)
+
+	dataDir := path.Join(dir, "data")
+	if err := os.Mkdir(dataDir,
+		syscall.S_IRUSR|syscall.S_IWUSR|syscall.S_IXUSR|
+		syscall.S_IRGRP|syscall.S_IXGRP|
+		syscall.S_IROTH|syscall.S_IXOTH); err != nil {
+		log.Printf("Not critical: %s\n", err.Error())
+	}
+	log.Printf("Data changes will be stored in: %s\n", dataDir)
+
+	workDir := path.Join(dir, "work")
+	if err := os.Mkdir(workDir,
+		syscall.S_IRUSR|syscall.S_IWUSR|syscall.S_IXUSR|
+		syscall.S_IRGRP|syscall.S_IXGRP|
+		syscall.S_IROTH|syscall.S_IXOTH); err != nil {
+		log.Printf("Not critical: %s\n", err.Error())
+	}
+	// try to delete, on error
+	defer os.RemoveAll(workDir)
+
+	combinedDir := path.Join(dir, "overlay")
+	if err := os.Mkdir(combinedDir,
+		syscall.S_IRUSR|syscall.S_IWUSR|syscall.S_IXUSR|
+		syscall.S_IRGRP|syscall.S_IXGRP|
+		syscall.S_IROTH|syscall.S_IXOTH); err != nil {
+		log.Printf("Not critical: %s\n", err.Error())
+	}
+	// try to delete, on error
+	defer os.RemoveAll(combinedDir)
+
+	// mount overlayfs
+	/*if err := syscall.Mount("sysfs", "/sys", "sysfs",
+			syscall.MS_NODEV | syscall.MS_NOEXEC | syscall.MS_NOSUID, ""); err != nil {
+		log.Fatalf("mount overlayfs: %s", err)
+	}*/
+	//defer syscall.Unmount("/sys", syscall.MNT_DETACH)
+	mountEverythingAndRun(combinedDir)
 }
