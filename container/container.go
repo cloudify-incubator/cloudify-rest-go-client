@@ -123,6 +123,16 @@ func mountEverythingAndRun(combinedDir string) {
 		log.Fatalf("mknod /dev/tty: %s", err)
 	}
 
+	args := []string{"/bin/touch", "/tmp/I_am_alive"}
+	binary := "/bin/touch"
+	var env syscall.ProcAttr
+	env.Env = []string{"PATH=/usr/sbin:/usr/bin:/sbin:/bin"}
+	pid, err := syscall.ForkExec(binary, args, &env);
+	if err != nil {
+		log.Fatalf("Issues with run: %s", err)
+	}
+
+	syscall.Wait4(pid, nil, 0, nil)
 	// go back with rights
 	syscall.Umask(oldUmask)
 	log.Printf("Wait 30 seconds before revert everything.")
