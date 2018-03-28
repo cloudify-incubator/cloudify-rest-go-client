@@ -29,6 +29,8 @@ type FakeClient struct {
 
 	// delete call
 	DeleteURL      string
+	DeleteType     string
+	DeleteData     []byte
 	DeleteResponse []byte
 	DeleteError    error
 
@@ -58,8 +60,10 @@ func (cl *FakeClient) Get(url, acceptedContentType string) ([]byte, error) {
 }
 
 // Delete - mimic to real delete
-func (cl *FakeClient) Delete(url string) ([]byte, error) {
+func (cl *FakeClient) Delete(url, providedContentType string, data []byte) ([]byte, error) {
 	cl.DeleteURL = url
+	cl.DeleteType = providedContentType
+	cl.DeleteData = data
 	return cl.DeleteResponse, cl.DeleteError
 }
 

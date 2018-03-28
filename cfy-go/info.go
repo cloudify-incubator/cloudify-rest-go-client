@@ -113,21 +113,6 @@ func instancesChecks(cl *cloudify.Client, params map[string]string, typeName str
 	return 0
 }
 
-func nodeWithGroup2CheckLine(node cloudify.NodeWithGroup) []string {
-	var line = make([]string, 7)
-	line[0] = node.ID
-	line[1] = node.DeploymentID
-	line[2] = node.HostID
-	line[3] = node.Type
-	line[4] = node.GroupName
-	line[5] = node.ScalingGroupName
-	line[6] = "looks good"
-	if node.ScalingGroupName == "" || node.GroupName == "" {
-		line[6] = "unscalable"
-	}
-	return line
-}
-
 func groupInstancesChecksPrint(nodes *cloudify.NodeWithGroups) {
 	lines := [][]string{}
 	for _, node := range nodes.Items {
@@ -136,7 +121,19 @@ func groupInstancesChecksPrint(nodes *cloudify.NodeWithGroups) {
 			continue
 		}
 
-		lines = append(lines, nodeWithGroup2CheckLine(node))
+		var line = make([]string, 7)
+		line[0] = node.ID
+		line[1] = node.DeploymentID
+		line[2] = node.HostID
+		line[3] = node.Type
+		line[4] = node.GroupName
+		line[5] = node.ScalingGroupName
+		line[6] = "looks good"
+		if node.ScalingGroupName == "" || node.GroupName == "" {
+			line[6] = "unscalable"
+		}
+
+		lines = append(lines, line)
 	}
 	utils.PrintTable([]string{
 		"Id", "Deployment id", "Host id", "Type", "Group", "Scaling Group", "Notes",

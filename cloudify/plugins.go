@@ -17,7 +17,9 @@ limitations under the License.
 package cloudify
 
 import (
+	"fmt"
 	rest "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify/rest"
+	"os"
 )
 
 // PluginBase - common part for any response about plugin
@@ -70,6 +72,18 @@ func (cl *Client) GetPlugins(params map[string]string) (*Plugins, error) {
 	return &plugins, nil
 }
 
+//DeletePlugins - delete plugin by id
+func (cl *Client) DeletePlugins(pluginID string, params CallWithForce) (*PluginGet, error) {
+	var plugin PluginGet
+
+	err := cl.Delete("plugins/"+pluginID, params, &plugin)
+	if err != nil {
+		return nil, err
+	}
+
+	return &plugin, nil
+}
+
 //UploadPlugin - upload plugin with path to plugin in filesystem
 func (cl *Client) UploadPlugin(params map[string]string, pluginPath, yamlPath string) (*PluginGet, error) {
 	var plugin PluginGet
@@ -82,4 +96,21 @@ func (cl *Client) UploadPlugin(params map[string]string, pluginPath, yamlPath st
 	}
 
 	return &plugin, nil
+}
+
+//DownloadPlugins - download plugin by id
+func (cl *Client) DownloadPlugins(pluginID string) (string, error) {
+	fileName := pluginID + ".wgn"
+
+	_, errFile := os.Stat(fileName)
+	if !os.IsNotExist(errFile) {
+		return "", fmt.Errorf("file `%s` is exist", fileName)
+	}
+
+	err := cl.GetBinary("plugins/"+pluginID+"/archive", fileName)
+	if err != nil {
+		return "", err
+	}
+
+	return fileName, nil
 }

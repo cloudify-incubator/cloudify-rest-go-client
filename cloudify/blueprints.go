@@ -66,7 +66,7 @@ func (cl *Client) GetBlueprints(params map[string]string) (*Blueprints, error) {
 func (cl *Client) DeleteBlueprints(blueprintID string) (*BlueprintGet, error) {
 	var blueprint BlueprintGet
 
-	err := cl.Delete("blueprints/"+blueprintID, &blueprint)
+	err := cl.Delete("blueprints/"+blueprintID, nil, &blueprint)
 	if err != nil {
 		return nil, err
 	}

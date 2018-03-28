@@ -62,8 +62,7 @@ func (s InstanceService) Status() string {
 
 // Status - response from server about current status
 type Status struct {
-	rest.BaseMessage
-	Status   string            `json:"status"`
+	rest.StrStatusMessage
 	Services []InstanceService `json:"services"`
 }
 
