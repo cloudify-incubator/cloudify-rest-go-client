@@ -1,51 +1,43 @@
 package main
 
 import (
-	"fmt"
-	"log"
-	"net"
 	"os"
 	"path"
+	"log"
 	"syscall"
 )
 
-const (
-	NsRunDir  = "/var/run/netns"
-	SelfNetNs = "/proc/self/ns/net"
-)
-
 func main() {
-	netNsPath := path.Join(NsRunDir, "myns")
-	os.Mkdir(NsRunDir, 0755)
-
-	if err := syscall.Mount(NsRunDir, NsRunDir, "none", syscall.MS_BIND, ""); err != nil {
-		log.Fatalf("Could not create Network namespace: %s", err)
-	}
-
-	fd, err := syscall.Open(netNsPath, syscall.O_RDONLY|syscall.O_CREAT|syscall.O_EXCL, 0)
+	dir, err := os.Getwd()
 	if err != nil {
-		log.Fatalf("Could not create Network namespace: %s", err)
-	}
-	syscall.Close(fd)
-
-	if err := syscall.Unshare(syscall.CLONE_NEWNET); err != nil {
-		log.Fatalf("Could not clone new Network namespace: %s", err)
+		log.Fatalf("Cloudify error: %s\n", err.Error())
 	}
 
-	if err := syscall.Mount(SelfNetNs, netNsPath, "none", syscall.MS_BIND, ""); err != nil {
-		log.Fatalf("Could not Mount Network namespace: %s", err)
-	}
+	// create and mount all dirs
+	os.Mkdir(path.Join(dir, "sys"),
+				syscall.S_IRUSR | syscall.S_IXUSR |
+				syscall.S_IRGRP | syscall.S_IXGRP |
+				syscall.S_IROTH | syscall.S_IXOTH)
 
-	if err := syscall.Unmount(netNsPath, syscall.MNT_DETACH); err != nil {
-		log.Fatalf("Could not Unmount new Network namespace: %s", err)
-	}
+	os.Mkdir(path.Join(dir, "proc"),
+				syscall.S_IRUSR | syscall.S_IXUSR |
+				syscall.S_IRGRP | syscall.S_IXGRP |
+				syscall.S_IROTH | syscall.S_IXOTH)
 
-	if err := syscall.Unlink(netNsPath); err != nil {
-		log.Fatalf("Could not Unlink new Network namespace: %s", err)
-	}
+	os.Mkdir(path.Join(dir, "tmp"),
+				syscall.S_IRUSR | syscall.S_IWUSR | syscall.S_IXUSR |
+				syscall.S_IRGRP | syscall.S_IWGRP | syscall.S_IXGRP |
+				syscall.S_IROTH | syscall.S_IWOTH | syscall.S_IXOTH)
 
-	ifcs, _ := net.Interfaces()
-	for _, ifc := range ifcs {
-		fmt.Printf("%#v\n", ifc)
+	os.Mkdir(path.Join(dir, "dev"),
+				syscall.S_IRUSR | syscall.S_IWUSR | syscall.S_IXUSR |
+				syscall.S_IRGRP | syscall.S_IXGRP |
+				syscall.S_IROTH | syscall.S_IXOTH)
+
+	if err := syscall.Unshare(syscall.CLONE_FS | syscall.CLONE_FILES | syscall.CLONE_NEWPID); err != nil {
+		log.Fatalf("Could not clone new fs and proc: %s", err)
+	}
+	if err := syscall.Chroot(dir); err != nil {
+		log.Fatalf("Could not change root: %s", err)
 	}
 }
