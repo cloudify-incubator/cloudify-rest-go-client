@@ -32,12 +32,6 @@ func mountEverythingAndRun(combinedDir string, argv0 string, argv []string) {
 			syscall.S_IROTH|syscall.S_IXOTH); err != nil {
 		log.Printf("Not critical: %s\n", err.Error())
 	}
-	defer os.RemoveAll("/sys")
-	if err := syscall.Mount("sysfs", "/sys", "sysfs",
-		syscall.MS_NODEV|syscall.MS_NOEXEC|syscall.MS_NOSUID, ""); err != nil {
-		log.Fatalf("mount sys: %s", err)
-	}
-	defer syscall.Unmount("/sys", syscall.MNT_DETACH)
 
 	if err := os.Mkdir("/proc",
 		syscall.S_IRUSR|syscall.S_IXUSR|
@@ -58,12 +52,6 @@ func mountEverythingAndRun(combinedDir string, argv0 string, argv []string) {
 			syscall.S_IROTH|syscall.S_IWOTH|syscall.S_IXOTH); err != nil {
 		log.Printf("Not critical: %s\n", err.Error())
 	}
-	defer os.RemoveAll("/tmp")
-	if err := syscall.Mount("tmpfs", "/tmp", "tmpfs",
-		0, "size=65536k,mode=0755"); err != nil {
-		log.Fatalf("mount tmp: %s", err)
-	}
-	defer syscall.Unmount("/tmp", syscall.MNT_DETACH)
 
 	if err := os.Mkdir("/dev",
 		syscall.S_IRUSR|syscall.S_IWUSR|syscall.S_IXUSR|
@@ -125,6 +113,7 @@ func mountEverythingAndRun(combinedDir string, argv0 string, argv []string) {
 	}
 
 	var procInfo syscall.SysProcAttr
+	procInfo.Chroot = "/" // combinedDir
 	var env syscall.ProcAttr
 	env.Env = []string{"PATH=/usr/sbin:/usr/bin:/sbin:/bin"}
 	// TODO: hackish way, but ok for now
@@ -139,8 +128,8 @@ func mountEverythingAndRun(combinedDir string, argv0 string, argv []string) {
 	syscall.Wait4(pid, nil, 0, nil)
 	// go back with rights
 	syscall.Umask(oldUmask)
-	log.Printf("Wait 30 seconds before revert everything.")
-	time.Sleep(30 * time.Second)
+	log.Printf("Wait 10 seconds before revert everything.")
+	time.Sleep(10 * time.Second)
 }
 
 func main() {
