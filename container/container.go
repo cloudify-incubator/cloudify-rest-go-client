@@ -5,19 +5,102 @@ import (
 	"log"
 	"os"
 	"path"
+	"strings"
 	"syscall"
 	"time"
-	"strings"
 )
 
 func makedev(major int, minor int) int {
 	return (minor & 0xff) | (major&0xfff)<<8
 }
 
-func mountEverythingAndRun(combinedDir string, argv0 string, argv []string) {
+func createDirInContainer(combinedDir string) {
 	// reset umask befor do anything
 	oldUmask := syscall.Umask(0)
 
+	// create and mount all dirs
+	if err := os.Mkdir(path.Join(combinedDir, "/sys"),
+		syscall.S_IRUSR|syscall.S_IXUSR|
+			syscall.S_IRGRP|syscall.S_IXGRP|
+			syscall.S_IROTH|syscall.S_IXOTH); err != nil {
+		log.Printf("Not critical: %s\n", err.Error())
+	}
+
+	if err := os.Mkdir(path.Join(combinedDir, "/proc"),
+		syscall.S_IRUSR|syscall.S_IXUSR|
+			syscall.S_IRGRP|syscall.S_IXGRP|
+			syscall.S_IROTH|syscall.S_IXOTH); err != nil {
+		log.Printf("Not critical: %s\n", err.Error())
+	}
+
+	if err := os.Mkdir(path.Join(combinedDir, "/tmp"),
+		syscall.S_IRUSR|syscall.S_IWUSR|syscall.S_IXUSR|
+			syscall.S_IRGRP|syscall.S_IWGRP|syscall.S_IXGRP|
+			syscall.S_IROTH|syscall.S_IWOTH|syscall.S_IXOTH); err != nil {
+		log.Printf("Not critical: %s\n", err.Error())
+	}
+
+	devDir := path.Join(combinedDir, "/dev")
+	os.RemoveAll(devDir)
+	if err := os.Mkdir(devDir,
+		syscall.S_IRUSR|syscall.S_IWUSR|syscall.S_IXUSR|
+			syscall.S_IRGRP|syscall.S_IXGRP|
+			syscall.S_IROTH|syscall.S_IXOTH); err != nil {
+		log.Printf("Not critical: %s\n", err.Error())
+	}
+
+	if err := syscall.Mknod(path.Join(devDir, "/full"),
+		syscall.S_IRUSR|syscall.S_IWUSR|
+			syscall.S_IRGRP|syscall.S_IWGRP|
+			syscall.S_IROTH|syscall.S_IWOTH|
+			syscall.S_IFCHR, makedev(1, 7)); err != nil {
+		log.Printf("mknod /dev/full: %s", err)
+	}
+
+	if err := syscall.Mknod(path.Join(devDir, "/ptmx"),
+		syscall.S_IRUSR|syscall.S_IWUSR|
+			syscall.S_IRGRP|syscall.S_IWGRP|
+			syscall.S_IROTH|syscall.S_IWOTH|
+			syscall.S_IFCHR, makedev(5, 2)); err != nil {
+		log.Printf("mknod /dev/ptmx: %s", err)
+	}
+
+	if err := syscall.Mknod(path.Join(devDir, "/random"),
+		syscall.S_IRUSR|syscall.S_IWUSR|
+			syscall.S_IRGRP|syscall.S_IROTH|
+			syscall.S_IFCHR, makedev(1, 8)); err != nil {
+		log.Printf("mknod /dev/random: %s", err)
+	}
+
+	if err := syscall.Mknod(path.Join(devDir, "/urandom"),
+		syscall.S_IRUSR|syscall.S_IWUSR|
+			syscall.S_IRGRP|syscall.S_IROTH|
+			syscall.S_IFCHR, makedev(1, 9)); err != nil {
+		log.Printf("mknod /dev/urandom: %s", err)
+	}
+
+	if err := syscall.Mknod(path.Join(devDir, "/zero"),
+		syscall.S_IRUSR|syscall.S_IWUSR|
+			syscall.S_IRGRP|syscall.S_IWGRP|
+			syscall.S_IROTH|syscall.S_IWOTH|
+			syscall.S_IFCHR, makedev(1, 5)); err != nil {
+		log.Printf("mknod /dev/zero: %s", err)
+	}
+
+	if err := syscall.Mknod(path.Join(devDir, "/tty"),
+		syscall.S_IRUSR|syscall.S_IWUSR|
+			syscall.S_IRGRP|syscall.S_IWGRP|
+			syscall.S_IROTH|syscall.S_IWOTH|
+			syscall.S_IFCHR, makedev(5, 0)); err != nil {
+		log.Printf("mknod /dev/tty: %s", err)
+	}
+
+	// go back with rights
+	syscall.Umask(oldUmask)
+}
+
+func mountEverythingAndRun(combinedDir string, argv0 string, argv []string) {
+	log.Printf("I am going to run: %+v\n\n", strings.Join(argv, " "))
 	if err := syscall.Unshare(syscall.CLONE_FILES | syscall.CLONE_FS | syscall.CLONE_NEWPID | syscall.CLONE_SYSVSEM); err != nil {
 		log.Fatalf("Could not clone new fs and proc: %s", err)
 	}
@@ -25,92 +108,11 @@ func mountEverythingAndRun(combinedDir string, argv0 string, argv []string) {
 		log.Fatalf("Could not change root: %s", err)
 	}
 
-	// create and mount all dirs
-	if err := os.Mkdir("/sys",
-		syscall.S_IRUSR|syscall.S_IXUSR|
-			syscall.S_IRGRP|syscall.S_IXGRP|
-			syscall.S_IROTH|syscall.S_IXOTH); err != nil {
-		log.Printf("Not critical: %s\n", err.Error())
-	}
-
-	if err := os.Mkdir("/proc",
-		syscall.S_IRUSR|syscall.S_IXUSR|
-			syscall.S_IRGRP|syscall.S_IXGRP|
-			syscall.S_IROTH|syscall.S_IXOTH); err != nil {
-		log.Printf("Not critical: %s\n", err.Error())
-	}
-	defer os.RemoveAll("/proc")
 	if err := syscall.Mount("proc", "/proc", "proc",
 		syscall.MS_NODEV|syscall.MS_NOEXEC|syscall.MS_NOSUID, ""); err != nil {
 		log.Fatalf("mount proc: %s", err)
 	}
 	defer syscall.Unmount("/proc", syscall.MNT_DETACH)
-
-	if err := os.Mkdir("/tmp",
-		syscall.S_IRUSR|syscall.S_IWUSR|syscall.S_IXUSR|
-			syscall.S_IRGRP|syscall.S_IWGRP|syscall.S_IXGRP|
-			syscall.S_IROTH|syscall.S_IWOTH|syscall.S_IXOTH); err != nil {
-		log.Printf("Not critical: %s\n", err.Error())
-	}
-
-	if err := os.Mkdir("/dev",
-		syscall.S_IRUSR|syscall.S_IWUSR|syscall.S_IXUSR|
-			syscall.S_IRGRP|syscall.S_IXGRP|
-			syscall.S_IROTH|syscall.S_IXOTH); err != nil {
-		log.Printf("Not critical: %s\n", err.Error())
-	}
-	defer os.RemoveAll("/dev")
-	if err := syscall.Mount("tmpfs", "/dev", "tmpfs",
-		0, "size=65536k,mode=0755"); err != nil {
-		log.Fatalf("mount dev: %s", err)
-	}
-	defer syscall.Unmount("/dev", syscall.MNT_DETACH)
-
-	if err := syscall.Mknod("/dev/full",
-		syscall.S_IRUSR|syscall.S_IWUSR|
-			syscall.S_IRGRP|syscall.S_IWGRP|
-			syscall.S_IROTH|syscall.S_IWOTH|
-			syscall.S_IFCHR, makedev(1, 7)); err != nil {
-		log.Fatalf("mknod /dev/full: %s", err)
-	}
-
-	if err := syscall.Mknod("/dev/ptmx",
-		syscall.S_IRUSR|syscall.S_IWUSR|
-			syscall.S_IRGRP|syscall.S_IWGRP|
-			syscall.S_IROTH|syscall.S_IWOTH|
-			syscall.S_IFCHR, makedev(5, 2)); err != nil {
-		log.Fatalf("mknod /dev/ptmx: %s", err)
-	}
-
-	if err := syscall.Mknod("/dev/random",
-		syscall.S_IRUSR|syscall.S_IWUSR|
-			syscall.S_IRGRP|syscall.S_IROTH|
-			syscall.S_IFCHR, makedev(1, 8)); err != nil {
-		log.Fatalf("mknod /dev/random: %s", err)
-	}
-
-	if err := syscall.Mknod("/dev/urandom",
-		syscall.S_IRUSR|syscall.S_IWUSR|
-			syscall.S_IRGRP|syscall.S_IROTH|
-			syscall.S_IFCHR, makedev(1, 9)); err != nil {
-		log.Fatalf("mknod /dev/urandom: %s", err)
-	}
-
-	if err := syscall.Mknod("/dev/zero",
-		syscall.S_IRUSR|syscall.S_IWUSR|
-			syscall.S_IRGRP|syscall.S_IWGRP|
-			syscall.S_IROTH|syscall.S_IWOTH|
-			syscall.S_IFCHR, makedev(1, 5)); err != nil {
-		log.Fatalf("mknod /dev/zero: %s", err)
-	}
-
-	if err := syscall.Mknod("/dev/tty",
-		syscall.S_IRUSR|syscall.S_IWUSR|
-			syscall.S_IRGRP|syscall.S_IWGRP|
-			syscall.S_IROTH|syscall.S_IWOTH|
-			syscall.S_IFCHR, makedev(5, 0)); err != nil {
-		log.Fatalf("mknod /dev/tty: %s", err)
-	}
 
 	var procInfo syscall.SysProcAttr
 	procInfo.Chroot = "/" // combinedDir
@@ -126,8 +128,6 @@ func mountEverythingAndRun(combinedDir string, argv0 string, argv []string) {
 	}
 
 	syscall.Wait4(pid, nil, 0, nil)
-	// go back with rights
-	syscall.Umask(oldUmask)
 	log.Printf("Wait 10 seconds before revert everything.")
 	time.Sleep(10 * time.Second)
 }
@@ -138,7 +138,6 @@ func main() {
 	if len(commandList) == 0 {
 		commandList = []string{"/bin/sh"}
 	}
-	log.Printf("Command for run: %v\n", strings.Join(commandList, " "))
 
 	dir, err := os.Getwd()
 	if err != nil {
@@ -192,6 +191,8 @@ func main() {
 	}
 	// try to delete, on error
 	defer syscall.Unmount(combinedDir, syscall.MNT_DETACH)
+
+	createDirInContainer(combinedDir)
 
 	// real work
 	mountEverythingAndRun(combinedDir, commandList[0], commandList)
