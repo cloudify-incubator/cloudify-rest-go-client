@@ -62,6 +62,14 @@ func ExampleCliArgumentsList() {
 	// Output: Args: [cfy-go status], Options: [-user admin].
 }
 
+func ExampleCliSubArgumentsList() {
+	args, options := CliSubArgumentsList([]string{
+		"-data", "container-place/data", "-work-dir", "container-place/",
+		"--", "cfy", "profile", "use", "local"})
+	fmt.Printf("Args: %v, Options: %v.", args, options)
+	// Output: Args: [-data container-place/data -work-dir container-place/], Options: [cfy profile use local].
+}
+
 func TestInList(t *testing.T) {
 	if InList([]string{"a", "b"}, "c") {
 		t.Error("Recheck 'c' not in ['a', 'b'] ")

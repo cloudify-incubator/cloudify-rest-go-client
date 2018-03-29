@@ -95,6 +95,16 @@ func CliArgumentsList(osArgs []string) (arguments []string, options []string) {
 	return osArgs, []string{}
 }
 
+//CliSubArgumentsList - return clean list of arguments and options
+func CliSubArgumentsList(osArgs []string) (arguments []string, options []string) {
+	for pos, str := range osArgs {
+		if str == "--" {
+			return osArgs[:pos], osArgs[pos+1:]
+		}
+	}
+	return osArgs, []string{}
+}
+
 //ZipAttachFile - attach file to zip
 func ZipAttachFile(w *zip.Writer, zipFileName, fullPath string) error {
 	f, errCreate := w.Create(zipFileName)
