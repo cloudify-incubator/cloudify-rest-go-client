@@ -104,18 +104,16 @@ func mountEverythingAndRun(combinedDir string, argv0 string, argv []string) {
 	if err := syscall.Unshare(syscall.CLONE_FILES | syscall.CLONE_FS | syscall.CLONE_NEWPID | syscall.CLONE_SYSVSEM); err != nil {
 		log.Fatalf("Could not clone new fs and proc: %s", err)
 	}
-	if err := syscall.Chroot(combinedDir); err != nil {
-		log.Fatalf("Could not change root: %s", err)
-	}
 
-	if err := syscall.Mount("proc", "/proc", "proc",
+	procDir := path.Join(combinedDir, "/proc")
+	if err := syscall.Mount("proc", procDir, "proc",
 		syscall.MS_NODEV|syscall.MS_NOEXEC|syscall.MS_NOSUID, ""); err != nil {
 		log.Fatalf("mount proc: %s", err)
 	}
-	defer syscall.Unmount("/proc", syscall.MNT_DETACH)
+	defer syscall.Unmount(procDir, syscall.MNT_DETACH)
 
 	var procInfo syscall.SysProcAttr
-	procInfo.Chroot = "/" // combinedDir
+	procInfo.Chroot = combinedDir
 	var env syscall.ProcAttr
 	env.Env = []string{"PATH=/usr/sbin:/usr/bin:/sbin:/bin"}
 	// TODO: hackish way, but ok for now
