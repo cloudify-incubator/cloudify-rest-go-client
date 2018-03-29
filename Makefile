@@ -15,6 +15,7 @@ reformat:
 	gofmt -w src/${PACKAGEPATH}/cloudify/utils/*.go
 	gofmt -w src/${PACKAGEPATH}/cloudify/tests/*.go
 	gofmt -w src/${PACKAGEPATH}/cloudify/*.go
+	gofmt -w src/${PACKAGEPATH}/container/*.go
 	gofmt -w src/${PACKAGEPATH}/cfy-go/*.go
 	gofmt -w src/${PACKAGEPATH}/kubernetes/*.go
 
@@ -52,6 +53,14 @@ pkg/linux_amd64/${PACKAGEPATH}/cloudify/utils.a: ${CLOUDIFYUTILS}
 	$(call colorecho,"Build: ", $@)
 	go build -v -i -o pkg/linux_amd64/${PACKAGEPATH}/cloudify/utils.a ${CLOUDIFYUTILS}
 
+# container
+CLOUDIFYCONTAINER := \
+	src/${PACKAGEPATH}/container/container.go
+
+pkg/linux_amd64/${PACKAGEPATH}/container.a: ${CLOUDIFYCONTAINER}
+	$(call colorecho,"Build: ",$@)
+	go build -v -i -o pkg/linux_amd64/${PACKAGEPATH}/container.a ${CLOUDIFYCONTAINER}
+
 # cloudify
 CLOUDIFYCOMMON := \
 	src/${PACKAGEPATH}/cloudify/scalegroup.go \
@@ -77,6 +86,7 @@ pkg/linux_amd64/${PACKAGEPATH}/cloudify.a: ${CLOUDIFYCOMMON} pkg/linux_amd64/${P
 CFYGOLIBS := \
 	pkg/linux_amd64/${PACKAGEPATH}/cloudify/utils.a \
 	pkg/linux_amd64/${PACKAGEPATH}/kubernetes.a \
+	pkg/linux_amd64/${PACKAGEPATH}/container.a \
 	pkg/linux_amd64/${PACKAGEPATH}/cloudify.a
 
 # cfy-go
@@ -92,6 +102,7 @@ CFYGO := \
 	src/${PACKAGEPATH}/cfy-go/nodes.go \
 	src/${PACKAGEPATH}/cfy-go/plugins.go \
 	src/${PACKAGEPATH}/cfy-go/scaling.go \
+	src/${PACKAGEPATH}/cfy-go/container.go \
 	src/${PACKAGEPATH}/cfy-go/tenants.go
 
 bin/cfy-go: ${CFYGO} ${CFYGOLIBS}
