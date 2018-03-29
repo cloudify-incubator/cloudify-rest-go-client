@@ -7,6 +7,7 @@ import (
 	"path"
 	"syscall"
 	"time"
+	"strings"
 )
 
 func makedev(major int, minor int) int {
@@ -143,6 +144,13 @@ func mountEverythingAndRun(combinedDir string, argv0 string, argv []string) {
 }
 
 func main() {
+	var commandList []string
+	commandList = os.Args[1:]
+	if len(commandList) == 0 {
+		commandList = []string{"/bin/sh"}
+	}
+	log.Printf("Command for run: %v\n", strings.Join(commandList, " "))
+
 	dir, err := os.Getwd()
 	if err != nil {
 		log.Fatalf("Cloudify error: %s\n", err.Error())
@@ -196,9 +204,6 @@ func main() {
 	// try to delete, on error
 	defer syscall.Unmount(combinedDir, syscall.MNT_DETACH)
 
-	args := []string{"/bin/echo", "/tmp/I_am_alive"}
-	binary := "/bin/echo"
-
 	// real work
-	mountEverythingAndRun(combinedDir, binary, args)
+	mountEverythingAndRun(combinedDir, commandList[0], commandList)
 }
