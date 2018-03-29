@@ -13,7 +13,7 @@ func makedev(major int, minor int) int {
 	return (minor & 0xff) | (major&0xfff)<<8
 }
 
-func mountEverythingAndRun(combinedDir string) {
+func mountEverythingAndRun(combinedDir string, argv0 string, argv []string) {
 	// reset umask befor do anything
 	oldUmask := syscall.Umask(0)
 
@@ -123,11 +123,14 @@ func mountEverythingAndRun(combinedDir string) {
 		log.Fatalf("mknod /dev/tty: %s", err)
 	}
 
-	args := []string{"/bin/touch", "/tmp/I_am_alive"}
-	binary := "/bin/touch"
+	var procInfo syscall.SysProcAttr
 	var env syscall.ProcAttr
 	env.Env = []string{"PATH=/usr/sbin:/usr/bin:/sbin:/bin"}
-	pid, err := syscall.ForkExec(binary, args, &env);
+	// TODO: hackish way, but ok for now
+	env.Files = []uintptr{0, 1, 2}
+	env.Sys = &procInfo
+
+	pid, err := syscall.ForkExec(argv0, argv, &env)
 	if err != nil {
 		log.Fatalf("Issues with run: %s", err)
 	}
@@ -184,6 +187,7 @@ func main() {
 	// try to delete, on error
 	defer os.RemoveAll(combinedDir)
 
+	// https://www.kernel.org/doc/Documentation/filesystems/overlayfs.txt
 	mountOptions := fmt.Sprintf("lowerdir=%s,upperdir=%s,workdir=%s", baseDir, dataDir, workDir)
 	// mount overlayfs
 	if err := syscall.Mount("overlay", combinedDir, "overlay", 0, mountOptions); err != nil {
@@ -192,6 +196,9 @@ func main() {
 	// try to delete, on error
 	defer syscall.Unmount(combinedDir, syscall.MNT_DETACH)
 
+	args := []string{"/bin/echo", "/tmp/I_am_alive"}
+	binary := "/bin/echo"
+
 	// real work
-	mountEverythingAndRun(combinedDir)
+	mountEverythingAndRun(combinedDir, binary, args)
 }
