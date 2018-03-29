@@ -92,6 +92,7 @@ CFYGO := \
 	src/${PACKAGEPATH}/cfy-go/nodes.go \
 	src/${PACKAGEPATH}/cfy-go/plugins.go \
 	src/${PACKAGEPATH}/cfy-go/scaling.go \
+	src/${PACKAGEPATH}/cfy-go/container.go \
 	src/${PACKAGEPATH}/cfy-go/tenants.go
 
 bin/cfy-go: ${CFYGO} ${CFYGOLIBS}

@@ -19,25 +19,32 @@ func createDirInContainer(combinedDir string) {
 	oldUmask := syscall.Umask(0)
 
 	// create and mount all dirs
-	if err := os.Mkdir(path.Join(combinedDir, "/sys"),
+	sysDir := path.Join(combinedDir, "/sys")
+	os.RemoveAll(sysDir)
+	if err := os.Mkdir(sysDir,
+			syscall.S_IRUSR|syscall.S_IXUSR|
+			syscall.S_IRGRP|syscall.S_IXGRP|
+			syscall.S_IROTH|syscall.S_IXOTH); err != nil {
+		log.Printf("Not critical: %s\n", err.Error())
+	}
+
+	procDir := path.Join(combinedDir, "/proc")
+	os.RemoveAll(procDir)
+	if err := os.Mkdir(procDir,
 		syscall.S_IRUSR|syscall.S_IXUSR|
 			syscall.S_IRGRP|syscall.S_IXGRP|
 			syscall.S_IROTH|syscall.S_IXOTH); err != nil {
 		log.Printf("Not critical: %s\n", err.Error())
 	}
 
-	if err := os.Mkdir(path.Join(combinedDir, "/proc"),
-		syscall.S_IRUSR|syscall.S_IXUSR|
-			syscall.S_IRGRP|syscall.S_IXGRP|
-			syscall.S_IROTH|syscall.S_IXOTH); err != nil {
-		log.Printf("Not critical: %s\n", err.Error())
-	}
-
-	if err := os.Mkdir(path.Join(combinedDir, "/tmp"),
-		syscall.S_IRUSR|syscall.S_IWUSR|syscall.S_IXUSR|
-			syscall.S_IRGRP|syscall.S_IWGRP|syscall.S_IXGRP|
-			syscall.S_IROTH|syscall.S_IWOTH|syscall.S_IXOTH); err != nil {
-		log.Printf("Not critical: %s\n", err.Error())
+	tmpDir := path.Join(combinedDir, "/tmp")
+	if _, err := os.Stat(tmpDir); err != nil {
+		if err := os.Mkdir(tmpDir,
+			syscall.S_IRUSR|syscall.S_IWUSR|syscall.S_IXUSR|
+				syscall.S_IRGRP|syscall.S_IWGRP|syscall.S_IXGRP|
+				syscall.S_IROTH|syscall.S_IWOTH|syscall.S_IXOTH); err != nil {
+			log.Printf("Not critical: %s\n", err.Error())
+		}
 	}
 
 	devDir := path.Join(combinedDir, "/dev")
@@ -101,9 +108,6 @@ func createDirInContainer(combinedDir string) {
 
 func mountEverythingAndRun(combinedDir string, argv0 string, argv []string) {
 	log.Printf("I am going to run: %+v\n\n", strings.Join(argv, " "))
-	if err := syscall.Unshare(syscall.CLONE_FILES | syscall.CLONE_FS | syscall.CLONE_NEWPID | syscall.CLONE_SYSVSEM); err != nil {
-		log.Fatalf("Could not clone new fs and proc: %s", err)
-	}
 
 	procDir := path.Join(combinedDir, "/proc")
 	if err := syscall.Mount("proc", procDir, "proc",
@@ -119,6 +123,7 @@ func mountEverythingAndRun(combinedDir string, argv0 string, argv []string) {
 	// TODO: hackish way, but ok for now
 	env.Files = []uintptr{0, 1, 2}
 	env.Sys = &procInfo
+	env.Dir = "/"
 
 	pid, err := syscall.ForkExec(argv0, argv, &env)
 	if err != nil {
@@ -153,11 +158,13 @@ func main() {
 	log.Printf("As Operation System filesystem will be used: %s\n", baseDir)
 
 	dataDir := path.Join(dir, "data")
-	if err := os.Mkdir(dataDir,
-		syscall.S_IRUSR|syscall.S_IWUSR|syscall.S_IXUSR|
-			syscall.S_IRGRP|syscall.S_IXGRP|
-			syscall.S_IROTH|syscall.S_IXOTH); err != nil {
-		log.Printf("Not critical: %s\n", err.Error())
+	if _, err := os.Stat(dataDir); err != nil {
+		if err := os.Mkdir(dataDir,
+			syscall.S_IRUSR|syscall.S_IWUSR|syscall.S_IXUSR|
+				syscall.S_IRGRP|syscall.S_IXGRP|
+				syscall.S_IROTH|syscall.S_IXOTH); err != nil {
+			log.Printf("Not critical: %s\n", err.Error())
+		}
 	}
 	log.Printf("Data changes will be stored in: %s\n", dataDir)
 

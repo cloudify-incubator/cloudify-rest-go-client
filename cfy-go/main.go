@@ -204,6 +204,10 @@ func main() {
 		{
 			os.Exit(tenantsOptions(args, options))
 		}
+	case "container":
+		{
+			os.Exit(containerOptions(args, options))
+		}
 	default:
 		{
 			fmt.Println(defaultError)
