@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2017 GigaSpaces Technologies Ltd. All rights reserved
+Copyright (c) 2018 GigaSpaces Technologies Ltd. All rights reserved
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -23,13 +23,6 @@ container - Run command in container
 
 		cfy-go container run -base container-place/base -- cfy profile use local
 
-	Manager version: Show manager version
-
-		cfy-go status version
-
-	Kubernetes: Show diagnostic for current installation
-
-		cfy-go status diag
 */
 package main
 
@@ -37,6 +30,7 @@ import (
 	"flag"
 	"fmt"
 	utils "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify/utils"
+	container "github.com/cloudify-incubator/cloudify-rest-go-client/container"
 	"os"
 	"path"
 )
@@ -77,9 +71,7 @@ func containerRunCall(operFlagSet *flag.FlagSet, args, options []string) int {
 		dataDir = path.Join(workDir, "data")
 	}
 
-	fmt.Printf("Base: %v, Data: %v, Work: %v, Commands: %v\n", baseDir, dataDir, workDir, commandList)
-	// container.Run()
-	return 0
+	return container.Run(baseDir, dataDir, workDir, commandList)
 }
 
 func containerOptions(args, options []string) int {
