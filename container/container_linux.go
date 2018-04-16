@@ -1,3 +1,5 @@
+// +build linux
+
 /*
 Copyright (c) 2018 GigaSpaces Technologies Ltd. All rights reserved
 

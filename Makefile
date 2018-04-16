@@ -1,6 +1,12 @@
 .PHONY: all
 all: bin/cfy-go
 
+ifdef SystemRoot
+OSTYPE := Windows
+else
+OSTYPE ?= $(shell uname -s)
+endif
+
 PACKAGEPATH := github.com/cloudify-incubator/cloudify-rest-go-client
 
 VERSION := `cd src/${PACKAGEPATH} && git rev-parse --short HEAD`
@@ -54,8 +60,11 @@ pkg/linux_amd64/${PACKAGEPATH}/cloudify/utils.a: ${CLOUDIFYUTILS}
 	go build -v -i -o pkg/linux_amd64/${PACKAGEPATH}/cloudify/utils.a ${CLOUDIFYUTILS}
 
 # container
-CLOUDIFYCONTAINER := \
-	src/${PACKAGEPATH}/container/container.go
+ifeq ($(OSTYPE),Linux)
+CLOUDIFYCONTAINER := src/${PACKAGEPATH}/container/container_linux.go
+else
+CLOUDIFYCONTAINER := src/${PACKAGEPATH}/container/container_darwin.go
+endif
 
 pkg/linux_amd64/${PACKAGEPATH}/container.a: ${CLOUDIFYCONTAINER}
 	$(call colorecho,"Build: ",$@)
