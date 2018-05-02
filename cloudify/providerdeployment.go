@@ -42,11 +42,12 @@ Example for deployments info Which need to be used by cloudify provider
 }
  */
 
+// DeploymentsInfo - all deployments used on kubernetes cloudify provider
 type DeploymentsInfo struct {
 	Deployments         []interface{}          `json:"deployments,omitempty"`
 }
 
-// Get deployments provider info needed to be used by kubernetes cloudify provider
+//ParseDeploymentFile - Get deployments provider info needed to be used by kubernetes cloudify provider
 func ParseDeploymentFile(deploymentFile string) (*DeploymentsInfo, error) {
 	var deploymentInfo DeploymentsInfo
 

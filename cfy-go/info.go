@@ -276,9 +276,8 @@ func diagInfoCall(operFlagSet *flag.FlagSet, args, options []string) int {
 		return runChecksNode(params)
 	} else if diagLoad {
 		return runChecksLoad(params)
-	} else {
-		return runChecks(params)
 	}
+	return runChecks(params)
 }
 
 func infoOptions(args, options []string) int {

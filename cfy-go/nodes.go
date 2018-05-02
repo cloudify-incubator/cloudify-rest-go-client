@@ -129,6 +129,11 @@ func nodesOptions(args, options []string) int {
 			var nodeType string
 			var hostID string
 
+			defaultNodeType := os.Getenv("CFY_K8S_NODE_TYPE")
+			if defaultNodeType == "" {
+				defaultNodeType = cloudify.KubernetesNode
+			}
+
 			operFlagSet.StringVar(&node, "node", "",
 				"The unique identifier for the node")
 			operFlagSet.StringVar(&deployment, "deployment", "",
@@ -136,13 +141,12 @@ func nodesOptions(args, options []string) int {
 			operFlagSet.StringVar(&hostID, "host-id", "",
 				"Filter by hostID")
 
+			operFlagSet.StringVar(&nodeType, "node-type",
+				defaultNodeType, "Filter by node type")
+
 			operFlagSet.Parse(options)
 
 			var params = map[string]string{}
-			nodeType = os.Getenv("CFY_K8S_NODE_TYPE")
-			if nodeType == "" {
-				nodeType = cloudify.KubernetesNode
-			}
 
 			if node != "" {
 				params["id"] = node
@@ -163,13 +167,18 @@ func nodesOptions(args, options []string) int {
 			var node string
 			var deployment string
 			var nodeType string
+
+			defaultNodeType := os.Getenv("CFY_K8S_NODE_TYPE")
+			if defaultNodeType == "" {
+				defaultNodeType = cloudify.KubernetesNode
+			}
+
 			operFlagSet.StringVar(&node, "node", "",
 				"The unique identifier for the node")
 			operFlagSet.StringVar(&deployment, "deployment", "",
 				"The unique identifier for the deployment")
 			operFlagSet.StringVar(&nodeType, "node-type",
-				"",
-				"Filter by node type")
+				defaultNodeType, "Filter by node type")
 
 			params := parsePagination(operFlagSet, options)
 
@@ -192,13 +201,18 @@ func nodesOptions(args, options []string) int {
 			var node string
 			var deployment string
 			var nodeType string
+
+			defaultNodeType := os.Getenv("CFY_K8S_NODE_TYPE")
+			if defaultNodeType == "" {
+				defaultNodeType = cloudify.KubernetesNode
+			}
+
 			operFlagSet.StringVar(&node, "node", "",
 				"The unique identifier for the node")
 			operFlagSet.StringVar(&deployment, "deployment", "",
 				"The unique identifier for the deployment")
 			operFlagSet.StringVar(&nodeType, "node-type",
-				"",
-				"Filter by node type")
+				defaultNodeType, "Filter by node type")
 
 			params := parsePagination(operFlagSet, options)
 

@@ -195,6 +195,11 @@ func nodeInstancesOptions(args, options []string) int {
 			var loadbalancerNamespace string
 			var loadbalancerCluster string
 
+			defaultLoadType := os.Getenv("CFY_K8S_LOAD_TYPE")
+			if defaultLoadType == "" {
+				defaultLoadType = cloudify.KubernetesLoadBalancer
+			}
+
 			operFlagSet.StringVar(&loadbalancerName, "loadbalancer-name",
 				"",
 				"Filter by loadbalancer name")
@@ -205,12 +210,10 @@ func nodeInstancesOptions(args, options []string) int {
 				"",
 				"Filter by loadbalancer cluster name")
 
-			params := parseInstancesFlags(operFlagSet, options)
+			operFlagSet.StringVar(&nodeType, "node-type",
+				defaultLoadType, "Filter by node type")
 
-			nodeType = os.Getenv("CFY_K8S_LOAD_TYPE")
-			if nodeType == "" {
-				nodeType = cloudify.KubernetesLoadBalancer
-			}
+			params := parseInstancesFlags(operFlagSet, options)
 
 			cl := getClient()
 			return nodeInstancesPrint(
@@ -220,13 +223,16 @@ func nodeInstancesOptions(args, options []string) int {
 		}
 	case "by-type":
 		{
-			operFlagSet := basicOptions("node-instances started")
-			params := parseInstancesFlags(operFlagSet, options)
+			var nodeType string
 
-			var nodeType = os.Getenv("CFY_K8S_NODE_TYPE")
-			if nodeType == "" {
-				nodeType = cloudify.KubernetesNode
+			defaultNodeType := os.Getenv("CFY_K8S_NODE_TYPE")
+			if defaultNodeType == "" {
+				defaultNodeType = cloudify.KubernetesNode
 			}
+
+			operFlagSet := basicOptions("node-instances started")
+			operFlagSet.StringVar(&nodeType, "node-type", defaultNodeType, "Filter by node type")
+			params := parseInstancesFlags(operFlagSet, options)
 
 			cl := getClient()
 			return nodeInstancesPrint(
@@ -234,13 +240,15 @@ func nodeInstancesOptions(args, options []string) int {
 		}
 	case "started":
 		{
-			operFlagSet := basicOptions("node-instances started")
-			params := parseInstancesFlags(operFlagSet, options)
-
-			var nodeType = os.Getenv("CFY_K8S_NODE_TYPE")
-			if nodeType == "" {
-				nodeType = cloudify.KubernetesNode
+			var nodeType string
+			defaultNodeType := os.Getenv("CFY_K8S_NODE_TYPE")
+			if defaultNodeType == "" {
+				defaultNodeType = cloudify.KubernetesNode
 			}
+
+			operFlagSet := basicOptions("node-instances started")
+			operFlagSet.StringVar(&nodeType, "node-type", defaultNodeType, "Filter by node type")
+			params := parseInstancesFlags(operFlagSet, options)
 
 			cl := getClient()
 			return nodeInstancesPrint(
@@ -248,13 +256,16 @@ func nodeInstancesOptions(args, options []string) int {
 		}
 	case "alive":
 		{
-			operFlagSet := basicOptions("node-instances alive")
-			params := parseInstancesFlags(operFlagSet, options)
-
-			var nodeType = os.Getenv("CFY_K8S_NODE_TYPE")
-			if nodeType == "" {
-				nodeType = cloudify.KubernetesNode
+			var nodeType string
+			defaultNodeType := os.Getenv("CFY_K8S_NODE_TYPE")
+			if defaultNodeType == "" {
+				defaultNodeType = cloudify.KubernetesNode
 			}
+
+			operFlagSet := basicOptions("node-instances alive")
+			operFlagSet.StringVar(&nodeType, "node-type",
+				defaultNodeType, "Filter by node type")
+			params := parseInstancesFlags(operFlagSet, options)
 
 			cl := getClient()
 			return nodeInstancesPrint(
