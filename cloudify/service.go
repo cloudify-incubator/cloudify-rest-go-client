@@ -26,8 +26,6 @@ import (
 // ServiceConfig - settings for connect to cloudify
 type ServiceConfig struct {
 	ClientConfig
-	// TODO Add support for dynamic type from proxy deployment (load + node)
-	//NodeType string `json:"nodeType,omitempty"`
 }
 
 // ServiceClientInit - common functionality for load config for service
