@@ -38,8 +38,8 @@ import (
 	cloudify "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify"
 	utils "github.com/cloudify-incubator/cloudify-rest-go-client/cloudify/utils"
 	"log"
-	"strings"
 	"os"
+	"strings"
 )
 
 func scaleGroupPrint(deploymentScalingGroups map[string]cloudify.ScalingGroup, err error) int {

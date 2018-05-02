@@ -18,11 +18,10 @@ package cloudify
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"fmt"
+	"io/ioutil"
 	"os"
 )
-
 
 /*
 Example for deployments info Which need to be used by cloudify provider
@@ -40,11 +39,11 @@ Example for deployments info Which need to be used by cloudify provider
       }
    ]
 }
- */
+*/
 
 // DeploymentsInfo - all deployments used on kubernetes cloudify provider
 type DeploymentsInfo struct {
-	Deployments         []interface{}          `json:"deployments,omitempty"`
+	Deployments []interface{} `json:"deployments,omitempty"`
 }
 
 //ParseDeploymentFile - Get deployments provider info needed to be used by kubernetes cloudify provider
@@ -64,5 +63,3 @@ func ParseDeploymentFile(deploymentFile string) (*DeploymentsInfo, error) {
 
 	return &deploymentInfo, nil
 }
-
-
