@@ -19,22 +19,22 @@ Nodes
 
 nodes - Handle a deployment's nodes
 
-	get: Retrieve node information [manager only]
+	get: Retrieve node information [manager only] [node-type is optional]
 
-		cfy-go nodes list -node server -deployment deployment
+		cfy-go nodes list -node server -deployment deployment -node-type <nodeType>
 
 
-	list: List nodes for a deployment [manager only]
+	list: List nodes for a deployment [manager only] [node-type is optional]
 
-		cfy-go nodes list
+		cfy-go nodes list -node-type <nodeType>
 
-	group: List nodes for a deployment [manager only], with groups names
+	group: List nodes for a deployment [manager only], with groups names [node-type is optional]
 
-		cfy-go nodes group
+		cfy-go nodes group -node-type <nodeType>
 
-	started - check started nodes in deployment (all, without filter by scaling group)
+	started - check started nodes in deployment (all, without filter by scaling group) [node-type is optional]
 
-		cfy-go nodes started -deployment deployment
+		cfy-go nodes started -deployment deployment -node-type <nodeType>
 
 */
 package main

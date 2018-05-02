@@ -19,17 +19,17 @@ Scaling Groups
 
 scaling-groups - operations related to Scaling Groups
 
-	groups: check nodes in group - recheck code used in get scaling group by instance(hostname) in autoscale
+	groups: check nodes in group - recheck code used in get scaling group by instance(hostname) in autoscale [node-type is optional]
 
-		cfy-go scaling-groups groups -deployment <deployment_name>
+		cfy-go scaling-groups groups -deployment <deployment_name> -node-type <nodeType>
 
-	nodes: check nodes in group in autoscale, check that we have node in scaling group
+	nodes: check nodes in group in autoscale, check that we have node in scaling group [node-type is optional]
 
-		cfy-go scaling-groups nodes -deployment <deployment_name> -scalegroup <scale_group_name>
+		cfy-go scaling-groups nodes -deployment <deployment_name> -scalegroup <scale_group_name> -node-type <nodeType>
 
-	instances: check instances in group in autoscale
+	instances: check instances in group in autoscale [node-type is optional]
 
-		cfy-go scaling-groups instances -deployment <deployment_name> -scalegroup <scale_group_name>
+		cfy-go scaling-groups instances -deployment <deployment_name> -scalegroup <scale_group_name> -node-type <nodeType>
 */
 package main
 

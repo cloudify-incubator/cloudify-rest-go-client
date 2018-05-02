@@ -27,17 +27,21 @@ node-instances - Handle a deployment's node-instances.
 
 		cfy-go node-instances list -deployment deployment
 
-	started: check started instances in deployment (all, without filter by scaling group)
+	started: check started instances in deployment (all, without filter by scaling group) [node-type is optional]
 
-		cfy-go node-instances started -deployment <deployment_name>
+		cfy-go node-instances started -deployment <deployment_name> -node-type <nodeType>
 
 	alive: check created instances in deployment (all, without filter by scaling group)
 
 		cfy-go node-instances alive -deployment <deployment_name>
 
-	loadbalancer: return list of loadbalancers, by default returned free nodes
+	by-type: check created instances in deployment by node type
 
-		cfy-go node-instances alive -deployment <deployment_name>
+		cfy-go node-instances alive -deployment <deployment_name> -node-type <nodeType>
+
+	loadbalancer: return list of loadbalancers, by default returned free nodes [node-type is optional]
+
+		cfy-go node-instances alive -deployment <deployment_name> -node-type <nodeType>
 
 	host-grouped: list instances grouped by hostID
 
