@@ -16,6 +16,9 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+/*
+Package container - functions for "cfy local" style operations.
+*/
 package container
 
 import (

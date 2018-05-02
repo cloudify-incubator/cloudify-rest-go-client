@@ -26,13 +26,13 @@ import (
 
 // ClientConfig - all configuration fields for connection
 type ClientConfig struct {
-	Host      string `json:"host,omitempty"`
-	User      string `json:"user,omitempty"`
-	Password  string `json:"password,omitempty"`
-	Tenant    string `json:"tenant,omitempty"`
-	AgentFile string `json:"agent,omitempty"`
+	Host            string `json:"host,omitempty"`
+	User            string `json:"user,omitempty"`
+	Password        string `json:"password,omitempty"`
+	Tenant          string `json:"tenant,omitempty"`
+	AgentFile       string `json:"agent,omitempty"`
 	DeploymentsFile string `json:"deployment,omitempty"`
-	Debug     bool   `json:"debug,omitempty"`
+	Debug           bool   `json:"debug,omitempty"`
 }
 
 //Client - struct with connection settings for connect to manager
